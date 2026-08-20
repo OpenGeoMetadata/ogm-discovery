@@ -74,14 +74,14 @@ describe('small UI utilities', () => {
   });
 
   it('builds internal hash route URLs inside the current theme path', () => {
-    vi.stubEnv('BASE_URL', '/abcdefgeo/');
+    vi.stubEnv('BASE_URL', '/ogm-discovery/');
     window.history.replaceState(
       null,
       '',
-      '/abcdefgeo/unr/#/resources/unr-example'
+      '/ogm-discovery/unr/#/resources/unr-example'
     );
 
-    expect(getThemeScopedAppBasePath()).toBe('/abcdefgeo/unr/');
+    expect(getThemeScopedAppBasePath()).toBe('/ogm-discovery/unr/');
 
     const url = new URL(
       buildAppHashRouteUrl(
@@ -90,7 +90,7 @@ describe('small UI utilities', () => {
       )
     );
 
-    expect(url.pathname).toBe('/abcdefgeo/unr/');
+    expect(url.pathname).toBe('/ogm-discovery/unr/');
     expect(url.search).toBe('');
     expect(url.hash).toBe(
       '#/mirador?manifest=blob%3Ahttp%3A%2F%2Flocalhost%2Fmanifest'
