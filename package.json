@@ -1,6 +1,6 @@
 {
-  "name": "ogm-viewer",
-  "homepage": "https://ewlarson.github.io/abcdefgeo",
+  "name": "ogm-discovery",
+  "homepage": "https://opengeometadata.github.io/ogm-discovery",
   "private": true,
   "version": "0.1.0",
   "type": "module",

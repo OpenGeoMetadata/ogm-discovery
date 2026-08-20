@@ -1,7 +1,8 @@
-# abcdefgeo
+# OpenGeoMetadata Discovery
 
-A configurable, static-site-friendly geospatial discovery frontend for metadata
-served by the BTAA Geospatial API.
+The official OpenGeoMetadata community frontend for configurable,
+static-site-friendly geospatial discovery using metadata served by the BTAA
+Geospatial API.
 
 This project is evolving the BTAA Geoportal frontend into a reusable
 OpenGeoMetadata viewer that can be branded for different institutions without
@@ -262,8 +263,8 @@ ready to publish.
 `npm run build` also emits `dist/404.html` and `dist/500.html` as copies of the
 built SPA entry point, plus `dist/<theme-id>/index.html` for every configured
 theme. GitHub Pages deployments use hash routing for all themes, with URLs such
-as `/abcdefgeo/unr/#/resources/<id>`. Hosts that support a custom server-error
-fallback can serve `500.html`.
+as `/ogm-discovery/unr/#/resources/<id>`. Hosts that support a custom
+server-error fallback can serve `500.html`.
 
 The repository includes a GitHub Pages workflow in
 `.github/workflows/deploy.yml`. Review its branch trigger and required secrets

@@ -454,8 +454,8 @@ describe('fetchResourceDetails', () => {
     window.sessionStorage.clear();
     Object.defineProperty(window, 'location', {
       value: {
-        origin: 'https://ewlarson.github.io',
-        hostname: 'ewlarson.github.io',
+        origin: 'https://opengeometadata.github.io',
+        hostname: 'opengeometadata.github.io',
       },
       writable: true,
     });

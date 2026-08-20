@@ -6,7 +6,7 @@ site:
   short_name: OpenGeoMetadata
   description:
     en: A configurable geospatial discovery site for a fictitious OpenGeoMetadata institution.
-  canonical_url: https://ewlarson.github.io/abcdefgeo
+  canonical_url: https://opengeometadata.github.io/ogm-discovery
   locale: en
   supported_locales:
     - en
