@@ -285,3 +285,38 @@ npm run deploy
 - Generic product work should usually happen in `src/`, not `app/` or `server/`.
 - Keep the viewer map-forward, accessible, localizable, and static-host
   compatible.
+
+## Resource previews
+
+Resource pages use [OGM Viewer](https://github.com/OpenGeoMetadata/ogm-viewer)
+(`ogm-viewer` 1.5) for map and IIIF previews, layer controls, and feature inspection.
+The viewer loads on demand and receives the Aardvark record already fetched by the
+app, preserving direct service URLs and static hosting support. Object and JSON
+string reference fields are normalized; the API's selected preview and geometry
+provide fallbacks when references or bounds are missing. COG URLs retain the
+resource version parameter used for cache invalidation.
+
+OGM Viewer owns its preview tabs and controls. The surrounding loading/error
+messages are localized; upstream viewer controls currently use English. oEmbed
+content is displayed in a sandboxed iframe because OGM Viewer does not provide
+an oEmbed preview. Featured homepage layers and discovery maps keep their existing
+implementation; GeoBlacklight remains a dependency for the homepage layers.
+
+For deployments with a Content Security Policy, follow OGM Viewer's
+[CSP requirements](https://github.com/OpenGeoMetadata/ogm-viewer#content-security-policy),
+including `worker-src blob:`, `script-src 'wasm-unsafe-eval'`, and `connect-src data:`
+alongside the metadata, basemap, and layer service origins.
+
+### Basemaps
+
+OpenStreetMap is the default basemap, matching the BTAA Geoportal. Leaflet maps
+also offer Esri World Imagery. Saved CARTO selections automatically fall back to
+OpenStreetMap.
+
+`src/config/openStreetMapStyle.json` defines the OpenStreetMap raster tiles,
+attribution, and native zoom limit. Leaflet reads the same source settings, and
+OGM Viewer uses this locally bundled MapLibre style for both theme modes. Vite
+generates its URL so it works on static hosts, including GitHub Pages subpaths.
+No CARTO API key is needed. Keep OpenStreetMap attribution visible and follow its
+[tile usage policy](https://operations.osmfoundation.org/policies/tiles/); these
+public tiles are not for bulk downloading or offline prefetching.

@@ -1,3 +1,5 @@
+vi.mock('ogm-viewer', () => ({}));
+vi.mock('ogm-viewer/lib', () => ({ OgmRecord: vi.fn() }));
 import { render, screen, waitFor } from '@testing-library/react';
 import { axeWithWCAG22 } from '../../test-utils/axe';
 import userEvent from '@testing-library/user-event';
@@ -605,23 +607,7 @@ describe('ResourceView Component', () => {
       ).toBeGreaterThan(0);
     });
 
-    it('renders AttributeTable when protocol is wms', async () => {
-      render(
-        <TestWrapper>
-          <ResourceView />
-        </TestWrapper>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('Attribute')).toBeInTheDocument();
-        expect(screen.getByText('Value')).toBeInTheDocument();
-        expect(
-          screen.getByText('Click on map to inspect values')
-        ).toBeInTheDocument();
-      });
-    });
-
-    it('renders IndexMap when protocol is open_index_map', async () => {
+    it('renders the resource preview for an index map', async () => {
       // Mock the component with open_index_map protocol
       (fetchResourceDetails as any).mockResolvedValue(realFixtureData[2]); // Tufts fixture with open_index_map
 
