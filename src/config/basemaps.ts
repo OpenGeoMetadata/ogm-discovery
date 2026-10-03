@@ -1,5 +1,6 @@
 import Cookies from 'js-cookie';
 import type L from 'leaflet';
+import openStreetMapStyle from './openStreetMapStyle.json';
 
 type BasemapDefinition = {
   label: string;
@@ -10,26 +11,15 @@ type BasemapDefinition = {
 
 const BASEMAP_COOKIE_NAME = 'preferred_basemap';
 const BASEMAP_COOKIE_EXPIRY_DAYS = 365;
-const DEFAULT_BASEMAP_KEY = 'cartoLight';
+const DEFAULT_BASEMAP_KEY = 'openStreetMap';
 
 const BASEMAP_DEFINITIONS = {
-  cartoLight: {
-    label: 'Carto Light',
-    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    options: {
-      subdomains: 'abcd',
-      maxZoom: 20,
-    },
-  },
   openStreetMap: {
     label: 'OpenStreetMap',
-    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    url: openStreetMapStyle.sources.openStreetMap.tiles[0],
+    attribution: openStreetMapStyle.sources.openStreetMap.attribution,
     options: {
-      maxZoom: 19,
+      maxZoom: openStreetMapStyle.sources.openStreetMap.maxzoom,
     },
   },
   esriWorldImagery: {
@@ -46,7 +36,7 @@ const BASEMAP_DEFINITIONS = {
 export type BasemapKey = keyof typeof BASEMAP_DEFINITIONS;
 
 function isBasemapKey(value: string): value is BasemapKey {
-  return value in BASEMAP_DEFINITIONS;
+  return Object.prototype.hasOwnProperty.call(BASEMAP_DEFINITIONS, value);
 }
 
 export function getSavedBasemapKey(): BasemapKey {
@@ -58,7 +48,9 @@ export function getSavedBasemapKey(): BasemapKey {
 }
 
 function saveBasemapKey(key: BasemapKey): void {
-  Cookies.set(BASEMAP_COOKIE_NAME, key, { expires: BASEMAP_COOKIE_EXPIRY_DAYS });
+  Cookies.set(BASEMAP_COOKIE_NAME, key, {
+    expires: BASEMAP_COOKIE_EXPIRY_DAYS,
+  });
 }
 
 export function createBasemapLayer(

@@ -1,6 +1,7 @@
 import Leaflet, { map } from 'leaflet';
 import BaseLeafletViewerController from '@geoblacklight/frontend/app/javascript/geoblacklight/controllers/leaflet_viewer_controller';
 import Sleep from 'geoblacklight/leaflet/controls/sleep';
+import { createBasemapLayer } from '../config/basemaps';
 import { registerLeafletGestureHandling } from '../config/leafletGestureHandling';
 
 let leafletIiifPromise;
@@ -46,7 +47,7 @@ export default class LeafletViewerController extends BaseLeafletViewerController
     });
     if (sleepSettings.SLEEP) this.map.addHandler('SLEEP', Sleep);
 
-    if (!this.isIiifImage) this.map.addLayer(this.basemap);
+    if (!this.isIiifImage) this.map.addLayer(createBasemapLayer(Leaflet, 'openStreetMap'));
     this.map.addLayer(this.overlay);
     if (!this.isIiifImage) this.fitBounds(this.bounds);
     this.map.options.selected_color =

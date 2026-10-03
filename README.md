@@ -306,3 +306,17 @@ For deployments with a Content Security Policy, follow OGM Viewer's
 [CSP requirements](https://github.com/OpenGeoMetadata/ogm-viewer#content-security-policy),
 including `worker-src blob:`, `script-src 'wasm-unsafe-eval'`, and `connect-src data:`
 alongside the metadata, basemap, and layer service origins.
+
+### Basemaps
+
+OpenStreetMap is the default basemap, matching the BTAA Geoportal. Leaflet maps
+also offer Esri World Imagery. Saved CARTO selections automatically fall back to
+OpenStreetMap.
+
+`src/config/openStreetMapStyle.json` defines the OpenStreetMap raster tiles,
+attribution, and native zoom limit. Leaflet reads the same source settings, and
+OGM Viewer uses this locally bundled MapLibre style for both theme modes. Vite
+generates its URL so it works on static hosts, including GitHub Pages subpaths.
+No CARTO API key is needed. Keep OpenStreetMap attribution visible and follow its
+[tile usage policy](https://operations.osmfoundation.org/policies/tiles/); these
+public tiles are not for bulk downloading or offline prefetching.
