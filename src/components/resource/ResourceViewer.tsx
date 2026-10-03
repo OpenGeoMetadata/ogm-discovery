@@ -1,5 +1,6 @@
 import { createElement, useEffect, useRef, useState } from 'react';
 import type { OgmViewer } from 'ogm-viewer';
+import openStreetMapStyleUrl from '../../config/openStreetMapStyle.json?url';
 import { useI18n } from '../../hooks/useI18n';
 import {
   toOgmViewerRecord,
@@ -97,6 +98,8 @@ function OgmPreview({ data }: { data: ViewerDocument }) {
         ref,
         class: 'viewer block h-[600px] w-full',
         theme: 'light',
+        'light-basemap': openStreetMapStyleUrl,
+        'dark-basemap': openStreetMapStyleUrl,
         role: 'region',
         'hide-title': true,
         lang: locale,
