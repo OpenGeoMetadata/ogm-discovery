@@ -1,548 +1,108 @@
-import { act, render } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { GeoDocument } from '../../../types/api';
 
-const mocks = vi.hoisted(() => {
-  const fitInternal = vi.fn();
-  const fit = vi.fn();
-  const setCenter = vi.fn();
-  const setResolution = vi.fn();
-  const setViewportSize = vi.fn();
-  const useGeographic = vi.fn();
-  const transformExtent = vi.fn((extent: number[]) => extent);
-  const geoTiff = vi.fn();
-  const geoTiffSource = {
-    getView: vi.fn(() =>
-      Promise.resolve({
-        projection: {
-          getCode: () => 'EPSG:26911',
-        },
-      })
-    ),
-  };
-  const pmtilesVectorSource = vi.fn();
-  const vectorTileLayer = vi.fn();
-  const webglTileLayer = vi.fn();
-  const tileLayer = vi.fn();
-  const xyzSource = vi.fn();
-  const style = vi.fn();
-  const stroke = vi.fn();
-  const fill = vi.fn();
-  const circle = vi.fn();
-  const polygonFromExtent = vi.fn((extent: number[]) => ({
-    extent,
-    getFlatCoordinates: () => extent,
-    getStride: () => 2,
-  }));
-  const overlaySource = {
-    getState: vi.fn(() => 'ready'),
-    on: vi.fn(),
-    un: vi.fn(),
-  };
-  const overlay = {
-    getSource: vi.fn(() => overlaySource),
-  };
-  const map = {
-    getSize: vi.fn(() => undefined),
-    updateSize: vi.fn(),
-    renderSync: vi.fn(),
-    on: vi.fn(),
-    setTarget: vi.fn(),
-    getEventPixel: vi.fn(() => [0, 0]),
-    hasFeatureAtPixel: vi.fn(() => false),
-    getViewport: vi.fn(() => ({ style: { cursor: '' } })),
-    getFeaturesAtPixel: vi.fn(() => []),
-  };
-  const view = {
-    getProjection: vi.fn(() => ({ getCode: () => 'EPSG:3857' })),
-    setViewportSize,
-    fitInternal,
-    fit,
-    getCenterInternal: vi.fn(() => [-10381844.95, 5616966.0]),
-    getCenter: vi.fn(() => [-10381844.95, 5616966.0]),
-    setCenter,
-    setResolution,
-    getResolutionForExtentInternal: vi.fn(() => 128),
-  };
-  const olMap = vi.fn(() => map);
-  const olView = vi.fn(() => view);
-
-  geoTiff.mockImplementation(() => geoTiffSource);
-  vectorTileLayer.mockImplementation(() => overlay);
-  webglTileLayer.mockImplementation(() => overlay);
-
-  return {
-    circle,
-    fill,
-    fit,
-    fitInternal,
-    geoTiff,
-    geoTiffSource,
-    map,
-    olMap,
-    olView,
-    overlay,
-    overlaySource,
-    pmtilesVectorSource,
-    polygonFromExtent,
-    setCenter,
-    setResolution,
-    setViewportSize,
-    stroke,
-    style,
-    tileLayer,
-    transformExtent,
-    useGeographic,
-    vectorTileLayer,
-    view,
-    webglTileLayer,
-    xyzSource,
-  };
+const { loadRecord, makeRecord } = vi.hoisted(() => ({
+  loadRecord: vi.fn().mockResolvedValue(undefined),
+  makeRecord: vi.fn(function (json) {
+    return { json };
+  }),
+}));
+vi.mock('ogm-viewer', () => {
+  if (!customElements.get('ogm-viewer')) {
+    customElements.define(
+      'ogm-viewer',
+      class extends HTMLElement {
+        loadRecord = loadRecord;
+      }
+    );
+  }
+  return {};
 });
-
-vi.mock('ol/Map', () => ({
-  default: mocks.olMap,
-}));
-
-vi.mock('ol/View', () => ({
-  default: mocks.olView,
-}));
-
-vi.mock('ol/control', () => ({
-  FullScreen: vi.fn(function FullScreen() {}),
-  defaults: vi.fn(() => ({
-    extend: vi.fn(() => []),
-  })),
-}));
-
-vi.mock('ol/layer/Tile', () => ({
-  default: mocks.tileLayer,
-}));
-
-vi.mock('ol/source/XYZ', () => ({
-  default: mocks.xyzSource,
-}));
-
-vi.mock('ol/layer/VectorTile.js', () => ({
-  default: mocks.vectorTileLayer,
-}));
-
-vi.mock('ol/layer/WebGLTile.js', () => ({
-  default: mocks.webglTileLayer,
-}));
-
-vi.mock('ol/source/GeoTIFF.js', () => ({
-  default: mocks.geoTiff,
-}));
-
-vi.mock('ol-pmtiles', () => ({
-  PMTilesVectorSource: mocks.pmtilesVectorSource,
-}));
-
-vi.mock('ol/style.js', () => ({
-  Circle: mocks.circle,
-  Fill: mocks.fill,
-  Stroke: mocks.stroke,
-  Style: mocks.style,
-}));
-
-vi.mock('ol/geom/Polygon', () => ({
-  fromExtent: mocks.polygonFromExtent,
-}));
-
-vi.mock('ol/proj', () => ({
-  transformExtent: mocks.transformExtent,
-  useGeographic: mocks.useGeographic,
-}));
-
+vi.mock('ogm-viewer/lib', () => ({ OgmRecord: makeRecord }));
+import 'ogm-viewer';
 import { ResourceViewer } from '../../../components/resource/ResourceViewer';
 
-const cogDataWithGeometry = {
-  attributes: { dct_references_s: {} },
-  meta: {
-    ui: {
-      viewer: {
-        protocol: 'cog',
-        endpoint: 'https://example.com/cog.tif',
-        geometry: {
-          type: 'Polygon',
-          coordinates: [
-            [
-              [-97.73743, 30.28753],
-              [-97.73743, 30.28409],
-              [-97.73346, 30.28409],
-              [-97.73346, 30.28753],
-              [-97.73743, 30.28753],
-            ],
-          ],
-        },
-      },
+function resource(id: string, protocol = 'wms'): GeoDocument {
+  return {
+    id,
+    type: 'resource',
+    attributes: { ogm: { id, dct_title_s: id, gbl_wxsIdentifier_s: id } },
+    meta: {
+      ui: { viewer: { protocol, endpoint: `https://example.com/${id}` } },
     },
-  },
-} as Parameters<typeof ResourceViewer>[0]['data'];
-
-const cogDataWithResourceVersion = {
-  ...cogDataWithGeometry,
-  attributes: {
-    ...cogDataWithGeometry.attributes,
-    ogm: {
-      id: 'unr-06625ac6-4cee-4eda-aea3-bfd18a903aed',
-      gbl_mdModified_dt: '2026-05-17T15:11:10.701000',
-    },
-  },
-} as Parameters<typeof ResourceViewer>[0]['data'];
-
-const pmtilesDataWithGeometry = {
-  attributes: { dct_references_s: {} },
-  meta: {
-    ui: {
-      viewer: {
-        protocol: 'pmtiles',
-        endpoint: 'https://example.com/test.pmtiles',
-        geometry: {
-          type: 'Polygon',
-          coordinates: [
-            [
-              [-93.3291, 44.8908],
-              [-93.3291, 45.0512],
-              [-93.1943, 45.0512],
-              [-93.1943, 44.8908],
-              [-93.3291, 44.8908],
-            ],
-          ],
-        },
-      },
-    },
-  },
-} as Parameters<typeof ResourceViewer>[0]['data'];
-
-const iiifImageDataWithoutGeometry = {
-  attributes: { dct_references_s: {} },
-  meta: {
-    ui: {
-      viewer: {
-        protocol: 'iiif_image',
-        endpoint:
-          'https://s3.amazonaws.com/ogm-metadata-studio/uploads/unr-74479f22-0e6b-4c13-b376-0195a7461525/iiif/info.json',
-      },
-    },
-  },
-} as Parameters<typeof ResourceViewer>[0]['data'];
-
-const iiifManifestData = {
-  attributes: { dct_references_s: {} },
-  meta: {
-    ui: {
-      viewer: {
-        protocol: 'iiif_manifest',
-        endpoint: 'https://example.com/iiif/manifest.json',
-      },
-    },
-  },
-} as Parameters<typeof ResourceViewer>[0]['data'];
-
-const iiifManifestDataWithGeometry = {
-  attributes: { dct_references_s: {} },
-  meta: {
-    ui: {
-      viewer: {
-        protocol: 'iiif_manifest',
-        endpoint: 'https://example.com/iiif/manifest.json',
-        geometry: {
-          type: 'Polygon',
-          coordinates: [
-            [
-              [-117, 36.75],
-              [-116.75, 36.75],
-              [-116.75, 37],
-              [-117, 37],
-              [-117, 36.75],
-            ],
-          ],
-        },
-      },
-    },
-  },
-} as Parameters<typeof ResourceViewer>[0]['data'];
-
-const wmsDataWithGeometry = {
-  attributes: {
-    dct_references_s: {},
-    ogm: {
-      id: 'cook-county-contours',
-      gbl_wxsIdentifier_s: 'Contours',
-    },
-  },
-  meta: {
-    ui: {
-      viewer: {
-        protocol: 'wms',
-        endpoint:
-          'https://example.com/cook-county/services/contours/MapServer/WMSServer',
-        geometry: {
-          type: 'Polygon',
-          coordinates: [
-            [
-              [-88.2, 41.6],
-              [-88.2, 42.2],
-              [-87.4, 42.2],
-              [-87.4, 41.6],
-              [-88.2, 41.6],
-            ],
-          ],
-        },
-      },
-    },
-  },
-} as Parameters<typeof ResourceViewer>[0]['data'];
-
-const secondWmsDataWithGeometry = {
-  attributes: {
-    dct_references_s: {},
-    ogm: {
-      id: 'cook-county-zoning',
-      gbl_wxsIdentifier_s: 'Zoning',
-    },
-  },
-  meta: {
-    ui: {
-      viewer: {
-        protocol: 'wms',
-        endpoint:
-          'https://example.com/cook-county/services/zoning/MapServer/WMSServer',
-        geometry: {
-          type: 'Polygon',
-          coordinates: [
-            [
-              [-88.0, 41.7],
-              [-88.0, 42.0],
-              [-87.5, 42.0],
-              [-87.5, 41.7],
-              [-88.0, 41.7],
-            ],
-          ],
-        },
-      },
-    },
-  },
-} as Parameters<typeof ResourceViewer>[0]['data'];
-
-async function flushReactWork() {
-  for (let i = 0; i < 4; i += 1) {
-    await act(async () => {
-      await Promise.resolve();
-    });
-  }
+  };
 }
 
 describe('ResourceViewer', () => {
-  let rectSpy: ReturnType<typeof vi.spyOn>;
-
   beforeEach(() => {
-    vi.useFakeTimers();
-    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
-      cb(0);
-      return 1;
-    });
-    vi.stubGlobal('cancelAnimationFrame', vi.fn());
-    vi.stubGlobal(
-      'ResizeObserver',
-      class ResizeObserver {
-        observe = vi.fn();
-        disconnect = vi.fn();
-      }
-    );
-    rectSpy = vi
-      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
-      .mockReturnValue({
-        width: 1094,
-        height: 600,
-        top: 0,
-        left: 0,
-        right: 1094,
-        bottom: 600,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      } as DOMRect);
-  });
-
-  afterEach(() => {
-    window.history.replaceState(null, '', '/');
-    rectSpy.mockRestore();
-    vi.useRealTimers();
-    vi.unstubAllGlobals();
     vi.clearAllMocks();
-    mocks.map.getSize.mockReturnValue(undefined);
-    mocks.view.getCenterInternal.mockReturnValue([-10381844.95, 5616966.0]);
-    mocks.overlaySource.getState.mockReturnValue('ready');
-    mocks.geoTiffSource.getView.mockResolvedValue({
-      projection: {
-        getCode: () => 'EPSG:26911',
-      },
+    loadRecord.mockResolvedValue(undefined);
+  });
+  it.each([
+    'wms',
+    'cog',
+    'pmtiles',
+    'iiif_image',
+    'iiif_manifest',
+    'arcgis_feature_layer',
+    'open_index_map',
+  ])('loads %s without requiring geometry', async (protocol) => {
+    const { container } = render(
+      <ResourceViewer data={resource('first', protocol)} pageValue="SHOW" />
+    );
+    await waitFor(() => expect(loadRecord).toHaveBeenCalledOnce());
+    expect(makeRecord.mock.calls[0][0]).toMatchObject({
+      id: 'first',
+      gbl_mdVersion_s: 'Aardvark',
+    });
+    expect(container.querySelector('ogm-viewer')).toHaveAttribute(
+      'aria-label',
+      'Resource preview'
+    );
+    expect(container.querySelector('[data-controller]')).toBeNull();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+  it('replaces the component on record navigation', async () => {
+    const { container, rerender } = render(
+      <ResourceViewer data={resource('first')} pageValue="SHOW" />
+    );
+    await waitFor(() => expect(loadRecord).toHaveBeenCalledOnce());
+    const first = container.querySelector('ogm-viewer');
+    rerender(<ResourceViewer data={resource('second')} pageValue="SHOW" />);
+    await waitFor(() => expect(loadRecord).toHaveBeenCalledTimes(2));
+    expect(container.querySelector('ogm-viewer')).not.toBe(first);
+    expect(makeRecord.mock.calls[1][0]).toMatchObject({
+      id: 'second',
+      gbl_wxsIdentifier_s: 'second',
     });
   });
-
-  describe('IIIF viewer bootstrap', () => {
-    it('routes IIIF image services to the local Leaflet image viewer', async () => {
-      const fetchMock = vi.fn().mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({
-          '@context': 'http://iiif.io/api/image/2/context.json',
-          '@id': 'https://example.com/iiif',
-          width: 1200,
-          height: 800,
-          profile: ['http://iiif.io/api/image/2/level0.json'],
-          tiles: [{ width: 512, scaleFactors: [1, 2, 4] }],
-        }),
-      });
-      vi.stubGlobal('fetch', fetchMock);
-
-      const { container } = render(
-        <ResourceViewer data={iiifImageDataWithoutGeometry} pageValue="SHOW" />
-      );
-
-      await flushReactWork();
-      await act(async () => {
-        await vi.runAllTimersAsync();
-      });
-
-      expect(container.querySelector('iframe.viewer')).toBeNull();
-      expect(container.querySelector('#leaflet-viewer')).toBeNull();
-      expect(container.querySelector('.leaflet-container')).not.toBeNull();
-      expect(fetchMock).toHaveBeenCalledWith(
-        'https://s3.amazonaws.com/ogm-metadata-studio/uploads/unr-74479f22-0e6b-4c13-b376-0195a7461525/iiif/info.json',
-        {
-          headers: {
-            Accept: 'application/json',
-          },
-        }
-      );
-    });
-
-    it('routes IIIF Presentation manifests through a themed hash-routed iframe', async () => {
-      window.history.replaceState(
-        null,
-        '',
-        '/unr/#/resources/unr-74479f22-0e6b-4c13-b376-0195a7461525'
-      );
-
-      const { container } = render(
-        <ResourceViewer data={iiifManifestData} pageValue="SHOW" />
-      );
-
-      await flushReactWork();
-      await act(async () => {
-        await vi.runAllTimersAsync();
-      });
-
-      const iframe = container.querySelector('iframe.viewer');
-      expect(iframe).not.toBeNull();
-      expect(iframe?.getAttribute('sandbox')).toBe(
-        'allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox allow-downloads'
-      );
-      expect(iframe).toHaveAttribute('allow', 'fullscreen');
-      expect(iframe).toHaveAttribute('allowfullscreen');
-
-      const src = iframe?.getAttribute('src') || '';
-      const miradorUrl = new URL(src);
-      expect(miradorUrl.pathname).toBe('/unr/');
-      expect(miradorUrl.search).toBe('');
-      expect(miradorUrl.hash).toMatch(/^#\/mirador\?/);
-
-      const hashParams = new URLSearchParams(miradorUrl.hash.split('?')[1]);
-      expect(hashParams.get('manifest')).toBe(
-        'https://example.com/iiif/manifest.json'
-      );
-      expect(iframe).not.toHaveAttribute('srcdoc');
-    });
+  it('reports viewer bootstrap failures', async () => {
+    loadRecord.mockRejectedValueOnce(new Error('Unavailable'));
+    render(<ResourceViewer data={resource('failed')} pageValue="SHOW" />);
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Unable to load the resource preview.'
+    );
   });
-
-  describe('OpenLayers viewer bootstrap', () => {
-    it('fits a COG map using the rendered element size when map size is unavailable', async () => {
-      render(<ResourceViewer data={cogDataWithGeometry} pageValue="SHOW" />);
-
-      await act(async () => {
-        await vi.runAllTimersAsync();
-      });
-
-      expect(mocks.olMap).toHaveBeenCalled();
-      expect(mocks.geoTiff).toHaveBeenCalledWith({
-        sources: [{ url: 'https://example.com/cog.tif' }],
-        convertToRGB: true,
-      });
-      expect(mocks.setViewportSize).toHaveBeenCalledWith([1094, 600]);
-      expect(mocks.fitInternal).toHaveBeenCalled();
-      expect(mocks.fitInternal.mock.calls[0][1]).toMatchObject({
-        size: [1094, 600],
-        maxZoom: 19,
-      });
-    });
-
-    it('adds a stable resource version to COG URLs before loading GeoTIFF data', async () => {
-      render(
-        <ResourceViewer data={cogDataWithResourceVersion} pageValue="SHOW" />
-      );
-
-      await act(async () => {
-        await vi.runAllTimersAsync();
-      });
-
-      expect(mocks.geoTiff).toHaveBeenCalled();
-      const call = mocks.geoTiff.mock.calls[0][0];
-      const url = new URL(call.sources[0].url);
-      expect(url.origin + url.pathname).toBe('https://example.com/cog.tif');
-      expect(url.searchParams.get('ogm_v')).toBe(
-        'unr-06625ac6-4cee-4eda-aea3-bfd18a903aed:2026-05-17T15:11:10.701000'
-      );
-    });
-
-    it('boots PMTiles through the local layer path and enables geographic mode', async () => {
-      render(
-        <ResourceViewer data={pmtilesDataWithGeometry} pageValue="SHOW" />
-      );
-
-      await act(async () => {
-        await vi.runAllTimersAsync();
-      });
-
-      expect(mocks.useGeographic).toHaveBeenCalled();
-      expect(mocks.pmtilesVectorSource).toHaveBeenCalledWith({
-        url: 'https://example.com/test.pmtiles',
-      });
-      expect(mocks.vectorTileLayer).toHaveBeenCalled();
-      expect(mocks.fitInternal).toHaveBeenCalled();
-    });
-  });
-
-  describe('Leaflet-backed viewer remounts', () => {
-    it('replaces the viewer container when the resource changes', async () => {
-      const { rerender, container } = render(
-        <ResourceViewer data={wmsDataWithGeometry} pageValue="SHOW" />
-      );
-
-      await act(async () => {});
-
-      const firstViewer = container.querySelector('#leaflet-viewer');
-      expect(firstViewer).not.toBeNull();
-      expect(
-        firstViewer?.getAttribute('data-leaflet-viewer-layer-id-value')
-      ).toBe('Contours');
-
-      rerender(
-        <ResourceViewer data={secondWmsDataWithGeometry} pageValue="SHOW" />
-      );
-
-      await act(async () => {});
-
-      const secondViewer = container.querySelector('#leaflet-viewer');
-      expect(secondViewer).not.toBeNull();
-      expect(secondViewer).not.toBe(firstViewer);
-      expect(
-        secondViewer?.getAttribute('data-leaflet-viewer-layer-id-value')
-      ).toBe('Zoning');
-      expect(secondViewer?.getAttribute('data-leaflet-viewer-url-value')).toBe(
-        'https://example.com/cook-county/services/zoning/MapServer/WMSServer'
-      );
-    });
+  it('isolates oEmbed HTML from the app', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          html: '<p>Embedded content</p>',
+        })
+      )
+    );
+    const { container } = render(
+      <ResourceViewer data={resource('embed', 'oembed')} pageValue="SHOW" />
+    );
+    await waitFor(() =>
+      expect(container.querySelector('iframe')).not.toBeNull()
+    );
+    expect(container.querySelector('iframe')).toHaveAttribute(
+      'sandbox',
+      'allow-scripts allow-popups allow-popups-to-escape-sandbox'
+    );
+    expect(container.querySelector('ogm-viewer')).toBeNull();
+    fetchSpy.mockRestore();
   });
 });

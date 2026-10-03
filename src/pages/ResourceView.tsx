@@ -1,3 +1,4 @@
+import { hasResourcePreview } from '../utils/ogmViewerRecord';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Seo } from '../components/Seo';
 import { useParams, Link, useLocation, useNavigate } from 'react-router';
@@ -116,44 +117,6 @@ function getSimilarItemIds(resource: ResourceData | null): string[] {
         .map((item) => item?.id)
         .filter((itemId): itemId is string => Boolean(itemId))
     )
-  );
-}
-
-// New component for index map
-function IndexMap() {
-  return <div className="viewer-information"></div>;
-}
-
-// New component for the attribute table
-function AttributeTable() {
-  return (
-    <div id="table-container" className="w-full">
-      <table id="attribute-table" className="w-full table-auto border-collapse">
-        <thead className="bg-gray-50">
-          <tr>
-            <th
-              scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              Attribute
-            </th>
-            <th
-              scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              Value
-            </th>
-          </tr>
-        </thead>
-        <tbody className="attribute-table-body bg-white divide-y divide-gray-200">
-          <tr className="hover:bg-gray-50">
-            <td className="border px-4 py-2" colSpan={2}>
-              <em>Click on map to inspect values</em>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
   );
 }
 
@@ -573,7 +536,6 @@ export function ResourceView({
   // const geometry = data?.data?.meta?.ui?.viewer?.geometry;
 
   // Extract data from the new structure
-  const viewerProtocol = data?.meta?.ui?.viewer?.protocol;
   const dataDictionaries = data?.attributes?.b1g?.data_dictionaries || [];
 
   // Open Graph / Twitter card image: prefer thumbnail; when none or placeholder, use static map when available
@@ -688,20 +650,13 @@ export function ResourceView({
 
                 {/* Viewer section */}
                 <div className="lg:col-span-8 space-y-6">
-                  {viewerProtocol && (
+                  {hasResourcePreview(data) && (
                     <div className="bg-white rounded-lg shadow-md overflow-hidden">
                       <div className="">
                         <ResourceViewer data={data} pageValue="SHOW" />
                       </div>
                     </div>
                   )}
-
-                  {/* Conditionally render the attribute table if the protocol is 'wms' or 'arcgis_feature_layer' */}
-                  {(viewerProtocol === 'wms' ||
-                    viewerProtocol === 'arcgis_feature_layer') && (
-                    <AttributeTable />
-                  )}
-                  {viewerProtocol === 'open_index_map' && <IndexMap />}
 
                   {/* Add Full Details table */}
                   <FullDetailsTable

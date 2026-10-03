@@ -102,6 +102,8 @@ export const messages = {
     },
     resource: {
       viewerLoadError: 'Unable to load the image viewer.',
+      previewLoadError: 'Unable to load the resource preview.',
+      previewLabel: 'Resource preview',
     },
     search: {
       customArea: 'Custom area',
@@ -251,6 +253,8 @@ export const messages = {
     },
     resource: {
       viewerLoadError: 'No se pudo cargar el visor de imágenes.',
+      previewLoadError: 'No se pudo cargar la vista previa del recurso.',
+      previewLabel: 'Vista previa del recurso',
     },
     search: {
       customArea: 'Área personalizada',

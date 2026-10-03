@@ -59,6 +59,7 @@
     "lucide-react": "^0.544.0",
     "mirador": "4.0.0",
     "mirador-dl-plugin": "1.0.0",
+    "ogm-viewer": "^1.5.0",
     "opentelemetry-instrumentation-remix": "^0.8.0",
     "proj4": "^2.20.2",
     "react": "^18.3.1",

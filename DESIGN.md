@@ -183,6 +183,7 @@ The overall impression should be sturdy, quiet, and intentionally understated.
 - **Facet Controls and Chips:** Filters should read as tools for narrowing a catalog, not as playful tags. Use calm backgrounds, visible selection states, and generous hit areas.
 - **Result Cards and Lists:** Lead with title, resource type, institution, and thumbnail when available. Metadata should support the title, not compete with it.
 - **Maps:** Base maps, hex maps, and overlays should stay visually calm. The cartographic layer should help orientation and discovery, not overwhelm the surrounding UI. Empty, loading, and no-geometry states should remain legible and useful.
+- **Resource previews:** OGM Viewer owns the map/image tabs, layer controls, fullscreen mode, and feature inspection within the existing resource preview frame. Use its light theme to match the page, hide its duplicate record title, and keep the frame full-width at 600px high. Discovery and homepage maps retain their existing presentation.
 - **Metadata Tables:** Favor alignment, consistent label treatment, and easy copyability. Dense detail is acceptable if it stays well grouped.
 - **Footer:** The footer is a utility space for partner links, help, policies, localization, and optional theme switching. It should feel structured and dependable rather than promotional.
 - A branded footer may use photography or a stronger atmospheric treatment if the information hierarchy stays clear and text contrast remains solid.

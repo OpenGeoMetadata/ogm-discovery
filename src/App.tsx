@@ -41,6 +41,8 @@ function App() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    // Resource previews manage their own OGM Viewer lifecycle.
+    if (location.pathname.startsWith('/resources/')) return;
 
     let cancelled = false;
 
@@ -87,7 +89,7 @@ function App() {
     return () => {
       cancelled = true;
     };
-  }, [location.key]);
+  }, [location.key, location.pathname]);
 
   return (
     <HelmetProvider>

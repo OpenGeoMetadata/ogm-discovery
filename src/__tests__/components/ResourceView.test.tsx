@@ -1,3 +1,5 @@
+vi.mock('ogm-viewer', () => ({}));
+vi.mock('ogm-viewer/lib', () => ({ OgmRecord: vi.fn() }));
 import { render, screen, waitFor } from '@testing-library/react';
 import { axeWithWCAG22 } from '../../test-utils/axe';
 import userEvent from '@testing-library/user-event';
@@ -860,29 +862,7 @@ describe('ResourceView Component', () => {
       expect(viewerContainer).toBeInTheDocument();
     });
 
-    it('renders AttributeTable when protocol is wms', async () => {
-      render(
-        <TestWrapper>
-          <ResourceView />
-        </TestWrapper>
-      );
-
-      await waitFor(() => {
-        expect(
-          screen.getByRole('heading', {
-            name: 'Nondigitized paper map with library catalog link',
-          })
-        ).toBeInTheDocument();
-      });
-
-      expect(screen.getByText('Attribute')).toBeInTheDocument();
-      expect(screen.getByText('Value')).toBeInTheDocument();
-      expect(
-        screen.getByText('Click on map to inspect values')
-      ).toBeInTheDocument();
-    });
-
-    it('renders IndexMap when protocol is open_index_map', async () => {
+    it('renders the resource preview for an index map', async () => {
       const resourceWithIndexMap = {
         ...mockResourceData,
         meta: {
@@ -913,7 +893,8 @@ describe('ResourceView Component', () => {
       });
 
       const indexMapContainer = document.querySelector('.viewer-information');
-      expect(indexMapContainer).toBeInTheDocument();
+      expect(indexMapContainer).not.toBeInTheDocument();
+      expect(document.querySelector('ogm-viewer')).toBeInTheDocument();
     });
 
     it('renders LocationMap when geometry is available', async () => {
