@@ -1,3 +1,9 @@
+vi.mock('../../../components/map/HexLayerToggleControl', () => ({
+  HexLayerToggleControl: () => null,
+}));
+vi.mock('../../../components/map/BboxRectangleSelector', () => ({
+  BboxRectangleSelector: () => null,
+}));
 /**
  * Accessibility tests for the Featured resources carousel on the homepage.
  * Mocks map/Leaflet so the carousel UI renders and can be tested with axe.
@@ -19,9 +25,12 @@ vi.mock('../../../components/map/MapGeosearchControl', () => ({
   MapGeosearchControl: () => <div data-testid="homepage-map-geosearch" />,
 }));
 
+vi.mock('../../../components/map/GeometryLayer', () => ({
+  GeometryLayer: () => null,
+}));
 const mockPane = document.createElement('div');
-vi.mock('react-leaflet', () => ({
-  MapContainer: ({ children }: { children: React.ReactNode }) => (
+vi.mock('../../../components/map/MapLibreMap', () => ({
+  MapLibreMap: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="map-container">{children}</div>
   ),
   TileLayer: () => null,
@@ -38,6 +47,7 @@ vi.mock('react-leaflet', () => ({
       getSouthWest: () => ({ lat: 30, lng: -100 }),
     }),
     getZoom: () => 5,
+    getCenter: () => ({ lat: 44, lng: -80 }),
     whenReady: (cb: () => void) => cb(),
     on: () => {},
     off: () => {},

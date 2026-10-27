@@ -202,3 +202,24 @@ footer:
   copyright:
     en: OpenGeoMetadata fictitious starter theme.
   show_api_debug: true
+
+# Discovery-owned interactive maps. Existing hero/camera coordinates retain
+# their historical [latitude, longitude] and 256px zoom conventions.
+map:
+  default_basemap: openFreeMap
+  fallback_basemap: openFreeMap
+  viewer_light_style: https://tiles.openfreemap.org/styles/liberty
+  viewer_dark_style: https://tiles.openfreemap.org/styles/dark
+  basemaps:
+    - id: openFreeMap
+      label:
+        en: OpenFreeMap Liberty
+      style_url: https://tiles.openfreemap.org/styles/liberty
+    - id: openFreeMapPositron
+      label:
+        en: OpenFreeMap Positron
+      style_url: https://tiles.openfreemap.org/styles/positron
+    - id: openFreeMapDark
+      label:
+        en: OpenFreeMap Dark
+      style_url: https://tiles.openfreemap.org/styles/dark

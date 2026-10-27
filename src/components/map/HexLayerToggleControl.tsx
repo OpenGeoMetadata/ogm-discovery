@@ -1,8 +1,9 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 import { createPortal } from 'react-dom';
-import L from 'leaflet';
+import type { Map as GLMap } from 'maplibre-gl';
+import { MapLibreContext, useControlContainer } from './MapLibreMap';
+import { useI18n } from '../../hooks/useI18n';
 import { Hexagon, Table } from 'lucide-react';
-import { LeafletContext } from '@react-leaflet/core';
 import { HexTableModal } from './HexTableModal';
 
 const MAP_CONTROL_ICON_PROPS = {
@@ -19,7 +20,7 @@ interface HexLayerToggleControlProps {
   searchQuery?: string;
   queryString?: string;
   loading?: boolean;
-  mapInstance?: L.Map | null;
+  mapInstance?: GLMap | null;
   stackOrder?: 'default' | 'beforeBasemap';
 }
 
@@ -32,48 +33,12 @@ export function HexLayerToggleControl({
   queryString,
   loading,
   mapInstance,
-  stackOrder = 'default',
 }: HexLayerToggleControlProps) {
-  const context = useContext(LeafletContext);
-  const map = context?.map ?? mapInstance ?? null;
-  const [container, setContainer] = useState<HTMLDivElement | null>(null);
+  const context = useContext(MapLibreContext);
+  const map = context ?? mapInstance ?? null;
+  const container = useControlContainer(map);
+  const { t } = useI18n();
   const [isTableOpen, setIsTableOpen] = useState(false);
-
-  useEffect(() => {
-    if (!map) return;
-
-    const CustomControl = L.Control.extend({
-      onAdd: () => {
-        const div = document.createElement('div');
-        div.className = 'leaflet-control leaflet-bar';
-        L.DomEvent.disableClickPropagation(div);
-        return div;
-      },
-    });
-
-    const control = new CustomControl({
-      position: 'topleft' as L.ControlPosition,
-    });
-    control.addTo(map);
-    const controlContainer = control.getContainer();
-    if (stackOrder === 'beforeBasemap') {
-      const cornerContainer = controlContainer?.parentElement;
-      if (cornerContainer && controlContainer) {
-        const basemapControl = cornerContainer.querySelector(
-          '.leaflet-control-layers'
-        );
-        if (basemapControl) {
-          cornerContainer.insertBefore(controlContainer, basemapControl);
-        }
-      }
-    }
-    setContainer(controlContainer);
-
-    return () => {
-      control.remove();
-      setContainer(null);
-    };
-  }, [map, stackOrder]);
 
   if (!container) return null;
 
@@ -98,9 +63,9 @@ export function HexLayerToggleControl({
               setIsTableOpen(false);
             }
           }}
-          aria-label={enabled ? 'Hide hex map layer' : 'Show hex map layer'}
-          title={enabled ? 'Hide hex map layer' : 'Show hex map layer'}
-          className={`leaflet-control-custom-button focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors ${
+          aria-label={t(enabled ? 'map.hideHex' : 'map.showHex')}
+          title={t(enabled ? 'map.hideHex' : 'map.showHex')}
+          className={`discovery-control-button focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors ${
             enabled ? 'bg-blue-50 hover:bg-blue-100' : ''
           }`}
         >
@@ -116,11 +81,9 @@ export function HexLayerToggleControl({
           disabled={!enabled}
           aria-haspopup="dialog"
           aria-expanded={isTableOpen}
-          aria-label={
-            isTableOpen ? 'Close hex data table' : 'View hex data as table'
-          }
-          title={isTableOpen ? 'Close hex data table' : 'View hex table'}
-          className="leaflet-control-custom-button focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors disabled:cursor-not-allowed disabled:text-gray-300"
+          aria-label={t(isTableOpen ? 'map.closeHexTable' : 'map.hexTable')}
+          title={t(isTableOpen ? 'map.closeHexTable' : 'map.hexTable')}
+          className="discovery-control-button focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors disabled:cursor-not-allowed disabled:text-gray-300"
         >
           <Table {...MAP_CONTROL_ICON_PROPS} className="text-gray-700" />
         </button>

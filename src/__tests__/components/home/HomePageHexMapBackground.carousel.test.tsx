@@ -1,3 +1,6 @@
+vi.mock('../../../components/map/BboxRectangleSelector', () => ({
+  BboxRectangleSelector: () => null,
+}));
 /**
  * Behavior tests for the Featured resources carousel on the homepage.
  * Covers: thumbnail selection (no auto-start), Play/Pause, animation from selected item.
@@ -49,9 +52,12 @@ vi.mock('../../../components/map/MapGeosearchControl', () => ({
   MapGeosearchControl: () => <div data-testid="homepage-map-geosearch" />,
 }));
 
+vi.mock('../../../components/map/GeometryLayer', () => ({
+  GeometryLayer: () => null,
+}));
 const mockPane = document.createElement('div');
-vi.mock('react-leaflet', () => ({
-  MapContainer: ({ children }: { children: React.ReactNode }) => (
+vi.mock('../../../components/map/MapLibreMap', () => ({
+  MapLibreMap: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="map-container">{children}</div>
   ),
   TileLayer: () => null,
@@ -67,8 +73,8 @@ vi.mock('react-leaflet', () => ({
       getNorthEast: () => ({ lat: 50, lng: -80 }),
       getSouthWest: () => ({ lat: 30, lng: -100 }),
     }),
-    getCenter: () => ({ lat: 44.9778, lng: -93.265 }),
     getZoom: () => 5,
+    getCenter: () => ({ lat: 44, lng: -80 }),
     whenReady: (cb: () => void) => cb(),
     on: () => {},
     off: () => {},

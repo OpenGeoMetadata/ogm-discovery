@@ -1,321 +1,97 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
+import { MemoryRouter, useLocation } from 'react-router';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+vi.mock('../../services/api', () => ({
+  fetchMapH3: vi.fn(),
+  fetchNominatimSearch: vi.fn(),
+  getApiBasePath: () => '/api/v1',
+}));
+vi.mock('maplibre-gl', () => import('../helpers/maplibre'));
+import { instances } from '../helpers/maplibre';
+import { MapProvider } from '../../context/MapContext';
 import { GeospatialFilterMap } from '../../components/search/GeospatialFilterMap.client';
 import { fetchMapH3 } from '../../services/api';
-
-const mockControl = { addTo: vi.fn(), remove: vi.fn() };
-const mockMapInstance = {
-  setView: vi.fn(),
-  fitBounds: vi.fn(),
-  on: vi.fn(),
-  off: vi.fn(),
-  remove: vi.fn(),
-  invalidateSize: vi.fn(),
-  addLayer: vi.fn(),
-  removeLayer: vi.fn(),
-  hasLayer: vi.fn().mockReturnValue(false),
-  getZoom: vi.fn().mockReturnValue(6),
-  getBounds: vi.fn().mockReturnValue({
-    getNorthEast: () => ({ lat: 45, lng: -104 }),
-    getSouthWest: () => ({ lat: 41, lng: -109 }),
-    getWest: () => -109,
-    getSouth: () => 41,
-    getEast: () => -104,
-    getNorth: () => 45,
-  }),
-};
-
-vi.mock('leaflet', () => {
-  return {
-    default: {
-      map: vi.fn(() => mockMapInstance),
-      tileLayer: vi.fn(() => ({ addTo: vi.fn() })),
-      rectangle: vi.fn(() => ({ addTo: vi.fn() })),
-      geoJSON: vi.fn(() => ({ addTo: vi.fn() })),
-      latLngBounds: vi.fn(() => ({ isValid: () => true })),
-      control: {
-        layers: vi.fn(() => mockControl),
-      },
-    },
-  };
-});
-
-vi.mock('h3-js', () => ({
-  cellToBoundary: vi.fn(() => [
-    [44, -108],
-    [44, -107],
-    [43, -107],
-    [43, -108],
-  ]),
-}));
-
-vi.mock('../../services/api', () => ({
-  fetchMapH3: vi.fn().mockResolvedValue({ hexes: [] }),
-}));
-
-vi.mock('../../components/map/HexTableControl', () => ({
-  HexTableControl: () => <div data-testid="hex-table-control" />,
-}));
-
-vi.mock('../../components/map/HexLayerToggleControl', () => ({
-  HexLayerToggleControl: ({
-    enabled,
-    onToggle,
-  }: {
-    enabled: boolean;
-    onToggle: (enabled: boolean) => void;
-  }) => (
-    <div>
-      <div data-testid="hex-enabled-state">{String(enabled)}</div>
-      <button
-        type="button"
-        data-testid="hex-toggle-btn"
-        onClick={() => onToggle(!enabled)}
-      >
-        Toggle hex
-      </button>
-    </div>
-  ),
-}));
-
-vi.mock('../../components/map/MapGeosearchControl', () => ({
-  MapGeosearchControl: () => <div data-testid="map-geosearch-control" />,
-}));
-
-function SearchLocationProbe() {
-  const location = useLocation();
-  return <div data-testid="location-search">{location.search}</div>;
+function Location() {
+  return <output data-testid="location">{useLocation().search}</output>;
 }
-
-describe('GeospatialFilterMap client', () => {
+function setup(query = '') {
+  return render(
+    <MemoryRouter initialEntries={[`/search${query}`]}>
+      <MapProvider>
+        <GeospatialFilterMap />
+        <Location />
+      </MapProvider>
+    </MemoryRouter>
+  );
+}
+const bbox =
+  '?include_filters[geo][type]=bbox&include_filters[geo][top_left][lat]=50&include_filters[geo][top_left][lon]=-110&include_filters[geo][bottom_right][lat]=30&include_filters[geo][bottom_right][lon]=-80';
+describe('Location filter', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.useRealTimers();
+    instances.length = 0;
     localStorage.clear();
-    class MockIntersectionObserver {
-      observe() {}
-      disconnect() {}
-    }
-    Object.defineProperty(window, 'IntersectionObserver', {
-      writable: true,
-      configurable: true,
-      value: MockIntersectionObserver,
-    });
-  });
-
-  it('waits until window load before issuing the initial hex request', async () => {
-    vi.useFakeTimers();
-
-    const originalReadyState = document.readyState;
-    Object.defineProperty(document, 'readyState', {
-      configurable: true,
-      value: 'loading',
-    });
-
-    render(
-      <MemoryRouter initialEntries={['/search?q=chicago&view=gallery']}>
-        <Routes>
-          <Route path="/search" element={<GeospatialFilterMap />} />
-        </Routes>
-      </MemoryRouter>
-    );
-
-    act(() => {
-      vi.advanceTimersByTime(2000);
-    });
-
-    expect(fetchMapH3).not.toHaveBeenCalled();
-
-    fireEvent(window, new Event('load'));
-
-    act(() => {
-      vi.advanceTimersByTime(249);
-    });
-
-    expect(fetchMapH3).not.toHaveBeenCalled();
-
-    await act(async () => {
-      vi.advanceTimersByTime(1);
-      await Promise.resolve();
-    });
-
-    expect(fetchMapH3).toHaveBeenCalledTimes(1);
-
-    Object.defineProperty(document, 'readyState', {
-      configurable: true,
-      value: originalReadyState,
-    });
-  });
-
-  it('fits to result hexes on the initial search load when no bbox is active', async () => {
-    vi.useFakeTimers();
-    vi.mocked(fetchMapH3).mockResolvedValueOnce({
-      hexes: [{ h3: '8928308280fffff', count: 12 }],
-    });
-    const originalReadyState = document.readyState;
-    Object.defineProperty(document, 'readyState', {
-      configurable: true,
-      value: 'complete',
-    });
-
-    render(
-      <MemoryRouter initialEntries={['/search?q=st%20paul&view=gallery']}>
-        <Routes>
-          <Route path="/search" element={<GeospatialFilterMap />} />
-        </Routes>
-      </MemoryRouter>
-    );
-
-    await act(async () => {
-      vi.advanceTimersByTime(250);
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    expect(fetchMapH3).toHaveBeenCalledTimes(1);
-    expect(mockMapInstance.fitBounds).toHaveBeenCalledWith(
-      expect.anything(),
-      {
-        padding: [24, 24],
-        maxZoom: 14,
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
       }
     );
-
-    Object.defineProperty(document, 'readyState', {
-      configurable: true,
-      value: originalReadyState,
+    vi.mocked(fetchMapH3).mockResolvedValue({
+      hexes: [],
+      resolution: 2,
+      globalCount: 0,
     });
   });
-
-  it('forwards router search params to the hex request in hash-routed deployments', async () => {
-    vi.useFakeTimers();
-    const originalReadyState = document.readyState;
-    Object.defineProperty(document, 'readyState', {
-      configurable: true,
-      value: 'complete',
-    });
-    const advQuery = JSON.stringify([
-      { op: 'AND', f: 'dct_title_s', q: 'water' },
-      { op: 'AND', f: 'dcat_theme_sm', q: 'Inland Waters' },
-    ]);
-
-    render(
-      <MemoryRouter
-        initialEntries={[
-          `/search?adv_q=${encodeURIComponent(advQuery)}&q=&view=gallery`,
-        ]}
-      >
-        <Routes>
-          <Route path="/search" element={<GeospatialFilterMap />} />
-        </Routes>
-      </MemoryRouter>
+  it('forwards active query and filters to H3', async () => {
+    setup('?q=water&include_filters[schema_provider_s][]=Campus');
+    await waitFor(() =>
+      expect(fetchMapH3).toHaveBeenCalledWith(
+        'water',
+        expect.any(String),
+        2,
+        expect.stringContaining('Campus')
+      )
     );
-
-    await act(async () => {
-      vi.advanceTimersByTime(250);
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    expect(fetchMapH3).toHaveBeenCalledTimes(1);
-    const queryString = vi.mocked(fetchMapH3).mock.calls[0][3];
-    expect(queryString).toBeDefined();
-    const forwardedParams = new URLSearchParams(queryString);
-    expect(forwardedParams.get('adv_q')).toBe(advQuery);
-    expect(forwardedParams.get('q')).toBe('');
-
-    Object.defineProperty(document, 'readyState', {
-      configurable: true,
-      value: originalReadyState,
-    });
   });
-
-  it('updates geo relation to within when toggle is clicked', async () => {
-    render(
-      <MemoryRouter
-        initialEntries={[
-          '/search?include_filters[geo][type]=bbox&include_filters[geo][field]=dcat_bbox&include_filters[geo][top_left][lat]=45&include_filters[geo][top_left][lon]=-109&include_filters[geo][bottom_right][lat]=41&include_filters[geo][bottom_right][lon]=-104&include_filters[geo][relation]=intersects',
-        ]}
-      >
-        <Routes>
-          <Route
-            path="/search"
-            element={
-              <>
-                <GeospatialFilterMap />
-                <SearchLocationProbe />
-              </>
-            }
-          />
-        </Routes>
-      </MemoryRouter>
+  it('updates within/overlap without losing bounds', () => {
+    setup(bbox);
+    expect(screen.getByRole('button', { name: 'Overlap' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
     );
-
-    const withinButton = await screen.findByRole('button', {
-      name: 'Set map mode to within',
-    });
-    fireEvent.click(withinButton);
-
-    await waitFor(() => {
-      const search = screen.getByTestId('location-search').textContent ?? '';
-      const params = new URLSearchParams(search);
-      expect(params.get('include_filters[geo][relation]')).toBe('within');
-    });
+    fireEvent.click(screen.getByRole('button', { name: 'Within' }));
+    expect(
+      decodeURIComponent(screen.getByTestId('location').textContent!)
+    ).toContain('include_filters[geo][relation]=within');
   });
-
-  it('defaults bbox relation mode to overlap when relation is absent', async () => {
-    render(
-      <MemoryRouter
-        initialEntries={[
-          '/search?include_filters[geo][type]=bbox&include_filters[geo][field]=dcat_bbox&include_filters[geo][top_left][lat]=45&include_filters[geo][top_left][lon]=-109&include_filters[geo][bottom_right][lat]=41&include_filters[geo][bottom_right][lon]=-104',
-        ]}
-      >
-        <Routes>
-          <Route
-            path="/search"
-            element={
-              <>
-                <GeospatialFilterMap />
-                <SearchLocationProbe />
-              </>
-            }
-          />
-        </Routes>
-      </MemoryRouter>
+  it('clears only geo filters and resets pagination', () => {
+    setup(`${bbox}&q=water&page=4`);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Clear location filter' })
     );
-
-    const withinButton = await screen.findByRole('button', {
-      name: 'Set map mode to within',
-    });
-    const overlapButton = screen.getByRole('button', {
-      name: 'Set map mode to overlap',
-    });
-
-    expect(withinButton).not.toHaveClass('bg-blue-600');
-    expect(overlapButton).toHaveClass('bg-blue-600');
+    expect(screen.getByTestId('location')).toHaveTextContent('?q=water');
   });
-
-  it('restores and persists hex layer preference via localStorage', async () => {
-    localStorage.setItem('hex_layer_enabled', '0');
-
-    render(
-      <MemoryRouter initialEntries={['/search?q=']}>
-        <Routes>
-          <Route path="/search" element={<GeospatialFilterMap />} />
-        </Routes>
-      </MemoryRouter>
-    );
-
-    expect(await screen.findByTestId('hex-enabled-state')).toHaveTextContent(
-      'false'
-    );
-
-    fireEvent.click(screen.getByTestId('hex-toggle-btn'));
-
-    await waitFor(() => {
-      expect(localStorage.getItem('hex_layer_enabled')).toBe('1');
-    });
-    expect(screen.getByTestId('hex-enabled-state')).toHaveTextContent('true');
+  it('searches the moved viewport only on request', () => {
+    setup('?q=water');
+    act(() => instances.at(-1)!.fire('movestart', { originalEvent: {} }));
+    expect(screen.getByTestId('location')).toHaveTextContent('?q=water');
+    fireEvent.click(screen.getByRole('button', { name: 'Search here' }));
+    expect(
+      decodeURIComponent(screen.getByTestId('location').textContent!)
+    ).toContain('include_filters[geo][top_left][lon]=-110');
+  });
+  it('persists the H3 toggle', () => {
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Hide hex map layer' }));
+    expect(
+      screen.getByRole('button', { name: 'Show hex map layer' })
+    ).toBeInTheDocument();
   });
 });

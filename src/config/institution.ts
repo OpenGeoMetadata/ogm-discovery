@@ -104,7 +104,27 @@ export interface ThemeSpotlightCard {
   reverse?: boolean;
 }
 
+export interface BasemapConfig {
+  id: string;
+  label: LocalizedText;
+  style_url?: string;
+  tiles?: string[];
+  tile_size?: number;
+  max_zoom?: number;
+  attribution?: string;
+  logo?: { src: string; href: string; alt: LocalizedText };
+}
+
+export interface ThemeMapConfig {
+  basemaps?: BasemapConfig[];
+  default_basemap?: string;
+  fallback_basemap?: string;
+  viewer_light_style?: string;
+  viewer_dark_style?: string;
+}
+
 export interface ThemeConfig {
+  map?: ThemeMapConfig;
   id?: ThemeId;
   label?: string;
   site?: {

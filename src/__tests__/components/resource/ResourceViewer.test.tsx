@@ -1,6 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import openStreetMapStyleUrl from '../../../config/openStreetMapStyle.json?url';
 import type { GeoDocument } from '../../../types/api';
 
 const { loadRecord, makeRecord } = vi.hoisted(() => ({
@@ -58,16 +57,16 @@ describe('ResourceViewer', () => {
       gbl_mdVersion_s: 'Aardvark',
     });
     expect(container.querySelector('ogm-viewer')).toHaveAttribute(
+      'light-basemap',
+      'https://tiles.openfreemap.org/styles/liberty'
+    );
+    expect(container.querySelector('ogm-viewer')).toHaveAttribute(
       'aria-label',
       'Resource preview'
     );
     expect(container.querySelector('ogm-viewer')).toHaveAttribute(
-      'light-basemap',
-      openStreetMapStyleUrl
-    );
-    expect(container.querySelector('ogm-viewer')).toHaveAttribute(
       'dark-basemap',
-      openStreetMapStyleUrl
+      'https://tiles.openfreemap.org/styles/dark'
     );
     expect(container.querySelector('[data-controller]')).toBeNull();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();

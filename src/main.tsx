@@ -1,3 +1,5 @@
+import { setWorkerUrl } from 'maplibre-gl';
+import mapWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router';
@@ -8,9 +10,11 @@ import { I18nProvider } from './context/I18nContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { getActiveThemeId } from './config/institution';
 import App from './App.tsx';
-import './config/fixLeafletDefaultIcon';
 import './index.css';
-import './styles/leaflet.css';
+
+// Bundle the MapLibre worker explicitly so Vite dev optimization and subpath
+// deployments both resolve its module dependencies correctly.
+setWorkerUrl(mapWorkerUrl);
 
 const initialThemeId = getActiveThemeId();
 

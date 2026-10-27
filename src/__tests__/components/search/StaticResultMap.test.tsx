@@ -1,40 +1,20 @@
-import { render, screen } from '@testing-library/react';
-
+import { render, screen, waitFor } from '@testing-library/react';
+import { afterEach, expect, it, vi } from 'vitest';
 import { StaticResultMap } from '../../../components/search/StaticResultMap';
 import type { GeoDocument } from '../../../types/api';
-
-describe('StaticResultMap', () => {
-  it('falls back to the geometry static-map endpoint even when geometry is missing', () => {
-    const result: GeoDocument = {
-      id: 'no-geometry-result',
-      type: 'document',
-      attributes: {
-        ogm: {
-          id: 'no-geometry-result',
-          dct_title_s: 'No Geometry Result',
-        },
-      },
-      meta: {
-        ui: {
-          thumbnail_url: null,
-          viewer: {
-            geometry: null,
-          },
-        },
-      },
-    };
-
-    const { container } = render(<StaticResultMap result={result} />);
-
-    const image = container.querySelector(
-      'img[src="/api/v1/static-maps/no-geometry-result/geometry"]'
-    );
-    expect(image).toHaveAttribute(
-      'src',
-      '/api/v1/static-maps/no-geometry-result/geometry'
-    );
-    expect(image).toHaveAttribute('alt', '');
-    expect(image).not.toHaveStyle({ display: 'none' });
-    expect(screen.queryByText('No map data')).not.toBeInTheDocument();
-  });
+afterEach(() => vi.unstubAllGlobals());
+it('shows the unavailable state immediately for missing records instead of retrying', async () => {
+  const fetcher = vi
+    .fn()
+    .mockResolvedValue(new Response(null, { status: 404 }));
+  vi.stubGlobal('fetch', fetcher);
+  vi.stubGlobal('IntersectionObserver', undefined);
+  const result = { id: 'missing', meta: {} } as GeoDocument;
+  const { container } = render(<StaticResultMap result={result} />);
+  await waitFor(() => expect(container.querySelector('img')).toBeNull());
+  expect(fetcher).toHaveBeenCalledTimes(1);
+  expect(fetcher.mock.calls[0][0]).toBe(
+    '/api/v1/static-maps/missing/geometry/native?size=thumbnail'
+  );
+  expect(screen.getByText(/could not be loaded/i)).toBeInTheDocument();
 });

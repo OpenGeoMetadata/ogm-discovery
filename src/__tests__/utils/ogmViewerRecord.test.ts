@@ -104,3 +104,44 @@ describe('hasResourcePreview', () => {
     expect(hasResourcePreview(data)).toBe(false);
   });
 });
+
+describe('Featured overlay protocol references', () => {
+  it.each([
+    ['wms', 'http://www.opengis.net/def/serviceType/ogc/wms'],
+    ['wmts', 'http://www.opengis.net/def/serviceType/ogc/wmts'],
+    [
+      'arcgis_dynamic_map_layer',
+      'urn:x-esri:serviceType:ArcGIS#DynamicMapLayer',
+    ],
+    ['arcgis_feature_layer', 'urn:x-esri:serviceType:ArcGIS#FeatureLayer'],
+    ['arcgis_image_map_layer', 'urn:x-esri:serviceType:ArcGIS#ImageMapLayer'],
+    ['arcgis_tiled_map_layer', 'urn:x-esri:serviceType:ArcGIS#TiledMapLayer'],
+    ['tile_json', 'https://github.com/mapbox/tilejson-spec'],
+    [
+      'tile_map_service',
+      'https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification',
+    ],
+    ['xyz_tiles', 'https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames'],
+    ['open_index_map', 'https://openindexmaps.org'],
+  ])('adapts %s without changing its endpoint', (protocol, reference) => {
+    const data = document();
+    data.meta!.ui!.viewer!.protocol = protocol;
+    const record = toOgmViewerRecord(data);
+    expect(JSON.parse(record.dct_references_s!)[reference]).toBe(
+      'https://example.com/wms'
+    );
+  });
+  it('retains Allmaps annotations derived from a manifest', () => {
+    const data = document();
+    data.meta!.ui!.allmaps = {
+      allmaps_annotated: true,
+      allmaps_manifest_uri: 'https://example.com/manifest.json',
+    };
+    const references = JSON.parse(toOgmViewerRecord(data).dct_references_s!);
+    expect(
+      references['https://iiif.io/api/extension/georef/1/context.json']
+    ).toBe(
+      'https://annotations.allmaps.org/?url=https%3A%2F%2Fexample.com%2Fmanifest.json'
+    );
+  });
+});

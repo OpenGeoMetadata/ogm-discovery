@@ -1,6 +1,7 @@
+import { useTheme } from '../../hooks/useTheme';
+import { OPEN_FREE_MAP_LIGHT, OPEN_FREE_MAP_DARK } from '../../config/basemaps';
 import { createElement, useEffect, useRef, useState } from 'react';
 import type { OgmViewer } from 'ogm-viewer';
-import openStreetMapStyleUrl from '../../config/openStreetMapStyle.json?url';
 import { useI18n } from '../../hooks/useI18n';
 import {
   toOgmViewerRecord,
@@ -52,6 +53,7 @@ function OembedPreview({ endpoint }: { endpoint: string }) {
 }
 
 function OgmPreview({ data }: { data: ViewerDocument }) {
+  const { theme } = useTheme();
   const ref = useRef<OgmViewer | null>(null);
   const { t, locale } = useI18n();
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>(
@@ -98,8 +100,8 @@ function OgmPreview({ data }: { data: ViewerDocument }) {
         ref,
         class: 'viewer block h-[600px] w-full',
         theme: 'light',
-        'light-basemap': openStreetMapStyleUrl,
-        'dark-basemap': openStreetMapStyleUrl,
+        'light-basemap': theme.map?.viewer_light_style || OPEN_FREE_MAP_LIGHT,
+        'dark-basemap': theme.map?.viewer_dark_style || OPEN_FREE_MAP_DARK,
         role: 'region',
         'hide-title': true,
         lang: locale,

@@ -138,7 +138,9 @@ export const BTAA_PARTNER_INSTITUTIONS: PartnerInstitution[] = [
   },
 ];
 
-export function getPartnerInstitutionBySlug(slug: string): PartnerInstitution | undefined {
+export function getPartnerInstitutionBySlug(
+  slug: string
+): PartnerInstitution | undefined {
   return BTAA_PARTNER_INSTITUTIONS.find(
     (institution) => institution.slug === slug
   );
@@ -186,12 +188,15 @@ export function getPartnerInstitutionStaticMapUrl(
 ): string | null {
   if (!institution.campusMap) return null;
 
-  const apiBasePath = getApiBasePath().replace(/\/$/, '');
+  const apiBasePath = (
+    import.meta.env.VITE_STATIC_MAP_API_BASE_URL || getApiBasePath()
+  ).replace(/\/$/, '');
   const params = new URLSearchParams({
+    renderer: 'maplibre',
     lat: String(institution.campusMap.latitude),
     lon: String(institution.campusMap.longitude),
     zoom: String(institution.campusMap.zoom),
   });
 
-  return `${apiBasePath}/static-maps/institutions/${institution.slug}?${params.toString()}`;
+  return `${apiBasePath}/static-maps/institutions/${institution.slug}/native?${params.toString()}`;
 }

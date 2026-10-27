@@ -1,111 +1,74 @@
 import Cookies from 'js-cookie';
-import type L from 'leaflet';
-import openStreetMapStyle from './openStreetMapStyle.json';
+import type { StyleSpecification } from 'maplibre-gl';
+import type { BasemapConfig, ThemeMapConfig } from './institution';
 
-type BasemapDefinition = {
-  label: string;
-  url: string;
-  attribution: string;
-  options?: L.TileLayerOptions;
+export const OPEN_FREE_MAP_LIGHT =
+  'https://tiles.openfreemap.org/styles/liberty';
+export const OPEN_FREE_MAP_DARK = 'https://tiles.openfreemap.org/styles/dark';
+export const DEFAULT_BASEMAPS: BasemapConfig[] = [
+  {
+    id: 'openFreeMap',
+    label: { en: 'OpenFreeMap Liberty' },
+    style_url: OPEN_FREE_MAP_LIGHT,
+  },
+  {
+    id: 'openFreeMapPositron',
+    label: { en: 'OpenFreeMap Positron' },
+    style_url: 'https://tiles.openfreemap.org/styles/positron',
+  },
+  {
+    id: 'openFreeMapDark',
+    label: { en: 'OpenFreeMap Dark' },
+    style_url: OPEN_FREE_MAP_DARK,
+  },
+];
+export const EMPTY_STYLE: StyleSpecification = {
+  version: 8,
+  sources: {},
+  layers: [
+    {
+      id: 'background',
+      type: 'background',
+      paint: { 'background-color': '#f1f3f2' },
+    },
+  ],
 };
-
-const BASEMAP_COOKIE_NAME = 'preferred_basemap';
-const BASEMAP_COOKIE_EXPIRY_DAYS = 365;
-const DEFAULT_BASEMAP_KEY = 'openStreetMap';
-
-const BASEMAP_DEFINITIONS = {
-  openStreetMap: {
-    label: 'OpenStreetMap',
-    url: openStreetMapStyle.sources.openStreetMap.tiles[0],
-    attribution: openStreetMapStyle.sources.openStreetMap.attribution,
-    options: {
-      maxZoom: openStreetMapStyle.sources.openStreetMap.maxzoom,
+export function resolveBasemaps(config?: ThemeMapConfig) {
+  const candidates = config?.basemaps?.filter(
+    (b) => b.id && (b.style_url || b.tiles?.length)
+  );
+  const basemaps = candidates?.length ? candidates : DEFAULT_BASEMAPS;
+  const defaultId = basemaps.some((b) => b.id === config?.default_basemap)
+    ? config!.default_basemap!
+    : basemaps[0].id;
+  const fallback =
+    basemaps.find((b) => b.id === config?.fallback_basemap) ??
+    DEFAULT_BASEMAPS[0];
+  return { basemaps, defaultId, fallback };
+}
+export function getSavedBasemapKey(config?: ThemeMapConfig): string {
+  const { basemaps, defaultId } = resolveBasemaps(config);
+  const saved = Cookies.get('preferred_basemap');
+  return basemaps.some((b) => b.id === saved) ? saved! : defaultId;
+}
+export function saveBasemapKey(key: string) {
+  Cookies.set('preferred_basemap', key, { expires: 365 });
+}
+export function basemapStyle(
+  basemap: BasemapConfig
+): string | StyleSpecification {
+  if (basemap.style_url) return basemap.style_url;
+  return {
+    version: 8,
+    sources: {
+      basemap: {
+        type: 'raster',
+        tiles: basemap.tiles,
+        tileSize: basemap.tile_size ?? 256,
+        maxzoom: basemap.max_zoom ?? 19,
+        attribution: basemap.attribution,
+      },
     },
-  },
-  esriWorldImagery: {
-    label: 'Esri World Imagery',
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attribution:
-      'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-    options: {
-      maxZoom: 18,
-    },
-  },
-} as const satisfies Record<string, BasemapDefinition>;
-
-export type BasemapKey = keyof typeof BASEMAP_DEFINITIONS;
-
-function isBasemapKey(value: string): value is BasemapKey {
-  return Object.prototype.hasOwnProperty.call(BASEMAP_DEFINITIONS, value);
-}
-
-export function getSavedBasemapKey(): BasemapKey {
-  const saved = Cookies.get(BASEMAP_COOKIE_NAME);
-  if (saved && isBasemapKey(saved)) {
-    return saved;
-  }
-  return DEFAULT_BASEMAP_KEY;
-}
-
-function saveBasemapKey(key: BasemapKey): void {
-  Cookies.set(BASEMAP_COOKIE_NAME, key, {
-    expires: BASEMAP_COOKIE_EXPIRY_DAYS,
-  });
-}
-
-export function createBasemapLayer(
-  Leaflet: typeof L,
-  key: BasemapKey
-): L.TileLayer {
-  const config = BASEMAP_DEFINITIONS[key];
-  return Leaflet.tileLayer(config.url, {
-    attribution: config.attribution,
-    ...config.options,
-  });
-}
-
-export function attachBasemapSwitcher(
-  map: L.Map,
-  Leaflet: typeof L,
-  position: L.ControlPosition = 'topleft'
-): () => void {
-  const basemapLayers = {} as Record<BasemapKey, L.TileLayer>;
-  const labeledLayers: Record<string, L.TileLayer> = {};
-
-  (Object.keys(BASEMAP_DEFINITIONS) as BasemapKey[]).forEach((key) => {
-    const layer = createBasemapLayer(Leaflet, key);
-    basemapLayers[key] = layer;
-    labeledLayers[BASEMAP_DEFINITIONS[key].label] = layer;
-  });
-
-  const selectedBasemap = getSavedBasemapKey();
-  basemapLayers[selectedBasemap].addTo(map);
-
-  const control = Leaflet.control.layers(labeledLayers, undefined, {
-    position,
-    collapsed: true,
-  });
-  control.addTo(map);
-
-  const onBaseLayerChange = (event: L.LayersControlEvent) => {
-    const matchedKey = (Object.keys(basemapLayers) as BasemapKey[]).find(
-      (key) => basemapLayers[key] === event.layer
-    );
-    if (matchedKey) {
-      saveBasemapKey(matchedKey);
-    }
-  };
-
-  map.on('baselayerchange', onBaseLayerChange);
-
-  return () => {
-    map.off('baselayerchange', onBaseLayerChange);
-    control.remove();
-    (Object.keys(basemapLayers) as BasemapKey[]).forEach((key) => {
-      const layer = basemapLayers[key];
-      if (map.hasLayer(layer)) {
-        map.removeLayer(layer);
-      }
-    });
+    layers: [{ id: 'basemap', type: 'raster', source: 'basemap' }],
   };
 }

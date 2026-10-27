@@ -1,264 +1,89 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+vi.mock('maplibre-gl', () => import('../../helpers/maplibre'));
+import { instances } from '../../helpers/maplibre';
 import { MapProvider } from '../../../context/MapContext';
-import { MapResultView } from '../../../components/search/MapResultView.client';
+import {
+  MapResultView,
+  spiderOffsets,
+} from '../../../components/search/MapResultView.client';
 import type { GeoDocument } from '../../../types/api';
-
-const mockFlyToBounds = vi.fn();
-const mockMap = {
-  flyToBounds: mockFlyToBounds,
-  openPopup: vi.fn(),
-  addLayer: vi.fn(),
-  removeLayer: vi.fn(),
-  hasLayer: vi.fn().mockReturnValue(false),
-  eachLayer: vi.fn(),
-};
-
-vi.mock('leaflet/dist/leaflet.css', () => ({}));
-vi.mock('react-leaflet', () => ({
-  MapContainer: ({
-    children,
-  }: {
-    children: React.ReactNode;
-  }) => <div data-testid="map-container">{children}</div>,
-  GeoJSON: () => null,
-  useMap: () => mockMap,
-}));
-
-vi.mock('@krozamdev/overlapping-marker-spiderfier', () => ({
-  default: vi.fn().mockImplementation(() => ({
-    addMarker: vi.fn(),
-    addListener: vi.fn(),
-    clearMarkers: vi.fn(),
-    unspiderfy: vi.fn(),
-  })),
-}));
-
-vi.mock('../../../components/map/BasemapSwitcherControl', () => ({
-  BasemapSwitcherControl: () => <div data-testid="basemap-switcher" />,
-}));
-
-const mockResultsWithCentroid: GeoDocument[] = [
-  {
-    id: 'res-1',
-    type: 'document',
-    attributes: {
-      ogm: {
-        id: 'res-1',
-        dct_title_s: 'Result One',
-        dcat_centroid: '42.36,-71.09',
-      },
+const result = (id: string): GeoDocument => ({
+  id,
+  type: 'resource',
+  attributes: {
+    ogm: {
+      id,
+      dct_title_s: `Map ${id}`,
+      dcat_centroid: '40,-90',
+      dcat_bbox: 'ENVELOPE(-100,-80,50,30)',
     },
   },
-  {
-    id: 'res-2',
-    type: 'document',
-    attributes: {
-      ogm: {
-        id: 'res-2',
-        dct_title_s: 'Result Two',
-        dcat_centroid: '40.71,-74.00',
-      },
-    },
-  },
-];
-
-// US locations (for refit-on-results-change test)
-const mockResultsUS: GeoDocument[] = [
-  {
-    id: 'us-1',
-    type: 'document',
-    attributes: {
-      ogm: {
-        id: 'us-1',
-        dct_title_s: 'US Result',
-        dcat_centroid: '41.88,-87.62',
-      },
-    },
-  },
-];
-
-// France/Europe locations (for refit-on-results-change test)
-const mockResultsFrance: GeoDocument[] = [
-  {
-    id: 'fr-1',
-    type: 'document',
-    attributes: {
-      ogm: {
-        id: 'fr-1',
-        dct_title_s: 'Paris Result',
-        dcat_centroid: '48.85,2.35',
-      },
-    },
-  },
-];
-
-const mockResultsWithGeometryOnly: GeoDocument[] = [
-  {
-    id: 'res-geom',
-    type: 'document',
-    attributes: {
-      ogm: {
-        id: 'res-geom',
-        dct_title_s: 'Geometry Only',
-      },
-    },
-    meta: {
-      ui: {
-        viewer: {
-          geometry: {
-            type: 'Point',
-            coordinates: [-87.62, 41.88],
-          },
-        },
-      },
-    },
-  },
-];
-
-const TestWrapper = ({ children }: { children: React.ReactNode }) => (
-  <MemoryRouter>
-    <MapProvider>{children}</MapProvider>
-  </MemoryRouter>
-);
-
-describe('MapResultView', () => {
+});
+const setup = (results: GeoDocument[], start = 1) =>
+  render(
+    <MemoryRouter>
+      <MapProvider>
+        <MapResultView results={results} resultStartIndex={start} />
+      </MapProvider>
+    </MemoryRouter>
+  );
+describe('Results map', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    mockFlyToBounds.mockClear();
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    instances.length = 0;
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      }
+    );
   });
-
-  describe('rendering', () => {
-    it('renders map container with results', async () => {
-      render(
-        <TestWrapper>
-          <MapResultView results={mockResultsWithCentroid} />
-        </TestWrapper>
-      );
-
-      expect(screen.getByTestId('map-container')).toBeInTheDocument();
-      expect(screen.getByTestId('basemap-switcher')).toBeInTheDocument();
-    });
-
-    it('shows "No mappable results" when no pins', () => {
-      render(
-        <TestWrapper>
-          <MapResultView
-            results={[
-              {
-                id: 'no-geom',
-                type: 'document',
-                attributes: {
-                  ogm: {
-                    id: 'no-geom',
-                    dct_title_s: 'No geometry',
-                  },
-                },
-              },
-            ]}
-          />
-        </TestWrapper>
-      );
-
-      expect(
-        screen.getByText('No mappable results found in this page.')
-      ).toBeInTheDocument();
-    });
-
-    it('accepts resultStartIndex for numbered pins', () => {
-      render(
-        <TestWrapper>
-          <MapResultView
-            results={mockResultsWithCentroid}
-            resultStartIndex={11}
-          />
-        </TestWrapper>
-      );
-
-      expect(screen.getByTestId('map-container')).toBeInTheDocument();
-    });
-
-    it('accepts highlightedResourceId and highlightedGeometry', () => {
-      render(
-        <TestWrapper>
-          <MapResultView
-            results={mockResultsWithCentroid}
-            highlightedResourceId="res-1"
-            highlightedGeometry='{"type":"Point","coordinates":[-71.09,42.36]}'
-          />
-        </TestWrapper>
-      );
-
-      expect(screen.getByTestId('map-container')).toBeInTheDocument();
-    });
-
-    it('adds dashed extent overlay for MultiPolygon (same as resource view LocationMap)', () => {
-      const multiPolygonJson = JSON.stringify({
-        type: 'MultiPolygon',
-        coordinates: [
-          [[[-75.6, 39.8], [-75.8, 39.7], [-80.5, 39.7], [-80.5, 42.3], [-75.6, 39.8]]],
-        ],
-      });
-      render(
-        <TestWrapper>
-          <MapResultView
-            results={mockResultsWithCentroid}
-            highlightedResourceId="res-1"
-            highlightedGeometry={multiPolygonJson}
-          />
-        </TestWrapper>
-      );
-
-      // HighlightOverlayController adds geoJSON layer + dashed rectangle for MultiPolygon
-      const addLayerCalls = mockMap.addLayer.mock.calls.length;
-      expect(addLayerCalls).toBeGreaterThanOrEqual(2);
-    });
+  it('numbers pins using the page offset and fits full footprints', () => {
+    setup([result('one')], 11);
+    expect(
+      screen.getByRole('button', { name: 'Result 11: Map one' })
+    ).toHaveTextContent('11');
+    expect(instances.at(-1)!.fitBounds).toHaveBeenCalledWith(
+      [
+        [-100, 30],
+        [-80, 50],
+      ],
+      expect.any(Object)
+    );
   });
-
-  describe('map refit on results change', () => {
-    it('refits map when search results change (e.g. facet filter applied)', () => {
-      const { rerender } = render(
-        <TestWrapper>
-          <MapResultView results={mockResultsFrance} />
-        </TestWrapper>
-      );
-
-      expect(mockFlyToBounds).toHaveBeenCalledTimes(1);
-
-      rerender(
-        <TestWrapper>
-          <MapResultView results={mockResultsUS} />
-        </TestWrapper>
-      );
-
-      // Should refit again when results change
-      expect(mockFlyToBounds).toHaveBeenCalledTimes(2);
-    });
+  it('expands overlapping pins and keeps each record selectable', () => {
+    setup([result('one'), result('two')]);
+    const map = instances.at(-1)!;
+    act(() => map.styleLoaded());
+    fireEvent.click(screen.getByRole('button', { name: 'Result 1: Map one' }));
+    expect(
+      map.getSource('discovery-pin-connectors').data.features
+    ).toHaveLength(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Result 2: Map two' }));
+    expect(screen.getByRole('link', { name: 'View Details' })).toHaveAttribute(
+      'href',
+      '/#/resources/two'
+    );
   });
-
-  describe('centroid resolution', () => {
-    it('renders pins for results with dcat_centroid', () => {
-      render(
-        <TestWrapper>
-          <MapResultView results={mockResultsWithCentroid} />
-        </TestWrapper>
+  it('derives a pin from geometry if centroid is missing', () => {
+    const r = result('one');
+    delete r.attributes.ogm.dcat_centroid;
+    r.attributes.ogm.locn_geometry = 'ENVELOPE(-100,-80,50,30)';
+    setup([r]);
+    expect(
+      screen.getByRole('button', { name: 'Result 1: Map one' })
+    ).toBeInTheDocument();
+  });
+  it('shows an accessible empty state', () => {
+    setup([]);
+    expect(screen.getByRole('status')).toHaveTextContent('No mappable results');
+  });
+  it('uses distinct circle and spiral positions for crowded records', () => {
+    for (const count of [2, 8, 20])
+      expect(new Set(spiderOffsets(count).map((p) => p.join(','))).size).toBe(
+        count
       );
-
-      expect(screen.getByTestId('map-container')).toBeInTheDocument();
-      expect(screen.queryByText('No mappable results')).not.toBeInTheDocument();
-    });
-
-    it('renders pins for results with geometry fallback (no centroid)', () => {
-      render(
-        <TestWrapper>
-          <MapResultView results={mockResultsWithGeometryOnly} />
-        </TestWrapper>
-      );
-
-      expect(screen.getByTestId('map-container')).toBeInTheDocument();
-      expect(screen.queryByText('No mappable results')).not.toBeInTheDocument();
-    });
   });
 });
