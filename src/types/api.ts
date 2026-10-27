@@ -86,7 +86,7 @@ export interface GeoDocument {
     ui?: {
       thumbnail_url?: string | null;
       resource_class_icon_url?: string | null;
-      citation?: string;
+      citation?: string | null;
       /** Citation formats: apa, mla, chicago */
       citations?: Record<string, string>;
       downloads?: Array<{
@@ -120,8 +120,8 @@ export interface GeoDocument {
       viewer?: {
         protocol?: string;
         endpoint?: string;
-        geometry?: string | GeoJSON.Polygon | GeoJSON.MultiPolygon;
-      };
+        geometry?: string | GeoJSON.Geometry | null;
+      } | null;
       allmaps?: {
         allmaps_id?: string | null;
         allmaps_annotated?: boolean;
@@ -134,10 +134,7 @@ export interface GeoDocument {
   };
 }
 
-export interface GeoDocumentDetails extends GeoDocument {
-  // Additional fields specific to detailed view
-  [key: string]: unknown;
-}
+export type GeoDocumentDetails = GeoDocument;
 
 export interface ParsedFacet {
   field: string;
@@ -157,7 +154,7 @@ interface FacetItem {
   };
 }
 
-interface Facet {
+export interface Facet {
   type: 'facet' | 'timeline';
   id: string;
   links?: {

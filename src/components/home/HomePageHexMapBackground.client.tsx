@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { ChevronLeft, ChevronRight, Home, Pause, Play } from 'lucide-react';
-import { MapLibreMap, useMap } from '../map/MapLibreMap';
+import { MapLibreMap } from '../map/MapLibreMap';
+import { useMap } from '../../context/MapLibreContext';
 import { GeometryLayer } from '../map/GeometryLayer';
 import { boundsPolygon, toLngLat, toMapBounds } from '../../utils/mapGeometry';
 import { cellArea, UNITS } from 'h3-js';

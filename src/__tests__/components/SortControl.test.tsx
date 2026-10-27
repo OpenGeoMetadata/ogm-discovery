@@ -102,7 +102,8 @@ describe('SortControl', () => {
     it('returns null when options is null', () => {
       const { container } = render(
         <SortControl
-          options={null as any}
+          // @ts-expect-error Deliberately exercise a missing API value.
+          options={null}
           currentSort="relevance"
           onSortChange={mockOnSortChange}
         />
@@ -114,7 +115,8 @@ describe('SortControl', () => {
     it('returns null when options is undefined', () => {
       const { container } = render(
         <SortControl
-          options={undefined as any}
+          // @ts-expect-error Deliberately exercise a missing API value.
+          options={undefined}
           currentSort="relevance"
           onSortChange={mockOnSortChange}
         />

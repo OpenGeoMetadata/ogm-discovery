@@ -1,5 +1,5 @@
 import { hasResourcePreview } from '../../utils/ogmViewerRecord';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router';
 import { ArrowLeft, ArrowRight, ArrowLeftCircle, XCircle } from 'lucide-react';
 import {

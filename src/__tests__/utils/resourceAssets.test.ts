@@ -46,7 +46,7 @@ describe('getResultPrimaryImageUrl', () => {
     );
   });
 
-  it('keeps generated thumbnail fallback for non-gallery contexts', () => {
+  it('uses the canonical icon-only fallback for list thumbnails', () => {
     const result = resultWithUi({
       thumbnail_url: '/api/v1/resources/resource-1/thumbnail',
       resource_class_icon_url:
@@ -54,8 +54,27 @@ describe('getResultPrimaryImageUrl', () => {
     });
 
     expect(getResultPrimaryImageUrl(result, 'list')).toMatch(
-      /\/thumbnails\/resource-1$/
+      /\/resources\/resource-1\/thumbnail\?variant=icon-gradient$/
     );
+  });
+  it('uses the icon-only resolver for missing list thumbnails', () => {
+    expect(getResultPrimaryImageUrl(resultWithUi({}), 'list')).toBe(
+      '/api/v1/resources/resource-1/thumbnail?variant=icon-gradient'
+    );
+  });
+  it('preserves immutable thumbnails', () => {
+    const path = '/api/v1/thumbnails/' + 'a'.repeat(64);
+    expect(
+      getResultPrimaryImageUrl(resultWithUi({ thumbnail_url: path }), 'list')
+    ).toBe(path);
+  });
+  it('routes legacy generated thumbnail URLs through the icon-only resolver', () => {
+    expect(
+      getResultPrimaryImageUrl(
+        resultWithUi({ thumbnail_url: '/api/v1/thumbnails/resource-1' }),
+        'list'
+      )
+    ).toBe('/api/v1/resources/resource-1/thumbnail?variant=icon-gradient');
   });
 });
 

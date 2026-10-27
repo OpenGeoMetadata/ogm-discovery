@@ -5,7 +5,7 @@ import {
   type MapLayerMouseEvent,
 } from 'maplibre-gl';
 import { cellArea, UNITS } from 'h3-js';
-import { useMap } from './MapLibreMap';
+import { useMap } from '../../context/MapLibreContext';
 import { useMapH3 } from '../../hooks/useMapH3';
 import {
   hexGeoJSON,

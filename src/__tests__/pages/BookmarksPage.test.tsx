@@ -1,3 +1,5 @@
+import type { ComponentProps } from 'react';
+import type { JsonApiResponse } from '../../types/api';
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router';
@@ -25,7 +27,13 @@ vi.mock('../../components/layout/Footer', () => ({
 }));
 
 vi.mock('../../components/SearchResults', () => ({
-  SearchResults: ({ results, isLoading, totalResults }: any) => (
+  SearchResults: ({
+    results,
+    isLoading,
+    totalResults,
+  }: ComponentProps<
+    typeof import('../../components/SearchResults').SearchResults
+  >) => (
     <div data-testid="search-results">
       {isLoading ? (
         <div data-testid="loading">Loading...</div>
@@ -40,19 +48,29 @@ vi.mock('../../components/SearchResults', () => ({
 }));
 
 vi.mock('../../components/FacetList', () => ({
-  FacetList: ({ facets }: any) => (
+  FacetList: ({
+    facets,
+  }: ComponentProps<typeof import('../../components/FacetList').FacetList>) => (
     <div data-testid="facet-list">Facets: {facets.length}</div>
   ),
 }));
 
 vi.mock('../../components/search/MapView', () => ({
-  MapView: ({ results }: any) => (
-    <div data-testid="map-view">Map with {results.length} results</div>
-  ),
+  MapView: ({
+    results,
+  }: ComponentProps<
+    typeof import('../../components/search/MapView').MapView
+  >) => <div data-testid="map-view">Map with {results.length} results</div>,
 }));
 
 vi.mock('../../components/search/SortControl', () => ({
-  SortControl: ({ options, currentSort, onSortChange }: any) => (
+  SortControl: ({
+    options,
+    currentSort,
+    onSortChange,
+  }: ComponentProps<
+    typeof import('../../components/search/SortControl').SortControl
+  >) => (
     <div data-testid="sort-control">
       <div data-testid="current-sort">{currentSort}</div>
       <div data-testid="sort-options">{options.length} options</div>
@@ -110,7 +128,7 @@ describe('BookmarksPage', () => {
     });
 
     it('hides loading state after data loads', async () => {
-      const mockResponse = {
+      const mockResponse: JsonApiResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
         meta: {
@@ -125,9 +143,12 @@ describe('BookmarksPage', () => {
             id: 'mit-001145244',
             type: 'document',
             attributes: {
-              dct_title_s: 'MIT Paper Map',
-              dct_description_sm: ['A paper map from MIT'],
-              gbl_resourceClass_sm: ['Paper Maps'],
+              ogm: {
+                id: 'mit-001145244',
+                dct_title_s: 'MIT Paper Map',
+                dct_description_sm: ['A paper map from MIT'],
+                gbl_resourceClass_sm: ['Paper Maps'],
+              },
             },
             meta: {
               ui: {
@@ -162,7 +183,7 @@ describe('BookmarksPage', () => {
 
   describe('Bookmark Count Display', () => {
     it('displays correct bookmark count with multiple bookmarks', async () => {
-      const mockResponse = {
+      const mockResponse: JsonApiResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
         meta: {
@@ -192,7 +213,7 @@ describe('BookmarksPage', () => {
     });
 
     it('displays zero count when no bookmarks', async () => {
-      const mockResponse = {
+      const mockResponse: JsonApiResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
         meta: {
@@ -220,7 +241,7 @@ describe('BookmarksPage', () => {
 
   describe('API Integration', () => {
     it('calls fetchBookmarkedResources with correct parameters', async () => {
-      const mockResponse = {
+      const mockResponse: JsonApiResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
         meta: {
@@ -273,7 +294,7 @@ describe('BookmarksPage', () => {
 
   describe('Sort Control', () => {
     it('shows sort control when sort options are available', async () => {
-      const mockResponse = {
+      const mockResponse: JsonApiResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
         meta: {
@@ -288,9 +309,12 @@ describe('BookmarksPage', () => {
             id: 'mit-001145244',
             type: 'document',
             attributes: {
-              dct_title_s: 'MIT Paper Map',
-              dct_description_sm: ['A paper map from MIT'],
-              gbl_resourceClass_sm: ['Paper Maps'],
+              ogm: {
+                id: 'mit-001145244',
+                dct_title_s: 'MIT Paper Map',
+                dct_description_sm: ['A paper map from MIT'],
+                gbl_resourceClass_sm: ['Paper Maps'],
+              },
             },
           },
         ],
@@ -326,7 +350,7 @@ describe('BookmarksPage', () => {
     });
 
     it('hides sort control when no sort options are available', async () => {
-      const mockResponse = {
+      const mockResponse: JsonApiResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
         meta: {
@@ -341,9 +365,12 @@ describe('BookmarksPage', () => {
             id: 'mit-001145244',
             type: 'document',
             attributes: {
-              dct_title_s: 'MIT Paper Map',
-              dct_description_sm: ['A paper map from MIT'],
-              gbl_resourceClass_sm: ['Paper Maps'],
+              ogm: {
+                id: 'mit-001145244',
+                dct_title_s: 'MIT Paper Map',
+                dct_description_sm: ['A paper map from MIT'],
+                gbl_resourceClass_sm: ['Paper Maps'],
+              },
             },
           },
         ],
@@ -360,7 +387,7 @@ describe('BookmarksPage', () => {
     });
 
     it('handles sort change correctly', async () => {
-      const mockResponse = {
+      const mockResponse: JsonApiResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
         meta: {
@@ -375,9 +402,12 @@ describe('BookmarksPage', () => {
             id: 'mit-001145244',
             type: 'document',
             attributes: {
-              dct_title_s: 'MIT Paper Map',
-              dct_description_sm: ['A paper map from MIT'],
-              gbl_resourceClass_sm: ['Paper Maps'],
+              ogm: {
+                id: 'mit-001145244',
+                dct_title_s: 'MIT Paper Map',
+                dct_description_sm: ['A paper map from MIT'],
+                gbl_resourceClass_sm: ['Paper Maps'],
+              },
             },
           },
         ],
@@ -417,7 +447,7 @@ describe('BookmarksPage', () => {
 
   describe('Facet List', () => {
     it('shows facet list when facets are available', async () => {
-      const mockResponse = {
+      const mockResponse: JsonApiResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
         meta: {
@@ -467,7 +497,7 @@ describe('BookmarksPage', () => {
     });
 
     it('hides facet list when no facets are available', async () => {
-      const mockResponse = {
+      const mockResponse: JsonApiResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
         meta: {
@@ -482,9 +512,12 @@ describe('BookmarksPage', () => {
             id: 'mit-001145244',
             type: 'document',
             attributes: {
-              dct_title_s: 'MIT Paper Map',
-              dct_description_sm: ['A paper map from MIT'],
-              gbl_resourceClass_sm: ['Paper Maps'],
+              ogm: {
+                id: 'mit-001145244',
+                dct_title_s: 'MIT Paper Map',
+                dct_description_sm: ['A paper map from MIT'],
+                gbl_resourceClass_sm: ['Paper Maps'],
+              },
             },
           },
         ],
@@ -501,7 +534,7 @@ describe('BookmarksPage', () => {
     });
 
     it('filters facets to only show configured facets', async () => {
-      const mockResponse = {
+      const mockResponse: JsonApiResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
         meta: {
@@ -557,7 +590,7 @@ describe('BookmarksPage', () => {
 
   describe('Map View', () => {
     it('shows map view with results', async () => {
-      const mockResponse = {
+      const mockResponse: JsonApiResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
         meta: {
@@ -572,9 +605,12 @@ describe('BookmarksPage', () => {
             id: 'mit-001145244',
             type: 'document',
             attributes: {
-              dct_title_s: 'MIT Paper Map',
-              dct_description_sm: ['A paper map from MIT'],
-              gbl_resourceClass_sm: ['Paper Maps'],
+              ogm: {
+                id: 'mit-001145244',
+                dct_title_s: 'MIT Paper Map',
+                dct_description_sm: ['A paper map from MIT'],
+                gbl_resourceClass_sm: ['Paper Maps'],
+              },
             },
             meta: {
               ui: {
@@ -592,9 +628,12 @@ describe('BookmarksPage', () => {
             id: 'nyu-2451-34564',
             type: 'document',
             attributes: {
-              dct_title_s: 'NYU Point Data',
-              dct_description_sm: ['Point dataset from NYU'],
-              gbl_resourceClass_sm: ['Point Data'],
+              ogm: {
+                id: 'nyu-2451-34564',
+                dct_title_s: 'NYU Point Data',
+                dct_description_sm: ['Point dataset from NYU'],
+                gbl_resourceClass_sm: ['Point Data'],
+              },
             },
             meta: {
               ui: {
@@ -625,7 +664,7 @@ describe('BookmarksPage', () => {
     });
 
     it('shows empty map when no results', async () => {
-      const mockResponse = {
+      const mockResponse: JsonApiResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
         meta: {
@@ -654,7 +693,7 @@ describe('BookmarksPage', () => {
 
   describe('Layout and Responsive Design', () => {
     it('renders all main layout components', async () => {
-      const mockResponse = {
+      const mockResponse: JsonApiResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
         meta: {
@@ -681,7 +720,7 @@ describe('BookmarksPage', () => {
     });
 
     it('shows mobile-friendly facet toggle', async () => {
-      const mockResponse = {
+      const mockResponse: JsonApiResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
         meta: {
@@ -696,9 +735,12 @@ describe('BookmarksPage', () => {
             id: 'mit-001145244',
             type: 'document',
             attributes: {
-              dct_title_s: 'MIT Paper Map',
-              dct_description_sm: ['A paper map from MIT'],
-              gbl_resourceClass_sm: ['Paper Maps'],
+              ogm: {
+                id: 'mit-001145244',
+                dct_title_s: 'MIT Paper Map',
+                dct_description_sm: ['A paper map from MIT'],
+                gbl_resourceClass_sm: ['Paper Maps'],
+              },
             },
           },
         ],
@@ -706,7 +748,7 @@ describe('BookmarksPage', () => {
           {
             type: 'facet',
             id: 'resource_class_agg',
-            attributes: { label: 'Resource Class' },
+            attributes: { label: 'Resource Class', items: [] },
           },
         ],
       };
@@ -723,7 +765,7 @@ describe('BookmarksPage', () => {
 
   describe('Real Fixture Data Integration', () => {
     it('handles MIT Libraries fixture data', async () => {
-      const mockResponse = {
+      const mockResponse: JsonApiResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
         meta: {
@@ -738,12 +780,15 @@ describe('BookmarksPage', () => {
             id: 'mit-001145244',
             type: 'document',
             attributes: {
-              dct_title_s: 'actual-papermap1',
-              dct_description_sm: [
-                'Nondigitized paper map with library catalog link',
-              ],
-              gbl_resourceClass_sm: ['Paper Maps'],
-              dc_publisher_sm: ['MIT Libraries'],
+              ogm: {
+                id: 'mit-001145244',
+                dct_title_s: 'actual-papermap1',
+                dct_description_sm: [
+                  'Nondigitized paper map with library catalog link',
+                ],
+                gbl_resourceClass_sm: ['Paper Maps'],
+                dc_publisher_sm: ['MIT Libraries'],
+              },
             },
             meta: {
               ui: {
@@ -776,7 +821,7 @@ describe('BookmarksPage', () => {
     });
 
     it('handles NYU Libraries fixture data', async () => {
-      const mockResponse = {
+      const mockResponse: JsonApiResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
         meta: {
@@ -791,10 +836,13 @@ describe('BookmarksPage', () => {
             id: 'nyu-2451-34564',
             type: 'document',
             attributes: {
-              dct_title_s: 'actual-point1',
-              dct_description_sm: ['Point dataset with WMS and WFS'],
-              gbl_resourceClass_sm: ['Point Data'],
-              dc_publisher_sm: ['NYU Libraries'],
+              ogm: {
+                id: 'nyu-2451-34564',
+                dct_title_s: 'actual-point1',
+                dct_description_sm: ['Point dataset with WMS and WFS'],
+                gbl_resourceClass_sm: ['Point Data'],
+                dc_publisher_sm: ['NYU Libraries'],
+              },
             },
             meta: {
               ui: {
@@ -827,7 +875,7 @@ describe('BookmarksPage', () => {
     });
 
     it('handles Tufts University fixture data', async () => {
-      const mockResponse = {
+      const mockResponse: JsonApiResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
         meta: {
@@ -842,12 +890,15 @@ describe('BookmarksPage', () => {
             id: 'tufts-cambridgegrid100-04',
             type: 'document',
             attributes: {
-              dct_title_s: 'actual-polygon1',
-              dct_description_sm: [
-                'Polygon dataset with WFS, WMS, and FGDC metadata',
-              ],
-              gbl_resourceClass_sm: ['Polygon Data'],
-              dc_publisher_sm: ['Tufts University'],
+              ogm: {
+                id: 'tufts-cambridgegrid100-04',
+                dct_title_s: 'actual-polygon1',
+                dct_description_sm: [
+                  'Polygon dataset with WFS, WMS, and FGDC metadata',
+                ],
+                gbl_resourceClass_sm: ['Polygon Data'],
+                dc_publisher_sm: ['Tufts University'],
+              },
             },
             meta: {
               ui: {
@@ -890,7 +941,7 @@ describe('BookmarksPage', () => {
 
   describe('Edge Cases', () => {
     it('handles empty response gracefully', async () => {
-      const mockResponse = {
+      const mockResponse: JsonApiResponse = {
         jsonapi: { version: '1.0', profile: [] },
         links: { self: '', first: '', last: '' },
         meta: {
@@ -936,6 +987,7 @@ describe('BookmarksPage', () => {
         included: null,
       };
 
+      // @ts-expect-error Exercise a malformed upstream response.
       mockFetchBookmarkedResources.mockResolvedValue(mockResponse);
 
       renderWithBookmarks(['test-id']);

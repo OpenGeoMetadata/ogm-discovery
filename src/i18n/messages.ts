@@ -1,4 +1,4 @@
-export type MessageValue = string | Record<string, MessageValue>;
+export type MessageValue = string | { [key: string]: MessageValue };
 
 export const messages = {
   en: {

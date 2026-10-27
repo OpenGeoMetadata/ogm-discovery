@@ -73,6 +73,21 @@ const realFixtureWithRestrictedAccess = {
 };
 
 describe('MetadataTable Component', () => {
+  it('reads metadata from the JSON:API OGM attributes used by resource details', () => {
+    render(
+      <MetadataTable
+        data={{
+          data: {
+            attributes: { ogm: realFixtureWithAllFields.data.attributes },
+          },
+        }}
+      />
+    );
+    expect(
+      screen.getByText('A historical paper map from MIT collections')
+    ).toBeInTheDocument();
+    expect(screen.getByText('MIT Libraries')).toBeInTheDocument();
+  });
   describe('Rendering with All Fields', () => {
     it('renders the table header with title and full details link', () => {
       render(<MetadataTable data={realFixtureWithAllFields} />);
@@ -256,13 +271,14 @@ describe('MetadataTable Component', () => {
         data: {
           attributes: {
             dct_description_sm: ['Valid description'],
-            dct_spatial_sm: null as any,
-            dct_temporal_sm: undefined as any,
-            dc_subject_sm: null as any,
+            dct_spatial_sm: null,
+            dct_temporal_sm: undefined,
+            dc_subject_sm: null,
           },
         },
       };
 
+      // @ts-expect-error Deliberately exercise a malformed API response.
       render(<MetadataTable data={dataWithNullFields} />);
 
       // Should render description
@@ -460,8 +476,9 @@ describe('MetadataTable Component', () => {
 
   describe('Edge Cases', () => {
     it('handles missing data object gracefully', () => {
-      const emptyData = { data: null as any };
+      const emptyData = { data: null };
 
+      // @ts-expect-error Deliberately exercise a malformed API response.
       render(<MetadataTable data={emptyData} />);
 
       // Should still render the header

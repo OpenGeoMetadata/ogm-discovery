@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { ResourceMetadata } from '../../components/resource/ResourceMetadata';
-import type { GeoDocumentDetails } from '../../types/api';
+import type { ResourceMetadataFields } from '../../components/resource/ResourceMetadata';
 
 // Real fixture data from the /test/fixtures page
-const realFixtureWithAllFields: GeoDocumentDetails = {
+const realFixtureWithAllFields: ResourceMetadataFields = {
   schema_provider_s: 'MIT Libraries',
   dc_publisher_sm: ['MIT Libraries'],
   creator_sm: ['MIT Libraries Staff'],
@@ -49,7 +49,7 @@ const realFixtureWithAllFields: GeoDocumentDetails = {
   },
 };
 
-const realFixtureWithMinimalFields: GeoDocumentDetails = {
+const realFixtureWithMinimalFields: ResourceMetadataFields = {
   dct_title_s: 'Point dataset with WMS and WFS',
   dct_description_sm: ['A point dataset from NYU with web services'],
   dct_temporal_sm: ['2020'],
@@ -92,7 +92,7 @@ const realFixtureWithMinimalFields: GeoDocumentDetails = {
   },
 };
 
-const realFixtureWithPolygonData: GeoDocumentDetails = {
+const realFixtureWithPolygonData: ResourceMetadataFields = {
   schema_provider_s: 'Tufts University',
   dc_publisher_sm: ['Tufts University'],
   creator_sm: ['Tufts GIS Staff'],
@@ -273,7 +273,7 @@ describe('ResourceMetadata Component', () => {
     });
 
     it('renders only available fields', () => {
-      const partialItem: GeoDocumentDetails = {
+      const partialItem: ResourceMetadataFields = {
         ...realFixtureWithMinimalFields,
         schema_provider_s: 'NYU Libraries',
         dc_publisher_sm: ['NYU Libraries'],
@@ -302,7 +302,7 @@ describe('ResourceMetadata Component', () => {
     });
 
     it('handles empty arrays gracefully', () => {
-      const itemWithEmptyArrays: GeoDocumentDetails = {
+      const itemWithEmptyArrays: ResourceMetadataFields = {
         ...realFixtureWithMinimalFields,
         dc_publisher_sm: [],
         creator_sm: [],
@@ -320,14 +320,14 @@ describe('ResourceMetadata Component', () => {
     });
 
     it('handles null/undefined fields gracefully', () => {
-      const itemWithNullFields: GeoDocumentDetails = {
+      const itemWithNullFields: ResourceMetadataFields = {
         ...realFixtureWithMinimalFields,
-        schema_provider_s: null as any,
-        dc_publisher_sm: null as any,
-        creator_sm: null as any,
-        dct_spatial_sm: null as any,
-        dc_subject_sm: null as any,
-        dct_issued_s: null as any,
+        schema_provider_s: null,
+        dc_publisher_sm: null,
+        creator_sm: null,
+        dct_spatial_sm: null,
+        dc_subject_sm: null,
+        dct_issued_s: null,
       };
 
       render(<ResourceMetadata item={itemWithNullFields} />);
@@ -439,7 +439,7 @@ describe('ResourceMetadata Component', () => {
 
   describe('Edge Cases', () => {
     it('handles single item arrays', () => {
-      const singleItemData: GeoDocumentDetails = {
+      const singleItemData: ResourceMetadataFields = {
         ...realFixtureWithMinimalFields,
         dc_publisher_sm: ['NYU Libraries'],
         creator_sm: ['NYU Staff'],
@@ -456,7 +456,7 @@ describe('ResourceMetadata Component', () => {
     });
 
     it('handles very long text content', () => {
-      const longTextData: GeoDocumentDetails = {
+      const longTextData: ResourceMetadataFields = {
         ...realFixtureWithMinimalFields,
         schema_provider_s:
           'This is a very long source name that might contain extensive information about the data provider and should still render correctly without breaking the layout or causing any display issues.',
@@ -478,7 +478,7 @@ describe('ResourceMetadata Component', () => {
     });
 
     it('handles special characters in content', () => {
-      const specialCharData: GeoDocumentDetails = {
+      const specialCharData: ResourceMetadataFields = {
         ...realFixtureWithMinimalFields,
         schema_provider_s: 'Source with special chars: !@#$%^&*()',
         dc_publisher_sm: ['Publisher with unicode: ñáéíóú'],

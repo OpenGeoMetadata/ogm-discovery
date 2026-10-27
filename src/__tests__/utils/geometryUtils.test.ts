@@ -317,13 +317,21 @@ describe('geometryUtils', () => {
       });
 
       it('handles null input', () => {
-        const result = wktToGeoJSON(null as any);
+        // @ts-expect-error Deliberately exercise a malformed API value.
+        const result = wktToGeoJSON(null);
         expect(result).toBeNull();
       });
     });
   });
 
   describe('normalizeGeometry', () => {
+    it('preserves point geometry from viewer metadata', () => {
+      const point: GeoJSON.Point = { type: 'Point', coordinates: [54, 32] };
+      expect(normalizeGeometry(point)).toBe(point);
+      expect(
+        normalizeGeometry({ type: 'Feature', geometry: point, properties: {} })
+      ).toBe(point);
+    });
     describe('GeoJSON Input', () => {
       it('returns GeoJSON polygon as-is', () => {
         const polygon: GeoJSON.Polygon = {
@@ -369,12 +377,28 @@ describe('geometryUtils', () => {
           properties: {},
           geometry: {
             type: 'Polygon',
-            coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+            coordinates: [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 1],
+                [0, 0],
+              ],
+            ],
           },
         };
-        const result = normalizeGeometry(feature as any);
+        const result = normalizeGeometry(feature);
         expect(result?.type).toBe('Polygon');
-        expect(result?.coordinates).toEqual([[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]);
+        expect(result?.coordinates).toEqual([
+          [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1],
+            [0, 0],
+          ],
+        ]);
       });
     });
 
@@ -427,10 +451,22 @@ describe('geometryUtils', () => {
         expect(result?.type).toBe('MultiPolygon');
         expect(result?.coordinates).toHaveLength(2);
         expect(result?.coordinates[0]).toEqual([
-          [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]],
+          [
+            [0, 0],
+            [0, 1],
+            [1, 1],
+            [1, 0],
+            [0, 0],
+          ],
         ]);
         expect(result?.coordinates[1]).toEqual([
-          [[2, 2], [2, 3], [3, 3], [3, 2], [2, 2]],
+          [
+            [2, 2],
+            [2, 3],
+            [3, 3],
+            [3, 2],
+            [2, 2],
+          ],
         ]);
       });
     });
@@ -464,7 +500,7 @@ describe('geometryUtils', () => {
       });
 
       it('returns null for undefined input', () => {
-        const result = normalizeGeometry(undefined as any);
+        const result = normalizeGeometry(undefined);
         expect(result).toBeNull();
       });
 
@@ -474,7 +510,7 @@ describe('geometryUtils', () => {
           .mockImplementation(() => {});
 
         const unknownGeometry = { type: 'Unknown', data: 'some data' };
-        const result = normalizeGeometry(unknownGeometry as any);
+        const result = normalizeGeometry(unknownGeometry);
 
         expect(result).toBeNull();
         expect(consoleSpy).toHaveBeenCalledWith(
@@ -529,12 +565,13 @@ describe('geometryUtils', () => {
           type: 'InvalidType',
           coordinates: 'not an array',
         };
-        const result = normalizeGeometry(invalidGeoJSON as any);
+        const result = normalizeGeometry(invalidGeoJSON);
 
-        // The function returns the object as-is if it has type and coordinates properties
-        expect(result).toBe(invalidGeoJSON);
-        // No warning is called because the function accepts any object with type and coordinates
-        expect(consoleSpy).not.toHaveBeenCalled();
+        expect(result).toBeNull();
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Unknown geometry format:',
+          invalidGeoJSON
+        );
 
         consoleSpy.mockRestore();
       });
@@ -567,7 +604,15 @@ describe('geometryUtils', () => {
     it('wraps Polygon in single Feature (same as LocationMap)', () => {
       const polygon: GeoJSON.Polygon = {
         type: 'Polygon',
-        coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+        coordinates: [
+          [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1],
+            [0, 0],
+          ],
+        ],
       };
       const features = geometryToLeafletFeatures(polygon);
       expect(features).toHaveLength(1);
@@ -578,14 +623,36 @@ describe('geometryUtils', () => {
       const multi: GeoJSON.MultiPolygon = {
         type: 'MultiPolygon',
         coordinates: [
-          [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
-          [[[2, 2], [3, 2], [3, 3], [2, 3], [2, 2]]],
+          [
+            [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0],
+            ],
+          ],
+          [
+            [
+              [2, 2],
+              [3, 2],
+              [3, 3],
+              [2, 3],
+              [2, 2],
+            ],
+          ],
         ],
       };
       const features = geometryToLeafletFeatures(multi);
       expect(features).toHaveLength(2);
-      expect(features[0].geometry).toEqual({ type: 'Polygon', coordinates: multi.coordinates[0] });
-      expect(features[1].geometry).toEqual({ type: 'Polygon', coordinates: multi.coordinates[1] });
+      expect(features[0].geometry).toEqual({
+        type: 'Polygon',
+        coordinates: multi.coordinates[0],
+      });
+      expect(features[1].geometry).toEqual({
+        type: 'Polygon',
+        coordinates: multi.coordinates[1],
+      });
     });
     it('returns empty array for null', () => {
       expect(geometryToLeafletFeatures(null)).toEqual([]);
@@ -709,8 +776,24 @@ describe('geometryUtils', () => {
       const geom: GeoJSON.MultiPolygon = {
         type: 'MultiPolygon',
         coordinates: [
-          [[[-75.6, 39.8], [-75.8, 39.7], [-80.5, 39.7], [-80.5, 42.3], [-75.6, 39.8]]],
-          [[[2, 2], [2, 3], [3, 3], [3, 2], [2, 2]]],
+          [
+            [
+              [-75.6, 39.8],
+              [-75.8, 39.7],
+              [-80.5, 39.7],
+              [-80.5, 42.3],
+              [-75.6, 39.8],
+            ],
+          ],
+          [
+            [
+              [2, 2],
+              [2, 3],
+              [3, 3],
+              [3, 2],
+              [2, 2],
+            ],
+          ],
         ],
       };
       const result = getBboxFromGeometry(geom);
@@ -750,10 +833,7 @@ describe('geometryUtils', () => {
         properties: {},
       });
       expect(getWgs84ExtentFromViewerGeometry(geometryForViewer)).toEqual([
-        -97.73743,
-        30.28409,
-        -97.73346,
-        30.28753,
+        -97.73743, 30.28409, -97.73346, 30.28753,
       ]);
     });
 
@@ -771,10 +851,7 @@ describe('geometryUtils', () => {
         ],
       });
       expect(getWgs84ExtentFromViewerGeometry(geometryForViewer)).toEqual([
-        -96.796,
-        43.429,
-        -90.379,
-        48.756,
+        -96.796, 43.429, -90.379, 48.756,
       ]);
     });
 
@@ -837,17 +914,30 @@ describe('geometryUtils', () => {
 
   describe('geometryToGeoJSONForDisplay', () => {
     it('returns GeoJSON object as-is', () => {
-      const geom = { type: 'Polygon', coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]] };
+      const geom = {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1],
+            [0, 0],
+          ],
+        ],
+      };
       expect(geometryToGeoJSONForDisplay(geom)).toEqual(geom);
     });
     it('parses GeoJSON string', () => {
-      const json = '{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]}';
+      const json =
+        '{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]}';
       const result = geometryToGeoJSONForDisplay(json);
       expect(result?.type).toBe('Polygon');
       expect(result?.coordinates).toHaveLength(1);
     });
     it('parses WKT POLYGON', () => {
-      const wkt = 'POLYGON((-96.796 48.756, -90.379 48.756, -90.379 43.429, -96.796 43.429, -96.796 48.756))';
+      const wkt =
+        'POLYGON((-96.796 48.756, -90.379 48.756, -90.379 43.429, -96.796 43.429, -96.796 48.756))';
       const result = geometryToGeoJSONForDisplay(wkt);
       expect(result?.type).toBe('Polygon');
     });
@@ -866,15 +956,32 @@ describe('geometryUtils', () => {
         properties: {},
         geometry: {
           type: 'Polygon',
-          coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+          coordinates: [
+            [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0],
+            ],
+          ],
         },
       };
       const result = geometryToGeoJSONForDisplay(feature);
       expect(result?.type).toBe('Polygon');
-      expect(result?.coordinates).toEqual([[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]);
+      expect(result?.coordinates).toEqual([
+        [
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 1],
+          [0, 0],
+        ],
+      ]);
     });
     it('extracts geometry from GeoJSON Feature string', () => {
-      const featureJson = '{"type":"Feature","geometry":{"type":"Point","coordinates":[-71,42]},"properties":{}}';
+      const featureJson =
+        '{"type":"Feature","geometry":{"type":"Point","coordinates":[-71,42]},"properties":{}}';
       const result = geometryToGeoJSONForDisplay(featureJson);
       expect(result?.type).toBe('Point');
       expect(result?.coordinates).toEqual([-71, 42]);
@@ -892,7 +999,18 @@ describe('geometryUtils', () => {
         meta: {
           ui: {
             viewer: {
-              geometry: { type: 'Polygon', coordinates: [[[-90, 48], [-88, 48], [-88, 46], [-90, 46], [-90, 48]]] },
+              geometry: {
+                type: 'Polygon',
+                coordinates: [
+                  [
+                    [-90, 48],
+                    [-88, 48],
+                    [-88, 46],
+                    [-90, 46],
+                    [-90, 48],
+                  ],
+                ],
+              },
             },
           },
         },
@@ -913,7 +1031,18 @@ describe('geometryUtils', () => {
         meta: {
           ui: {
             viewer: {
-              geometry: { type: 'Polygon', coordinates: [[[-90, 48], [-88, 48], [-88, 46], [-90, 46], [-90, 48]]] },
+              geometry: {
+                type: 'Polygon',
+                coordinates: [
+                  [
+                    [-90, 48],
+                    [-88, 48],
+                    [-88, 46],
+                    [-90, 46],
+                    [-90, 48],
+                  ],
+                ],
+              },
             },
           },
         },
@@ -931,8 +1060,24 @@ describe('geometryUtils', () => {
       const multi: GeoJSON.MultiPolygon = {
         type: 'MultiPolygon',
         coordinates: [
-          [[[-75.6, 39.8], [-75.8, 39.7], [-80.5, 39.7], [-80.5, 42.3], [-75.6, 39.8]]],
-          [[[2, 2], [2, 3], [3, 3], [3, 2], [2, 2]]],
+          [
+            [
+              [-75.6, 39.8],
+              [-75.8, 39.7],
+              [-80.5, 39.7],
+              [-80.5, 42.3],
+              [-75.6, 39.8],
+            ],
+          ],
+          [
+            [
+              [2, 2],
+              [2, 3],
+              [3, 3],
+              [3, 2],
+              [2, 2],
+            ],
+          ],
         ],
       };
       const result = {

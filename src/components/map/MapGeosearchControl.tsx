@@ -7,7 +7,10 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import type { Map as GLMap, ControlPosition } from 'maplibre-gl';
-import { useControlContainer, MapLibreContext } from './MapLibreMap';
+import {
+  useControlContainer,
+  MapLibreContext,
+} from '../../context/MapLibreContext';
 import { useI18n } from '../../hooks/useI18n';
 import { Search, X } from 'lucide-react';
 import { fetchNominatimSearch } from '../../services/api';

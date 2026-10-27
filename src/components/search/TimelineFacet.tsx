@@ -45,6 +45,10 @@ interface TimelineFacetProps {
   onChange: (range: SelectedYearRange | null) => void;
 }
 
+type ChartInteraction = Parameters<
+  NonNullable<React.ComponentProps<typeof BarChart>['onMouseDown']>
+>[0];
+
 type YearCount = {
   year: number;
   count: number;
@@ -153,7 +157,7 @@ export function TimelineFacet({
     onChange({ start: point.xKey, end: point.xEnd });
   };
 
-  const onMouseDown = (e: any) => {
+  const onMouseDown = (e: ChartInteraction) => {
     if (e && e.activeLabel) {
       setState((prev) => ({
         ...prev,
@@ -163,7 +167,7 @@ export function TimelineFacet({
     }
   };
 
-  const onMouseMove = (e: any) => {
+  const onMouseMove = (e: ChartInteraction) => {
     if (state.isDragging && e && e.activeLabel) {
       setState((prev) => ({ ...prev, refAreaRight: e.activeLabel }));
     }
@@ -205,7 +209,7 @@ export function TimelineFacet({
     }
   };
 
-  const onChartClick = (e: any) => {
+  const onChartClick = (e: ChartInteraction) => {
     if (!e?.activeLabel || state.isDragging) return;
     const point = data.find((p) => p.xKey === Number(e.activeLabel));
     if (point) selectPoint(point);
@@ -383,7 +387,9 @@ export function TimelineFacet({
               dataKey="count"
               minPointSize={3}
               radius={[2, 2, 0, 0]}
-              onMouseEnter={(point: ChartPoint) => setHoveredKey(point.xKey)}
+              onMouseEnter={(_point, index) =>
+                setHoveredKey(data[index]?.xKey ?? null)
+              }
               onMouseLeave={() => setHoveredKey(null)}
               className="cursor-pointer"
             >

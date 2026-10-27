@@ -1,7 +1,10 @@
 import { useContext, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Map as GLMap } from 'maplibre-gl';
-import { MapLibreContext, useControlContainer } from './MapLibreMap';
+import {
+  MapLibreContext,
+  useControlContainer,
+} from '../../context/MapLibreContext';
 import { useI18n } from '../../hooks/useI18n';
 import { Hexagon, Table } from 'lucide-react';
 import { HexTableModal } from './HexTableModal';

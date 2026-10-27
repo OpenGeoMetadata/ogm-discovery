@@ -1,13 +1,11 @@
+import { spiderOffsets } from '../../../utils/mapGeometry';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('maplibre-gl', () => import('../../helpers/maplibre'));
 import { instances } from '../../helpers/maplibre';
 import { MapProvider } from '../../../context/MapContext';
-import {
-  MapResultView,
-  spiderOffsets,
-} from '../../../components/search/MapResultView.client';
+import { MapResultView } from '../../../components/search/MapResultView.client';
 import type { GeoDocument } from '../../../types/api';
 const result = (id: string): GeoDocument => ({
   id,

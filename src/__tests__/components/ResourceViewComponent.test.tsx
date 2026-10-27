@@ -201,7 +201,14 @@ vi.mock('../../services/api', () => ({
 
 // Mock react-router-dom
 const mockNavigate = vi.fn();
-const mockLocation = {
+const mockLocation: import('react-router').Location<{
+  searchResults: Array<{ id: string }>;
+  currentIndex: number;
+  totalResults: number;
+  searchUrl: string;
+  currentPage: number;
+} | null> = {
+  unstable_mask: undefined,
   state: null,
   pathname: '/resources/mit-001145244',
   search: '',
@@ -210,7 +217,7 @@ const mockLocation = {
 };
 
 vi.mock('react-router', async (importOriginal) => {
-  const actual = await importOriginal();
+  const actual = await importOriginal<typeof import('react-router')>();
   return {
     ...actual,
     useParams: () => ({ id: 'mit-001145244' }),
@@ -233,20 +240,33 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 describe('ResourceView Component', () => {
-  let fetchResourceDetails: any;
-  let fetchSearchResults: any;
+  let fetchResourceDetails: ReturnType<
+    typeof vi.mocked<typeof import('../../services/api').fetchResourceDetails>
+  >;
+  let fetchSearchResults: ReturnType<
+    typeof vi.mocked<typeof import('../../services/api').fetchSearchResults>
+  >;
 
   beforeEach(async () => {
     vi.clearAllMocks();
 
     // Import the mocked functions
     const apiModule = await import('../../services/api');
-    fetchResourceDetails = apiModule.fetchResourceDetails;
-    fetchSearchResults = apiModule.fetchSearchResults;
+    fetchResourceDetails = vi.mocked(apiModule.fetchResourceDetails);
+    fetchSearchResults = vi.mocked(apiModule.fetchSearchResults);
 
     // Mock successful API response
-    (fetchResourceDetails as any).mockResolvedValue(realFixtureData[0]);
-    (fetchSearchResults as any).mockResolvedValue({
+    fetchResourceDetails.mockResolvedValue(realFixtureData[0]);
+    fetchSearchResults.mockResolvedValue({
+      jsonapi: { version: '1.0', profile: [] },
+      links: { self: '/search', first: '/search', last: '/search' },
+      meta: {
+        totalCount: realFixtureData.length,
+        totalPages: 1,
+        currentPage: 1,
+        perPage: 10,
+        query: '',
+      },
       data: realFixtureData,
     });
   });
@@ -286,7 +306,7 @@ describe('ResourceView Component', () => {
 
   describe('Error Handling', () => {
     it('displays error message when API call fails', async () => {
-      (fetchResourceDetails as any).mockRejectedValue(new Error('API Error'));
+      fetchResourceDetails.mockRejectedValue(new Error('API Error'));
 
       render(
         <TestWrapper>
@@ -305,7 +325,7 @@ describe('ResourceView Component', () => {
 
     it('displays ApiError message when API returns specific error', async () => {
       const { ApiError } = await import('../../services/api');
-      (fetchResourceDetails as any).mockRejectedValue(
+      fetchResourceDetails.mockRejectedValue(
         new ApiError('Resource not found')
       );
 
@@ -609,7 +629,7 @@ describe('ResourceView Component', () => {
 
     it('renders the resource preview for an index map', async () => {
       // Mock the component with open_index_map protocol
-      (fetchResourceDetails as any).mockResolvedValue(realFixtureData[2]); // Tufts fixture with open_index_map
+      fetchResourceDetails.mockResolvedValue(realFixtureData[2]); // Tufts fixture with open_index_map
 
       render(
         <TestWrapper>
@@ -713,7 +733,7 @@ describe('ResourceView Component', () => {
 
     it('handles different fixture data types', async () => {
       // Test with NYU fixture
-      (fetchResourceDetails as any).mockResolvedValue(realFixtureData[1]);
+      fetchResourceDetails.mockResolvedValue(realFixtureData[1]);
 
       render(
         <TestWrapper>
@@ -730,7 +750,7 @@ describe('ResourceView Component', () => {
 
     it('handles polygon data fixture', async () => {
       // Test with Tufts fixture
-      (fetchResourceDetails as any).mockResolvedValue(realFixtureData[2]);
+      fetchResourceDetails.mockResolvedValue(realFixtureData[2]);
 
       render(
         <TestWrapper>
@@ -760,7 +780,7 @@ describe('ResourceView Component', () => {
         },
       };
 
-      (fetchResourceDetails as any).mockResolvedValue(restrictedFixture);
+      fetchResourceDetails.mockResolvedValue(restrictedFixture);
 
       render(
         <TestWrapper>

@@ -1,3 +1,4 @@
+import type { Facet } from '../types/api';
 import React from 'react';
 import { Seo } from '../components/Seo';
 import { useSearchParams } from 'react-router';
@@ -586,7 +587,9 @@ function SearchContent({
   const isSpellingSuggestion = (
     suggestion: unknown
   ): suggestion is { text: string; highlighted: string; score: number } => {
-    return suggestion && typeof suggestion === 'object' && 'text' in suggestion;
+    return (
+      !!suggestion && typeof suggestion === 'object' && 'text' in suggestion
+    );
   };
 
   return (
@@ -696,7 +699,7 @@ function SearchContent({
                   {searchResults?.included ? (
                     <FacetList
                       facets={searchResults.included.filter(
-                        (item) =>
+                        (item): item is Facet =>
                           item.type === 'facet' || item.type === 'timeline'
                       )}
                       accordion={accordion}

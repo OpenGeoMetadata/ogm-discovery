@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { Seo } from '../components/Seo';
@@ -6,7 +6,7 @@ import { SearchResults } from '../components/SearchResults';
 import { useBookmarks } from '../context/BookmarkContext';
 import { fetchBookmarkedResources } from '../services/api';
 import { useApi } from '../context/ApiContext';
-import type { JsonApiResponse } from '../types/api';
+import type { JsonApiResponse, Facet } from '../types/api';
 import { MapProvider } from '../context/MapContext';
 import { FacetList } from '../components/FacetList';
 import { useFacetAccordion } from '../hooks/useFacetAccordion';
@@ -44,21 +44,13 @@ export function BookmarksPage() {
     fetchResults();
   }, [bookmarks, setLastApiUrl]);
 
-  const filteredFacets = results?.included
-    ? results.included.filter(
-        (
-          item
-        ): item is {
-          type: 'facet';
-          id: string;
-          attributes: Record<string, unknown>;
-        } =>
-          item.type === 'facet' &&
-          CONFIGURED_FACETS.includes(
-            item.id as (typeof CONFIGURED_FACETS)[number]
-          )
-      )
-    : [];
+  const included = results?.included ?? [];
+  const sortOptions = included.filter((item) => item.type === 'sort');
+  const filteredFacets = included.filter(
+    (item): item is Facet =>
+      item.type === 'facet' &&
+      CONFIGURED_FACETS.includes(item.id as (typeof CONFIGURED_FACETS)[number])
+  );
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -73,16 +65,13 @@ export function BookmarksPage() {
                 <h1 className="text-2xl font-bold text-gray-900">
                   {t('bookmarks.pageTitle')} ({formatCount(bookmarks.length)})
                 </h1>
-                {results?.included?.filter((item) => item.type === 'sort')
-                  .length > 0 && (
+                {sortOptions.length > 0 && (
                   <SortControl
-                    options={results.included
-                      .filter((item) => item.type === 'sort')
-                      .map((sortOption) => ({
-                        id: sortOption.id,
-                        label: sortOption.attributes.label,
-                        url: sortOption.links?.self || '',
-                      }))}
+                    options={sortOptions.map((sortOption) => ({
+                      id: sortOption.id,
+                      label: sortOption.attributes.label,
+                      url: sortOption.links?.self || '',
+                    }))}
                     currentSort={sort}
                     onSortChange={setSort}
                   />
@@ -95,11 +84,10 @@ export function BookmarksPage() {
               {/* Facets Sidebar - Collapsible on mobile */}
               <aside className="lg:col-span-2">
                 <details className="lg:hidden mb-4">
-                    <summary className="text-lg font-semibold cursor-pointer py-2">
+                  <summary className="text-lg font-semibold cursor-pointer py-2">
                     {t('common.filterResults')}
-                    </summary>
-                  {results?.included?.filter((item) => item.type === 'facet')
-                    .length > 0 && (
+                  </summary>
+                  {filteredFacets.length > 0 && (
                     <FacetList
                       facets={filteredFacets}
                       accordion={accordion}
@@ -113,9 +101,7 @@ export function BookmarksPage() {
                       <h2 className="text-lg font-semibold text-gray-900 mb-4">
                         {t('common.filterResults')}
                       </h2>
-                      {results?.included?.filter(
-                        (item) => item.type === 'facet'
-                      ).length > 0 && (
+                      {filteredFacets.length > 0 && (
                         <FacetList
                           facets={filteredFacets}
                           accordion={accordion}

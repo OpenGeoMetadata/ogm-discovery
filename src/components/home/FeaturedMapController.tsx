@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { useMap } from '../map/MapLibreMap';
+import { useMap } from '../../context/MapLibreContext';
 import type { GeoDocumentDetails } from '../../types/api';
 import { parseBboxToLeafletBounds } from '../../utils/bbox';
 import { toLngLat, toMapBounds } from '../../utils/mapGeometry';
 import { HOME_PAGE_MAP_CENTER, DEFAULT_US_ZOOM } from '../../config/mapView';
 import type { FeaturedMapCameraConfig } from '../../config/featured';
-import { hasAllmapsViewer } from './FeaturedItemPreviewLayer';
+import { hasAllmapsViewer } from '../../utils/ogmViewerRecord';
 interface Props {
   activeIndex: number;
   featuredDetails: (GeoDocumentDetails | null)[];

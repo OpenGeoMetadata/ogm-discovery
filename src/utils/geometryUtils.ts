@@ -194,35 +194,41 @@ function parseMultiPolygon(wkt: string): GeoJSON.MultiPolygon | null {
 }
 
 /**
- * Converts various geometry formats to GeoJSON Polygon/MultiPolygon.
+ * Converts supported geometry formats to coordinate-based GeoJSON geometry.
  * Same logic used by LocationMap on the resource page.
  * @param geometry - Geometry data in various formats
  * @returns GeoJSON object or null if conversion fails
  */
-export function normalizeGeometry(
-  geometry:
-    | string
-    | GeoJSON.Polygon
-    | GeoJSON.MultiPolygon
-    | GeoJSON.Feature
-    | { wkt: string; type?: string; geometry?: unknown; coordinates?: unknown }
-    | null
-): GeoJSON.Polygon | GeoJSON.MultiPolygon | null {
+export function normalizeGeometry(geometry: unknown): GeoJsonGeometry | null {
   if (!geometry) return null;
 
   // GeoJSON Feature: extract nested geometry
-  if (typeof geometry === 'object' && (geometry as { type?: string }).type === 'Feature') {
-    const geom = (geometry as GeoJSON.Feature).geometry;
-    return geom ? normalizeGeometry(geom) : null;
+  if (
+    typeof geometry === 'object' &&
+    'type' in geometry &&
+    geometry.type === 'Feature' &&
+    'geometry' in geometry
+  ) {
+    return normalizeGeometry(geometry.geometry);
   }
 
   // If it's already GeoJSON with coordinates
   if (
     typeof geometry === 'object' &&
     'type' in geometry &&
-    'coordinates' in geometry
+    'coordinates' in geometry &&
+    typeof geometry.type === 'string' &&
+    [
+      'Point',
+      'MultiPoint',
+      'LineString',
+      'MultiLineString',
+      'Polygon',
+      'MultiPolygon',
+    ].includes(geometry.type) &&
+    Array.isArray(geometry.coordinates)
   ) {
-    return geometry as GeoJSON.Polygon | GeoJSON.MultiPolygon;
+    return geometry as GeoJsonGeometry;
   }
 
   // If it's a WKT string
@@ -230,7 +236,7 @@ export function normalizeGeometry(
     const s = geometry.trim();
     if (s.startsWith('{')) {
       try {
-        const parsed = JSON.parse(s) as { type?: string; geometry?: unknown; coordinates?: unknown };
+        const parsed: unknown = JSON.parse(s);
         return normalizeGeometry(parsed);
       } catch {
         // Not valid JSON, try as WKT
@@ -240,8 +246,12 @@ export function normalizeGeometry(
   }
 
   // If it's a parsed object with WKT-like structure
-  if (typeof geometry === 'object' && 'wkt' in geometry) {
-    return wktToGeoJSON((geometry as { wkt: string }).wkt);
+  if (
+    typeof geometry === 'object' &&
+    'wkt' in geometry &&
+    typeof geometry.wkt === 'string'
+  ) {
+    return wktToGeoJSON(geometry.wkt);
   }
 
   console.warn('Unknown geometry format:', geometry);
@@ -253,7 +263,7 @@ export function normalizeGeometry(
  * Use this for search hover overlay so we match resource page behavior exactly.
  */
 export function geometryToLeafletFeatures(
-  normalized: GeoJSON.Polygon | GeoJSON.MultiPolygon | null
+  normalized: GeoJSON.Geometry | null
 ): GeoJSON.Feature[] {
   if (!normalized) return [];
   if (normalized.type === 'MultiPolygon') {
@@ -299,7 +309,10 @@ function collectLonLatPairs(geom: GeoJsonGeometry): [number, number][] {
   if (type === 'linestring' || type === 'multipoint') {
     return (coords as number[][]).filter(
       (c): c is [number, number] =>
-        Array.isArray(c) && c.length >= 2 && typeof c[0] === 'number' && typeof c[1] === 'number'
+        Array.isArray(c) &&
+        c.length >= 2 &&
+        typeof c[0] === 'number' &&
+        typeof c[1] === 'number'
     );
   }
   if (type === 'polygon') {
@@ -308,7 +321,10 @@ function collectLonLatPairs(geom: GeoJsonGeometry): [number, number][] {
     return Array.isArray(firstRing)
       ? firstRing.filter(
           (c): c is [number, number] =>
-            Array.isArray(c) && c.length >= 2 && typeof c[0] === 'number' && typeof c[1] === 'number'
+            Array.isArray(c) &&
+            c.length >= 2 &&
+            typeof c[0] === 'number' &&
+            typeof c[1] === 'number'
         )
       : [];
   }
@@ -336,7 +352,10 @@ function collectLonLatPairs(geom: GeoJsonGeometry): [number, number][] {
       Array.isArray(part)
         ? part.filter(
             (c): c is [number, number] =>
-              Array.isArray(c) && c.length >= 2 && typeof c[0] === 'number' && typeof c[1] === 'number'
+              Array.isArray(c) &&
+              c.length >= 2 &&
+              typeof c[0] === 'number' &&
+              typeof c[1] === 'number'
           )
         : []
     );
@@ -351,7 +370,7 @@ function collectLonLatPairs(geom: GeoJsonGeometry): [number, number][] {
 export function getCentroidFromGeometry(
   geometry:
     | string
-    | GeoJsonGeometry
+    | GeoJSON.Geometry
     | { type: string; coordinates: unknown }
     | null
     | undefined
@@ -360,13 +379,21 @@ export function getCentroidFromGeometry(
 
   let geom: GeoJsonGeometry | null = null;
 
-  if (typeof geometry === 'object' && geometry !== null && 'type' in geometry && 'coordinates' in geometry) {
+  if (
+    typeof geometry === 'object' &&
+    geometry !== null &&
+    'type' in geometry &&
+    'coordinates' in geometry
+  ) {
     geom = geometry as GeoJsonGeometry;
   } else if (typeof geometry === 'string') {
     const s = geometry.trim();
     if (s.startsWith('{')) {
       try {
-        const parsed = JSON.parse(s) as { type?: string; coordinates?: unknown };
+        const parsed = JSON.parse(s) as {
+          type?: string;
+          coordinates?: unknown;
+        };
         if (parsed && parsed.type && parsed.coordinates) {
           geom = parsed as GeoJsonGeometry;
         }
@@ -390,7 +417,11 @@ export function getCentroidFromGeometry(
         }
       }
     }
-    if (!geom && (s.toUpperCase().startsWith('POLYGON') || s.toUpperCase().startsWith('MULTIPOLYGON'))) {
+    if (
+      !geom &&
+      (s.toUpperCase().startsWith('POLYGON') ||
+        s.toUpperCase().startsWith('MULTIPOLYGON'))
+    ) {
       const normalized = normalizeGeometry(s);
       if (normalized) geom = normalized as GeoJsonGeometry;
     }
@@ -424,7 +455,7 @@ export type Bounds = [[number, number], [number, number]];
 export function getBboxFromGeometry(
   geometry:
     | string
-    | GeoJsonGeometry
+    | GeoJSON.Geometry
     | { type: string; coordinates: unknown }
     | null
     | undefined
@@ -433,13 +464,21 @@ export function getBboxFromGeometry(
 
   let geom: GeoJsonGeometry | null = null;
 
-  if (typeof geometry === 'object' && geometry !== null && 'type' in geometry && 'coordinates' in geometry) {
+  if (
+    typeof geometry === 'object' &&
+    geometry !== null &&
+    'type' in geometry &&
+    'coordinates' in geometry
+  ) {
     geom = geometry as GeoJsonGeometry;
   } else if (typeof geometry === 'string') {
     const s = geometry.trim();
     if (s.startsWith('{')) {
       try {
-        const parsed = JSON.parse(s) as { type?: string; coordinates?: unknown };
+        const parsed = JSON.parse(s) as {
+          type?: string;
+          coordinates?: unknown;
+        };
         if (parsed && parsed.type && parsed.coordinates) {
           geom = parsed as GeoJsonGeometry;
         }
@@ -457,11 +496,18 @@ export function getBboxFromGeometry(
         const maxy = parseFloat(match[3]);
         const miny = parseFloat(match[4]);
         if (!isNaN(minx + maxx + maxy + miny)) {
-          return [[miny, minx], [maxy, maxx]];
+          return [
+            [miny, minx],
+            [maxy, maxx],
+          ];
         }
       }
     }
-    if (!geom && (s.toUpperCase().startsWith('POLYGON') || s.toUpperCase().startsWith('MULTIPOLYGON'))) {
+    if (
+      !geom &&
+      (s.toUpperCase().startsWith('POLYGON') ||
+        s.toUpperCase().startsWith('MULTIPOLYGON'))
+    ) {
       const normalized = normalizeGeometry(s);
       if (normalized) geom = normalized as GeoJsonGeometry;
     }
@@ -488,10 +534,19 @@ export function getBboxFromGeometry(
     maxLon += ε;
   }
 
-  if (!Number.isFinite(minLat) || !Number.isFinite(maxLat) || !Number.isFinite(minLon) || !Number.isFinite(maxLon)) return null;
+  if (
+    !Number.isFinite(minLat) ||
+    !Number.isFinite(maxLat) ||
+    !Number.isFinite(minLon) ||
+    !Number.isFinite(maxLon)
+  )
+    return null;
   if (minLat < -90 || maxLat > 90 || minLon < -180 || maxLon > 180) return null;
 
-  return [[minLat, minLon], [maxLat, maxLon]];
+  return [
+    [minLat, minLon],
+    [maxLat, maxLon],
+  ];
 }
 
 /**
@@ -558,7 +613,14 @@ type GeoJsonGeometryForDisplay =
 function isValidCoord(lon: unknown, lat: unknown): boolean {
   const l = typeof lon === 'number' && Number.isFinite(lon) ? lon : NaN;
   const a = typeof lat === 'number' && Number.isFinite(lat) ? lat : NaN;
-  return !Number.isNaN(l) && !Number.isNaN(a) && a >= -90 && a <= 90 && l >= -180 && l <= 180;
+  return (
+    !Number.isNaN(l) &&
+    !Number.isNaN(a) &&
+    a >= -90 &&
+    a <= 90 &&
+    l >= -180 &&
+    l <= 180
+  );
 }
 
 /**
@@ -571,7 +633,8 @@ function hasValidGeoJsonCoordinates(coords: unknown): boolean {
   if (first === null || first === undefined) return false;
   if (typeof first === 'number') {
     const lon = first;
-    const lat = Array.isArray(coords) && coords.length >= 2 ? coords[1] : undefined;
+    const lat =
+      Array.isArray(coords) && coords.length >= 2 ? coords[1] : undefined;
     return isValidCoord(lon, lat);
   }
   if (Array.isArray(first)) {
@@ -584,12 +647,22 @@ function hasValidGeoJsonCoordinates(coords: unknown): boolean {
  * Returns true if the geometry is safe to pass to Leaflet (no undefined/NaN/out-of-range coords).
  */
 export function isValidGeoJsonForLeaflet(
-  geom: GeoJSON.Geometry | GeoJSON.Feature | GeoJSON.FeatureCollection | null | undefined
+  geom:
+    | GeoJSON.Geometry
+    | GeoJSON.Feature
+    | GeoJSON.FeatureCollection
+    | null
+    | undefined
 ): boolean {
   if (!geom || typeof geom !== 'object') return false;
-  const g = 'geometry' in geom ? (geom as GeoJSON.Feature).geometry : (geom as GeoJSON.Geometry);
+  const g =
+    'geometry' in geom
+      ? (geom as GeoJSON.Feature).geometry
+      : (geom as GeoJSON.Geometry);
   if (!g || typeof g !== 'object' || !('coordinates' in g)) return false;
-  return hasValidGeoJsonCoordinates((g as { coordinates: unknown }).coordinates);
+  return hasValidGeoJsonCoordinates(
+    (g as { coordinates: unknown }).coordinates
+  );
 }
 
 /**
@@ -604,7 +677,11 @@ export function geometryToGeoJSONForDisplay(
 
   // Already a GeoJSON object
   if (typeof geometry === 'object' && geometry !== null) {
-    const g = geometry as { type?: string; coordinates?: unknown; geometry?: unknown };
+    const g = geometry as {
+      type?: string;
+      coordinates?: unknown;
+      geometry?: unknown;
+    };
     if (g.type === 'Feature' && g.geometry && typeof g.geometry === 'object') {
       return geometryToGeoJSONForDisplay(g.geometry);
     }
@@ -619,7 +696,11 @@ export function geometryToGeoJSONForDisplay(
   // GeoJSON string
   if (s.startsWith('{')) {
     try {
-      const parsed = JSON.parse(s) as { type?: string; coordinates?: unknown; geometry?: unknown };
+      const parsed = JSON.parse(s) as {
+        type?: string;
+        coordinates?: unknown;
+        geometry?: unknown;
+      };
       if (parsed?.type === 'Feature' && parsed?.geometry) {
         return geometryToGeoJSONForDisplay(parsed.geometry);
       }
@@ -651,8 +732,8 @@ interface ResultLike {
   meta?: {
     ui?: {
       viewer?: {
-        geometry?: string | object;
-      };
+        geometry?: string | object | null;
+      } | null;
     };
   };
 }
@@ -661,7 +742,7 @@ interface ResultLike {
  * Get the hover geometry for a search result for map highlight.
  * Uses the SAME pipeline as resource page LocationMap: normalizeGeometry on the same
  * geometry sources (viewer.geometry, locn_geometry_original, locn_geometry).
- * Returns JSON string of normalized Polygon/MultiPolygon, or null.
+ * Returns JSON string of normalized geometry, or null.
  */
 export function getHoverGeometryForResult(result: ResultLike): string | null {
   const ogm = result?.attributes?.ogm;
@@ -673,9 +754,7 @@ export function getHoverGeometryForResult(result: ResultLike): string | null {
   const raw = viewerGeom ?? locnGeom ?? undefined;
   if (raw === undefined) return null;
 
-  const normalized = normalizeGeometry(
-    raw as string | GeoJSON.Polygon | GeoJSON.MultiPolygon | { wkt: string } | null
-  );
+  const normalized = normalizeGeometry(raw);
   if (!normalized) return null;
 
   try {

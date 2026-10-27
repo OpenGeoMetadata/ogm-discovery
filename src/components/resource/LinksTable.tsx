@@ -28,7 +28,7 @@ interface LinkItem {
 }
 
 interface LinksTableProps {
-  links: Record<string, LinkItem[]>;
+  links: Record<string, LinkItem[]> | null;
   resourceId?: string;
   searchId?: string;
 }
@@ -77,6 +77,7 @@ export function LinksTable({ links, resourceId, searchId }: LinksTableProps) {
 
   useEffect(() => {
     if (!activeMetadataLink?.format || !resourceId) return;
+    const format = activeMetadataLink.format;
 
     let cancelled = false;
     setMetadataLoading(true);
@@ -85,7 +86,7 @@ export function LinksTable({ links, resourceId, searchId }: LinksTableProps) {
     const doFetch = async () => {
       try {
         const base = getApiBasePath().replace(/\/$/, '');
-        const url = `${base}/resources/${resourceId}/metadata/display?format=${encodeURIComponent(activeMetadataLink.format)}`;
+        const url = `${base}/resources/${resourceId}/metadata/display?format=${encodeURIComponent(format)}`;
         const fullUrl = url.startsWith('/')
           ? `${window.location.origin}${url}`
           : url;

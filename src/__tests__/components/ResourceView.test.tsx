@@ -38,7 +38,7 @@ const mockUseLocation = vi.fn();
 const mockUseNavigate = vi.fn();
 
 vi.mock('react-router', async (importOriginal) => {
-  const actual = await importOriginal();
+  const actual = await importOriginal<typeof import('react-router')>();
   return {
     ...actual,
     useParams: () => mockUseParams(),
@@ -363,7 +363,15 @@ describe('ResourceView Component', () => {
 
     fetchSearchResults.mockResolvedValue({
       data: realFixtureData.slice(0, 2), // Return first 2 fixtures for pagination tests
-      meta: { total: realFixtureData.length, page: 2, per_page: 10 },
+      jsonapi: { version: '1.0', profile: [] },
+      links: { self: '', first: '', last: '' },
+      meta: {
+        totalCount: realFixtureData.length,
+        totalPages: 2,
+        currentPage: 2,
+        perPage: 10,
+        query: '',
+      },
       included: [],
     });
   });
@@ -448,6 +456,7 @@ describe('ResourceView Component', () => {
 
   describe('No Data State', () => {
     it('displays the server error page when no data is loaded', async () => {
+      // @ts-expect-error Exercise a malformed upstream response.
       fetchResourceDetails.mockResolvedValue(null);
 
       render(
@@ -1044,7 +1053,15 @@ describe('ResourceView Component', () => {
       fetchResourceDetails.mockResolvedValue(resourceWithSimilarItems);
       fetchSearchResults.mockResolvedValue({
         data: [scopedSimilarItem],
-        meta: { total: 1, page: 1, per_page: 2 },
+        jsonapi: { version: '1.0', profile: [] },
+        links: { self: '', first: '', last: '' },
+        meta: {
+          totalCount: 1,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 2,
+          query: '',
+        },
         included: [],
       });
 

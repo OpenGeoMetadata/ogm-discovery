@@ -1,4 +1,3 @@
-import React from 'react';
 import { ExternalLink } from 'lucide-react';
 import { Link } from 'react-router';
 import { useApi } from '../../context/ApiContext';

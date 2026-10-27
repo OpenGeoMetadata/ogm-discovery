@@ -3,6 +3,7 @@ import type { GeoDocument } from '../../types/api';
 import { Link, useLocation } from 'react-router';
 import { getResourceIcon } from '../../utils/resourceIcons';
 import { getResultPrimaryImageUrl } from '../../utils/resourceAssets';
+import { ThumbnailImage } from './ThumbnailImage';
 import { ResultCardPill } from './ResultCardPill';
 import { BookmarkButton } from '../BookmarkButton';
 import { useBookmarks } from '../../context/BookmarkContext';
@@ -36,12 +37,14 @@ function isResourceClassIconUrl(imageUrl: string | undefined): boolean {
 }
 
 interface GalleryThumbnailProps {
+  resourceId: string;
   imageUrl?: string;
   resourceClass?: string;
   index: number;
 }
 
 function GalleryThumbnail({
+  resourceId,
   imageUrl,
   resourceClass,
   index,
@@ -139,8 +142,11 @@ function GalleryThumbnail({
   return (
     <div className="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden relative">
       {imageUrl && shouldLoadImage && !showFallback ? (
-        <img
-          ref={(image) => {
+        <ThumbnailImage
+          resourceId={resourceId}
+          fallback={null}
+          onUnavailable={() => setShowFallback(true)}
+          imageRef={(image) => {
             imageRef.current = image;
             syncImageState(image);
           }}
@@ -319,6 +325,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
                 className="flex flex-col flex-1 relative"
               >
                 <GalleryThumbnail
+                  resourceId={r.id}
                   imageUrl={imageUrl}
                   resourceClass={resourceClass}
                   index={index}

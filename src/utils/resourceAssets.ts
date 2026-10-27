@@ -135,7 +135,9 @@ function isGenericResourceThumbnailUrl(url: string | undefined): boolean {
         : 'http://localhost';
     const parsed = new URL(url, base);
     return Boolean(
-      parsed.pathname.match(/^\/(api\/v1\/)?resources\/[^/]+\/thumbnail$/)
+      parsed.pathname.match(/\/resources\/[^/]+\/thumbnail$/) ||
+      (/\/thumbnails\/[^/]+$/.test(parsed.pathname) &&
+        !/\/thumbnails\/[0-9a-f]{64}$/i.test(parsed.pathname))
     );
   } catch {
     return false;
@@ -157,15 +159,13 @@ function isBridgeThumbnailAssetUrl(url: string | undefined): boolean {
   }
 }
 
-function getGeneratedThumbnailUrl(
+export function getGeneratedThumbnailUrl(
   resourceId: string,
   view: SearchResultAssetView
 ): string {
   const apiBasePath = getApiBasePath().replace(/\/$/, '');
-  if (view === 'gallery') {
-    return `${apiBasePath}/resources/${resourceId}/thumbnail`;
-  }
-  return `${apiBasePath}/thumbnails/${resourceId}`;
+  const url = `${apiBasePath}/resources/${encodeURIComponent(resourceId)}/thumbnail`;
+  return view === 'list' ? `${url}?variant=icon-gradient` : url;
 }
 
 export function getThumbnailFallbackUrl(
@@ -176,7 +176,7 @@ export function getThumbnailFallbackUrl(
   if (view === 'gallery') {
     return `${apiBasePath}/static-maps/${resourceId}/resource-class-icon`;
   }
-  return `${apiBasePath}/thumbnails/${resourceId}`;
+  return getGeneratedThumbnailUrl(resourceId, view);
 }
 
 export function getResultPrimaryImageUrl(

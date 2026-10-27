@@ -1,9 +1,18 @@
-import React from 'react';
 import { Users, MapPin, Tag } from 'lucide-react';
-import type { GeoDocumentDetails } from '../../types/api';
+
+/** Flat metadata consumed by this legacy presentation component. */
+export interface ResourceMetadataFields {
+  schema_provider_s?: string | null;
+  dc_publisher_sm?: string[] | null;
+  creator_sm?: string[] | null;
+  dct_spatial_sm?: string[] | null;
+  dc_subject_sm?: string[] | null;
+  dct_issued_s?: string | null;
+  [key: string]: unknown;
+}
 
 interface ResourceMetadataProps {
-  item: GeoDocumentDetails;
+  item: ResourceMetadataFields;
 }
 
 export function ResourceMetadata({ item }: ResourceMetadataProps) {

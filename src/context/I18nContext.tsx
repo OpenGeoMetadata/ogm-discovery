@@ -1,22 +1,10 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { I18nContext, type I18nContextValue } from './i18n';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import type { LocalizedText } from '../config/institution';
 import { resolveLocalizedText, translate } from '../i18n/messages';
 
 const LOCALE_STORAGE_KEY = 'ogm.locale';
-
-export interface I18nContextValue {
-  locale: string;
-  locales: string[];
-  setLocale: (locale: string) => void;
-  t: (key: string, vars?: Record<string, string | number>) => string;
-  text: (
-    value: LocalizedText | undefined,
-    vars?: Record<string, string | number>
-  ) => string;
-}
-
-const I18nContext = createContext<I18nContextValue | null>(null);
 
 function readStoredLocale(): string | null {
   try {
@@ -87,21 +75,4 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
-}
-
-export function useI18nContext(): I18nContextValue {
-  const context = useContext(I18nContext);
-  if (context) return context;
-
-  return {
-    locale: 'en',
-    locales: ['en'],
-    setLocale: () => {},
-    t: (key: string, vars?: Record<string, string | number>) =>
-      translate('en', 'en', key, vars),
-    text: (value: LocalizedText | undefined) =>
-      typeof value === 'string'
-        ? value
-        : resolveLocalizedText(value, 'en', 'en') || '',
-  };
 }

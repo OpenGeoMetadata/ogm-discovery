@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 vi.mock('../../../services/api', () => ({ fetchNominatimSearch: vi.fn() }));
 vi.mock('maplibre-gl', () => import('../../helpers/maplibre'));
 import { Map } from '../../helpers/maplibre';
-import { MapLibreContext } from '../../../components/map/MapLibreMap';
+import { MapLibreContext } from '../../../context/MapLibreContext';
 import { MapGeosearchControl } from '../../../components/map/MapGeosearchControl';
 import { fetchNominatimSearch } from '../../../services/api';
 describe('Map place search', () => {

@@ -1,5 +1,3 @@
-import React from 'react';
-
 export interface ResultCardPillProps {
   /** Index year - only shown when definitive (truthy number) */
   indexYear?: number | null;

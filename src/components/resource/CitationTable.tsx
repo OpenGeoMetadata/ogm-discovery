@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Copy, Check, Download } from 'lucide-react';
 import { scheduleAnalyticsBatch } from '../../services/analytics';
 import { getApiBasePath } from '../../services/api';
@@ -116,7 +116,9 @@ export function CitationTable({
                     <select
                       id="citation-style"
                       value={selectedStyle}
-                      onChange={(e) => setSelectedStyle(e.target.value as CitationStyle)}
+                      onChange={(e) =>
+                        setSelectedStyle(e.target.value as CitationStyle)
+                      }
                       className="text-xs border border-gray-300 rounded px-2 py-1 bg-white"
                     >
                       {styleOptions.map((s) => (
@@ -128,7 +130,9 @@ export function CitationTable({
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <div className="flex-1 text-sm text-gray-900">{displayCitation}</div>
+                  <div className="flex-1 text-sm text-gray-900">
+                    {displayCitation}
+                  </div>
                   <button
                     onClick={handleCopyCitation}
                     className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -219,7 +223,8 @@ export function CitationTable({
                   </a>
                 </div>
                 <p className="text-xs text-gray-500 mt-1.5">
-                  RIS and BibTeX for Zotero, EndNote, Mendeley. JSON-LD for Schema.org/Google Dataset Search.
+                  RIS and BibTeX for Zotero, EndNote, Mendeley. JSON-LD for
+                  Schema.org/Google Dataset Search.
                 </p>
               </td>
             </tr>

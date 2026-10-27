@@ -33,9 +33,9 @@ vi.mock('../../../components/map/MapLibreMap', () => ({
   MapLibreMap: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="map-container">{children}</div>
   ),
-  TileLayer: () => null,
-  ZoomControl: () => null,
-  Rectangle: () => null,
+}));
+
+vi.mock('../../../context/MapLibreContext', () => ({
   useMap: () => ({
     getContainer: () => document.createElement('div'),
     getBounds: () => ({
@@ -59,7 +59,6 @@ vi.mock('../../../components/map/MapLibreMap', () => ({
     createPane: () => mockPane,
     panBy: () => {},
   }),
-  useMapEvents: () => null,
 }));
 
 vi.mock('../../../components/map/MapUpdaterHex', () => ({

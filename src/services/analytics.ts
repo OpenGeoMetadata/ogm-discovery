@@ -94,14 +94,26 @@ function getSourceHost(): string | undefined {
   return window.location.host || undefined;
 }
 
-function withDefaults<T extends Record<string, unknown>>(row: T): T {
+function withDefaults<
+  T extends
+    | AnalyticsSearchRecord
+    | AnalyticsImpressionRecord
+    | AnalyticsEventRecord,
+>(row: T) {
   return {
     ...row,
     visit_token: row.visit_token ?? getVisitToken(),
-    client_name: row.client_name ?? ANALYTICS_CLIENT_NAME,
-    client_version: row.client_version ?? getClientVersion(),
-    client_channel: row.client_channel ?? ANALYTICS_CLIENT_CHANNEL,
-    source_host: row.source_host ?? getSourceHost(),
+    client_name:
+      ('client_name' in row ? row.client_name : undefined) ??
+      ANALYTICS_CLIENT_NAME,
+    client_version:
+      ('client_version' in row ? row.client_version : undefined) ??
+      getClientVersion(),
+    client_channel:
+      ('client_channel' in row ? row.client_channel : undefined) ??
+      ANALYTICS_CLIENT_CHANNEL,
+    source_host:
+      ('source_host' in row ? row.source_host : undefined) ?? getSourceHost(),
     occurred_at:
       typeof row.occurred_at === 'string'
         ? row.occurred_at
@@ -118,7 +130,7 @@ export function serializeSearchParams(
     .sort()
     .forEach((key) => {
       const values = searchParams.getAll(key);
-      serialized[key] = values.length > 1 ? values : values[0] ?? '';
+      serialized[key] = values.length > 1 ? values : (values[0] ?? '');
     });
 
   return serialized;
@@ -138,7 +150,11 @@ export function sendAnalyticsBatch(payload: AnalyticsBatchPayload): boolean {
     })
   );
 
-  if (searches.length === 0 && impressions.length === 0 && events.length === 0) {
+  if (
+    searches.length === 0 &&
+    impressions.length === 0 &&
+    events.length === 0
+  ) {
     return false;
   }
 
@@ -180,7 +196,7 @@ export function scheduleAnalyticsBatch(payload: AnalyticsBatchPayload): void {
     sendAnalyticsBatch(payload);
   };
 
-  if ('requestIdleCallback' in window) {
+  if (typeof window.requestIdleCallback === 'function') {
     window.requestIdleCallback(flush, { timeout: 1000 });
     return;
   }

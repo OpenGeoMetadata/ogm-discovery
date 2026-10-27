@@ -1,19 +1,14 @@
 import React, { Suspense, useEffect, useState } from 'react';
 
 interface LocationMapProps {
-  geometry:
-    | string
-    | GeoJSON.Polygon
-    | GeoJSON.MultiPolygon
-    | { wkt: string }
-    | null;
+  geometry: string | GeoJSON.Geometry | { wkt: string } | null;
 }
 
 const LocationMapClient = React.lazy(() => import('./LocationMap.client'));
 
 export const LocationMap: React.FC<LocationMapProps> = ({ geometry }) => {
   // Prevent hydration mismatches: render deterministic placeholder on the server
-  // and on the client's first render. Then swap in the Leaflet map after mount.
+  // and on the client's first render. Then swap in the MapLibre map after mount.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 

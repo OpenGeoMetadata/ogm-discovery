@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import type { GeoJSONSource } from 'maplibre-gl';
-import { useMap } from './MapLibreMap';
+import { useMap } from '../../context/MapLibreContext';
 import {
   boundsPolygon,
   writeSearchBounds,

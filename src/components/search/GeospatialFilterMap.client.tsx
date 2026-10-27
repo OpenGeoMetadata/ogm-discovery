@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
-import { MapLibreMap, useMap } from '../map/MapLibreMap';
+import { MapLibreMap } from '../map/MapLibreMap';
+import { useMap } from '../../context/MapLibreContext';
 import { GeometryLayer } from '../map/GeometryLayer';
 import { MapUpdaterHex, type HexStats } from '../map/MapUpdaterHex';
 import { HexLayerToggleControl } from '../map/HexLayerToggleControl';
@@ -19,6 +20,7 @@ import {
   saveHexLayerEnabled,
 } from '../../utils/hexLayerPreference';
 import { useI18n } from '../../hooks/useI18n';
+import { useMapH3 } from '../../hooks/useMapH3';
 import { useMap as useHoveredMap } from '../../context/MapContext';
 const EMPTY_STATS: HexStats = {
   hexes: [],
@@ -50,17 +52,30 @@ function FilterContents() {
     q.delete('per_page');
     return q.toString();
   }, [queryString]);
-  const onHexData = useCallback(
-    (next: HexStats) => {
-      setStats(next);
-      if (fitKey.current === queryKey || next.loading || next.error || bounds)
-        return;
-      fitKey.current = queryKey;
-      const extent = dataBounds(hexGeoJSON(next.hexes));
-      if (extent) fitMap(map, extent);
-    },
-    [map, queryKey, bounds]
-  );
+  // Discover the result extent independently of the current viewport. Otherwise
+  // an initial US view can hide the very hexes needed to fit an overseas search.
+  const extentStats = useMapH3(params.get('q') ?? '', null, 2, queryKey, {
+    enabled: !bounds,
+  });
+  useEffect(() => {
+    if (bounds) {
+      fitKey.current = null;
+      return;
+    }
+    if (fitKey.current === queryKey || extentStats.loading || extentStats.error)
+      return;
+    fitKey.current = queryKey;
+    const extent = dataBounds(hexGeoJSON(extentStats.hexes));
+    if (!extent) return;
+    fitMap(map, extent);
+  }, [
+    map,
+    queryKey,
+    bounds,
+    extentStats.hexes,
+    extentStats.loading,
+    extentStats.error,
+  ]);
   useEffect(() => {
     saveHexLayerEnabled(enabled);
   }, [enabled]);
@@ -116,7 +131,7 @@ function FilterContents() {
         <MapUpdaterHex
           searchQuery={params.get('q') ?? ''}
           queryString={queryString}
-          onHexData={onHexData}
+          onHexData={setStats}
           interactive={false}
         />
       )}

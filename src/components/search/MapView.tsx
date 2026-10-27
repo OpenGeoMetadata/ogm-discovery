@@ -2,7 +2,8 @@ import { useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router';
 import type { GeoDocument } from '../../types/api';
 import { useMap as useHoveredMap } from '../../context/MapContext';
-import { MapLibreMap, useMap } from '../map/MapLibreMap';
+import { MapLibreMap } from '../map/MapLibreMap';
+import { useMap } from '../../context/MapLibreContext';
 import { GeometryLayer } from '../map/GeometryLayer';
 import {
   boundsPolygon,

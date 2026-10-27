@@ -4,7 +4,7 @@ import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('maplibre-gl', () => import('../../helpers/maplibre'));
 import { Map } from '../../helpers/maplibre';
-import { MapLibreContext } from '../../../components/map/MapLibreMap';
+import { MapLibreContext } from '../../../context/MapLibreContext';
 import { FeaturedMapController } from '../../../components/home/FeaturedMapController';
 import type { GeoDocumentDetails } from '../../../types/api';
 const detail = {

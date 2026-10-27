@@ -1,7 +1,3 @@
-import React from 'react';
-// Remove unused import
-// import { humanizeFieldName } from '../../constants/fieldLabels';
-
 // Define types for the metadata structure
 interface MetadataAttributes {
   dct_description_sm?: string | string[];
@@ -16,22 +12,23 @@ interface MetadataAttributes {
   dc_subject_sm?: string | string[];
   gbl_resourceType_sm?: string | string[];
   gbl_resourceClass_sm?: string | string[];
-  [key: string]: string | string[] | undefined;
+  [key: string]: unknown;
 }
 
 interface MetadataTableProps {
   data: {
     data: {
-      attributes: MetadataAttributes;
+      attributes?: MetadataAttributes & { ogm?: MetadataAttributes };
     };
   };
 }
 
 export function MetadataTable({ data }: MetadataTableProps) {
-  const attributes = data?.data?.attributes || {};
+  const attributes =
+    data?.data?.attributes?.ogm ?? data?.data?.attributes ?? {};
 
   // Helper function to check if a value is empty
-  const hasValue = (value: string | string[] | undefined): boolean => {
+  const hasValue = (value: unknown): boolean => {
     if (Array.isArray(value)) {
       return value.length > 0;
     }
@@ -42,7 +39,7 @@ export function MetadataTable({ data }: MetadataTableProps) {
   };
 
   // Format value for display
-  const formatValue = (value: string | string[] | undefined): string => {
+  const formatValue = (value: unknown): string => {
     if (Array.isArray(value)) {
       return value.join(', ');
     }
@@ -59,7 +56,10 @@ export function MetadataTable({ data }: MetadataTableProps) {
   };
 
   // Metadata field definitions with labels
-  const metadataFields = [
+  const metadataFields: Array<
+    | { type?: never; key: string; label: string; colSpan: number }
+    | { type: 'combined'; cells: Array<{ key: string; label: string }> }
+  > = [
     // Core Descriptive Fields
     { key: 'dct_description_sm', label: 'Description', colSpan: 3 },
     {

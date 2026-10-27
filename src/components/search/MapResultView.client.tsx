@@ -8,6 +8,7 @@ import {
 } from '../../utils/geometryUtils';
 import { parseBboxToLeafletBounds } from '../../utils/bbox';
 import {
+  spiderOffsets,
   boundsPolygon,
   dataBounds,
   fitMap,
@@ -16,7 +17,8 @@ import {
   toMapBounds,
   type MapBounds,
 } from '../../utils/mapGeometry';
-import { MapLibreMap, useMap } from '../map/MapLibreMap';
+import { MapLibreMap } from '../map/MapLibreMap';
+import { useMap } from '../../context/MapLibreContext';
 import { GeometryLayer } from '../map/GeometryLayer';
 import { useI18n } from '../../hooks/useI18n';
 import { useMap as useHoveredMap } from '../../context/MapContext';
@@ -45,13 +47,6 @@ function centroid(resource: GeoDocument): [number, number] | null {
       ogm.locn_geometry_original
   );
   return p ? [p[1], p[0]] : null;
-}
-export function spiderOffsets(count: number): [number, number][] {
-  return Array.from({ length: count }, (_, i) => {
-    const angle = count < 9 ? (i * 2 * Math.PI) / count : i * 0.8;
-    const radius = count < 9 ? Math.max(40, count * 7) : 35 + i * 5;
-    return [Math.cos(angle) * radius, Math.sin(angle) * radius];
-  });
 }
 function ResultsContents({
   results,

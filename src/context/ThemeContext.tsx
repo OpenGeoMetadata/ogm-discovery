@@ -1,10 +1,5 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { ThemeContext, type ThemeContextValue } from './theme';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSyncExternalStore } from 'react';
 import {
   applyThemeToDom,
@@ -21,16 +16,6 @@ import {
   type ThemeConfig,
   type ThemeId,
 } from '../config/institution';
-
-export interface ThemeContextValue {
-  themeId: ThemeId;
-  theme: ThemeConfig;
-  themes: Array<{ id: ThemeId; label: string }>;
-  themeSelectorEnabled: boolean;
-  setThemeId: (id: ThemeId) => void;
-}
-
-const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 const AVAILABLE_THEMES = getAvailableThemes();
 const THEME_SELECTOR_ENABLED = isThemeSelectorEnabled();
@@ -94,19 +79,4 @@ export function ThemeProvider({
   return (
     <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
   );
-}
-
-export function useThemeContext(): ThemeContextValue {
-  const ctx = useContext(ThemeContext);
-  if (ctx) return ctx;
-
-  // Safe fallback for tests or non-provider renders (keeps components from hard-crashing).
-  const fallbackId = getDefaultThemeId();
-  return {
-    themeId: fallbackId,
-    theme: getThemeConfig(fallbackId),
-    themes: getAvailableThemes(),
-    themeSelectorEnabled: isThemeSelectorEnabled(),
-    setThemeId: () => {},
-  };
 }
