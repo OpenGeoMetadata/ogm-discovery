@@ -67,9 +67,13 @@ export function toOgmViewerRecord(
     references[reference] = viewer.endpoint;
   }
   const allmaps = data.meta?.ui?.allmaps;
-  if (allmaps?.allmaps_annotated && allmaps.allmaps_annotation_url) {
+  if (
+    allmaps?.allmaps_annotated &&
+    (allmaps.allmaps_annotation_url || allmaps.allmaps_manifest_uri)
+  ) {
     references['https://iiif.io/api/extension/georef/1/context.json'] ??=
-      allmaps.allmaps_annotation_url;
+      allmaps.allmaps_annotation_url ||
+      `https://annotations.allmaps.org/?url=${encodeURIComponent(allmaps.allmaps_manifest_uri!)}`;
   }
 
   // Retain the resource version used to invalidate stale COG tiles.

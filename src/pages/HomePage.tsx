@@ -14,6 +14,7 @@ import { useApi } from '../context/ApiContext';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { Seo } from '../components/Seo';
+import { CampusMapBackground } from '../components/home/CampusMapBackground';
 import { GinBlogSection } from '../components/home/GinBlogSection';
 import { HomepageFeaturedCollection } from '../components/home/HomepageFeaturedCollection';
 import { FacetMoreModal } from '../components/search/FacetMoreModal';
@@ -32,6 +33,7 @@ import {
   getPartnerInstitutionSearchHref,
   getPartnerInstitutionStaticMapUrl,
 } from '../constants/partnerInstitutions';
+import { resolveThemeAssetUrl } from '../utils/themeUrls';
 import { getActiveThemeId } from '../config/institution';
 import type { HomeBlogPost } from '../types/api';
 import { normalizeFacetId } from '../utils/facetLabels';
@@ -123,9 +125,8 @@ export function HomePage() {
     !!announcement.text &&
     !!announcement.link_label &&
     !!announcement.link_url;
-  const partnerInstitutions = (
-    theme.homepage?.partner_institutions || BTAA_PARTNER_INSTITUTIONS
-  ) as Array<{
+  const partnerInstitutions = (theme.homepage?.partner_institutions ||
+    BTAA_PARTNER_INSTITUTIONS) as Array<{
     slug: string;
     name: string;
     iconSlug?: string;
@@ -172,7 +173,6 @@ export function HomePage() {
   const blogLimit = blogCfg?.limit || 3;
   const browseSection = useSectionActivation<HTMLDivElement>('960px');
   const browseFacetPrefetch = useIdleActivation();
-  const partnerSection = useSectionActivation<HTMLElement>('640px');
   const blogSection = useSectionActivation<HTMLDivElement>('480px');
   const shouldLoadBrowseFacets = browseSection.active || browseFacetPrefetch;
 
@@ -576,10 +576,7 @@ export function HomePage() {
           </div>
         </div>
         {partnerInstitutions.length > 0 && (
-          <section
-            ref={partnerSection.ref}
-            className="theme-page-surface theme-border w-full border-t px-4 py-10 sm:px-6 lg:px-8"
-          >
+          <section className="theme-page-surface theme-border w-full border-t px-4 py-10 sm:px-6 lg:px-8">
             <div className="w-full">
               <p className="theme-ui theme-kicker mb-2 text-center text-[0.72rem] font-semibold uppercase tracking-[0.18em]">
                 {theme.site?.short_name || theme.institution.name}
@@ -593,41 +590,34 @@ export function HomePage() {
                   const searchHref =
                     institution.searchHref ||
                     getPartnerInstitutionSearchHref(institution);
-                  const staticMapUrl =
-                    institution.campusMap &&
-                    getPartnerInstitutionStaticMapUrl(institution);
                   const institutionMedia =
                     institution.media ||
                     (institution.slug === 'big-ten-academic-alliance'
                       ? homepageMedia
                       : undefined);
                   const shouldOpenMedia =
-                    institutionMedia?.enabled === true && !!institutionMedia.embed_url;
+                    institutionMedia?.enabled === true &&
+                    !!institutionMedia.embed_url;
+                  const campusMapUrl =
+                    getPartnerInstitutionStaticMapUrl(institution);
                   const tileContent = (
                     <div className="relative flex h-full min-h-[84px] w-full items-center justify-center overflow-hidden bg-brand p-3">
-                      {institution.campusMap &&
-                        (partnerSection.active && staticMapUrl ? (
-                          <img
-                            src={staticMapUrl}
-                            alt=""
-                            aria-hidden="true"
-                            loading="lazy"
-                            decoding="async"
-                            fetchPriority="low"
-                            className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-100 transition-transform duration-300 group-hover:scale-105"
-                          />
-                        ) : (
-                          <div
-                            aria-hidden="true"
-                            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_35%,rgba(255,255,255,0.18),transparent_45%),linear-gradient(135deg,rgba(255,255,255,0.12),rgba(255,255,255,0.03))]"
-                          />
-                        ))}
+                      <div
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_35%,rgba(255,255,255,0.18),transparent_45%),linear-gradient(135deg,rgba(255,255,255,0.12),rgba(255,255,255,0.03))]"
+                      />
+                      {campusMapUrl && (
+                        <CampusMapBackground
+                          key={campusMapUrl}
+                          url={campusMapUrl}
+                        />
+                      )}
                       <div className="relative z-10 flex items-center justify-center rounded-md bg-brand/70 px-3 py-2 shadow-sm backdrop-blur-[1px] transition-colors group-hover:bg-brand/80">
                         <img
-                          src={
+                          src={resolveThemeAssetUrl(
                             institution.iconSrc ||
-                            `/icons/${institution.iconSlug}.svg`
-                          }
+                              `/icons/${institution.iconSlug}.svg`
+                          )}
                           alt={`${institution.name} logo`}
                           title={institution.name}
                           loading="lazy"
@@ -676,6 +666,18 @@ export function HomePage() {
                   );
                 })}
               </ul>
+              {partnerInstitutions.some(
+                (institution) => institution.campusMap
+              ) && (
+                <p className="mt-2 text-right text-xs">
+                  <a href="https://openfreemap.org/">OpenFreeMap</a>
+                  {' · '}© <a href="https://openmaptiles.org/">OpenMapTiles</a>
+                  {' · '}©{' '}
+                  <a href="https://www.openstreetmap.org/copyright">
+                    OpenStreetMap
+                  </a>
+                </p>
+              )}
             </div>
           </section>
         )}

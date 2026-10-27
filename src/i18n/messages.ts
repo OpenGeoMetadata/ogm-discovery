@@ -2,6 +2,39 @@ export type MessageValue = string | Record<string, MessageValue>;
 
 export const messages = {
   en: {
+    map: {
+      label: 'Interactive map',
+      basemap: 'Basemap',
+      retry: 'Retry basemap',
+      fallback: 'The selected basemap is unavailable. Showing an alternative.',
+      unavailable:
+        'Basemaps are unavailable. Resource overlays remain visible.',
+      webgl:
+        'This device could not display the interactive map. You can still use search and the results list.',
+      geometryMissing: 'Location geometry is unavailable.',
+      location: 'Location',
+      searchPlaces: 'Search places',
+      clear: 'Clear',
+      within: 'Within',
+      intersects: 'Overlap',
+      clearLocation: 'Clear location filter',
+      relation: 'Spatial relationship',
+      showHex: 'Show hex map layer',
+      hideHex: 'Hide hex map layer',
+      hexTable: 'View hex data as table',
+      closeHexTable: 'Close hex data table',
+      resources: 'Resources',
+      resolution: 'Resolution',
+      area: 'Area',
+      searchHex: 'Search this hex',
+      noResults: 'No mappable results found in this page.',
+      details: 'View Details',
+      untitled: 'Untitled',
+      result: 'Result {number}',
+      overlayError: 'Preview unavailable. Showing the record footprint.',
+      loading: 'Loading map data…',
+      dataError: 'Map data could not be loaded.',
+    },
     common: {
       about: 'About',
       advancedSearch: 'Advanced search',

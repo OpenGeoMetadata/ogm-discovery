@@ -91,14 +91,6 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        'geoblacklight/controllers/leaflet_viewer_controller': path.resolve(
-          __dirname,
-          'src/controllers/leaflet_viewer_controller.js'
-        ),
-        geoblacklight: path.resolve(
-          __dirname,
-          'node_modules/@geoblacklight/frontend/app/javascript/geoblacklight'
-        ),
         'void-elements': path.resolve(__dirname, 'src/shims/void-elements.ts'),
       },
       dedupe: [
@@ -110,16 +102,7 @@ export default defineConfig(({ mode }) => {
       ],
     },
     optimizeDeps: {
-      exclude: [
-        'lucide-react',
-        '@geoblacklight/frontend',
-        'geoblacklight/controllers/leaflet_viewer_controller',
-        'geoblacklight/controllers/openlayers_viewer_controller',
-        'geoblacklight/controllers/oembed_viewer_controller',
-        'geoblacklight/controllers/search_results_controller',
-        'geoblacklight/controllers/downloads_controller',
-        'geoblacklight/controllers/clipboard_controller',
-      ],
+      exclude: ['lucide-react'],
       include: ['react-helmet-async', 'h3-js'],
     },
   };

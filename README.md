@@ -1,8 +1,8 @@
 # OpenGeoMetadata Discovery
 
-The official OpenGeoMetadata community frontend for configurable,
-static-site-friendly geospatial discovery using metadata served by the BTAA
-Geospatial API.
+A proof-of-concept OpenGeoMetadata community frontend for configurable,
+static-site-friendly geospatial discovery using metadata served by the
+OpenGeoMetadata API.
 
 This project is evolving the BTAA Geoportal frontend into a reusable
 OpenGeoMetadata viewer that can be branded for different institutions without
@@ -12,7 +12,7 @@ BTAA as the reference preset.
 
 ## What It Does
 
-- Searches and displays geospatial records from the BTAA Geospatial API.
+- Searches and displays geospatial records from the OpenGeoMetadata API.
 - Provides search, map, bookmark, and resource detail views.
 - Uses `theme.yaml` and optional `themes/*.yaml` files for institution
   branding, navigation, homepage content, API paths, locale settings, and
@@ -26,7 +26,7 @@ The active application lives in `src/`:
 
 - `src/config/institution.ts` parses the default `theme.yaml`, merges optional
   theme variations from `themes/`, and applies theme settings.
-- `src/services/api.ts` talks directly to the BTAA Geospatial API.
+- `src/services/api.ts` talks directly to the OpenGeoMetadata API.
 - `src/i18n/` contains shared message catalogs and locale helpers.
 - `src/components/` and `src/pages/` implement the viewer experience.
 - `public/` contains static assets used by themes and the generated site.
@@ -306,3 +306,92 @@ For deployments with a Content Security Policy, follow OGM Viewer's
 [CSP requirements](https://github.com/OpenGeoMetadata/ogm-viewer#content-security-policy),
 including `worker-src blob:`, `script-src 'wasm-unsafe-eval'`, and `connect-src data:`
 alongside the metadata, basemap, and layer service origins.
+
+### Interactive maps and basemap resilience
+
+Discovery uses MapLibre GL JS for its hero, search filter, search results,
+bookmarks, and resource location maps. H3 aggregation still comes directly from
+`api.map_h3_path`; cell IDs, search filters, counts, and resolution levels 2–8
+retain the existing API contract. The accessible hex table remains available.
+OGM Viewer continues to own resource previews and IIIF rendering.
+
+`map` in `theme.yaml` (or an institutional theme) configures the basemaps:
+
+- `basemaps`: ordered entries with a stable `id` and localized `label`.
+  Supply `style_url` for a MapLibre style, or `tiles`, `tile_size` (default 256),
+  `max_zoom` (default 19), and `attribution` for raster tiles. Optional `logo`
+  contains `src`, `href`, and localized `alt`.
+- `default_basemap` and `fallback_basemap`: entry IDs. Both default to OpenFreeMap
+  Liberty. Shipped choices are Liberty, Positron, and Dark. Unknown or retired
+  saved choices (including Maptoolkit and Esri) use the configured default.
+- `viewer_light_style` and `viewer_dark_style`: style URLs passed through OGM
+  Viewer's public properties; defaults use OpenFreeMap to avoid CARTO.
+
+A style-load error, a 15-second style timeout, or three distinct basemap tile
+failures within ten seconds switches Discovery maps to the fallback. Each
+provider is attempted once; if both fail, resource overlays remain on a neutral
+background with a retry button. Overlay/API failures do not change providers.
+Automatic fallback does not overwrite the visitor's saved basemap choice.
+
+OpenFreeMap supplies all shipped basemaps, viewer styles, and native-generated
+campus/resource map images. Preserve the style's OpenFreeMap, OpenMapTiles, and
+OpenStreetMap attribution. See the [OpenFreeMap setup guide](https://openfreemap.org/quick_start/).
+Hosted service availability is not guaranteed. Institutions can configure their
+own style endpoints. With the default Liberty selection, a basemap failure goes
+directly to the neutral background and retry control; switching between OFM
+styles does not provide independent-provider resilience. No persistent tile cache
+is added.
+
+Existing theme hero centers and featured camera centers stay `[latitude,
+longitude]`; existing camera zoom values retain their Leaflet-era scale for
+backward compatibility. They are converted at the boundary to MapLibre
+`[longitude, latitude]` and zoom minus one. New internal map geometry uses
+longitude first. Browser map requests remain direct HTTPS requests; CSP must
+permit configured styles, tiles, sprites, glyphs, logo origins, and MapLibre's
+worker (`worker-src 'self' blob:`). The SPA entrypoint explicitly bundles the
+MapLibre module worker through Vite so development and subpath deployments
+resolve it correctly. Keep that initialization before rendering maps. No server
+proxy is required.
+
+Backend-generated static-map images, external embeds, and the legacy `app/`
+SSR implementation are separate from this frontend migration. Legacy Leaflet
+assets/dependencies needed by `app/` remain isolated from the SPA entrypoint.
+
+### Generated static maps
+
+Partner campus backgrounds use API-generated MapLibre PNGs behind the bundled
+school logos. Discovery requests `/static-maps/institutions/{slug}/native` with
+the configured campus center and zoom. Deploy the API's optional native-map
+renderer/Celery integration before enabling these images in production; older
+APIs return 404 and Discovery retains its branded fallback. It never requests
+legacy CARTO campus images. Cold renders retry briefly without hiding the logo.
+
+Images normally use the active API base. For local integration testing only, set
+`VITE_STATIC_MAP_API_BASE_URL=http://127.0.0.1:3007/api/v1` when building to send
+campus and resource geography images to the local asset API while search still uses the configured API.
+Omit this override from production builds. Campus-image provider credits are
+visible below the partner grid; this integration currently uses OpenFreeMap.
+
+Search-result geography thumbnails request `/static-maps/{id}/geometry/native`.
+This endpoint generates missing images through Celery and stores them in the
+existing content-addressed asset system. Discovery bypasses legacy API static-map
+URLs (including immutable hashes containing CARTO error tiles); custom external
+map URLs remain supported. Deploy the native API route and worker before this
+frontend change. Pending images retry briefly, then show a localized unavailable
+state rather than falling back to legacy tiles. Existing immutable assets are
+not overwritten.
+
+Static-map loading uses status-aware fetches near the viewport (400px preload
+margin). Only pending/rate-limited responses (503/429) retry, using Retry-After;
+missing records fail immediately. Successful URLs stay stable so browser caching
+works. Native endpoints require CORS access from the frontend origin; CSP must
+allow the asset API in `connect-src` and `blob:` in `img-src`. Custom external
+map images continue to load directly. Search cards request the 384×288
+`?size=thumbnail` variant; full-size assets remain available without this query.
+The API caches successful native responses in the browser for one hour.
+
+For predictable first-page speed, prime campus maps and frequently viewed
+resource thumbnails before deployment. A cold render still depends on remote
+basemap data and available worker capacity. The local preview harness now loads
+missing public resource geometry into its isolated test database on demand;
+this behavior is not installed in the production API.

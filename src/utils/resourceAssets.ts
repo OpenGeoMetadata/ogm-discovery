@@ -106,7 +106,9 @@ export function toSsrAssetUrl(url: string | undefined): string | undefined {
     }
 
     const base =
-      typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+      typeof window !== 'undefined'
+        ? window.location.origin
+        : 'http://localhost';
     const parsed = new URL(url, base);
     return normalizePath(parsed.pathname, parsed.search);
   } catch {
@@ -128,7 +130,9 @@ function isGenericResourceThumbnailUrl(url: string | undefined): boolean {
 
   try {
     const base =
-      typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+      typeof window !== 'undefined'
+        ? window.location.origin
+        : 'http://localhost';
     const parsed = new URL(url, base);
     return Boolean(
       parsed.pathname.match(/^\/(api\/v1\/)?resources\/[^/]+\/thumbnail$/)
@@ -143,7 +147,9 @@ function isBridgeThumbnailAssetUrl(url: string | undefined): boolean {
 
   try {
     const base =
-      typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+      typeof window !== 'undefined'
+        ? window.location.origin
+        : 'http://localhost';
     const parsed = new URL(url, base);
     return parsed.pathname.includes('/store/asset/');
   } catch {
@@ -225,18 +231,32 @@ export function getStaticMapUrl(
   if (variant === 'resource-class-icon') {
     return `${apiBasePath}/static-maps/${resourceId}/resource-class-icon`;
   }
-  return `${apiBasePath}/static-maps/${resourceId}/geometry`;
+  const nativeBase = (
+    import.meta.env.VITE_STATIC_MAP_API_BASE_URL || apiBasePath
+  ).replace(/\/$/, '');
+  return `${nativeBase}/static-maps/${encodeURIComponent(resourceId)}/geometry/native`;
 }
 
 export function getResultStaticMapUrl(
   result: Pick<GeoDocument, 'id' | 'meta'>
 ): string {
   const extracted = extractStaticMapUrl(result);
-  const normalized = toSsrAssetUrl(extracted);
-
-  if (normalized) {
-    return normalized;
+  // API-supplied immutable hashes can contain burned-in provider error tiles.
+  // Re-resolve generated geography through the native variant, but preserve
+  // institution-provided external static maps.
+  if (extracted) {
+    try {
+      const path = new URL(extracted, 'https://api.invalid').pathname;
+      if (
+        !/^\/api\/v1\/(static-map-assets\/|static-maps\/|resources\/[^/]+\/static-map)/.test(
+          path
+        )
+      ) {
+        return extracted;
+      }
+    } catch {
+      // Resolve invalid generated metadata through the native endpoint below.
+    }
   }
-
-  return getStaticMapUrl(result.id, 'geometry');
+  return `${getStaticMapUrl(result.id, 'geometry')}?size=thumbnail`;
 }

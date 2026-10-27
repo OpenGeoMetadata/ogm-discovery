@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { getResultPrimaryImageUrl } from '../../utils/resourceAssets';
+import {
+  getResultPrimaryImageUrl,
+  getResultStaticMapUrl,
+} from '../../utils/resourceAssets';
 import type { GeoDocument } from '../../types/api';
 
 function resultWithUi(ui: Record<string, string | undefined>) {
@@ -53,5 +56,24 @@ describe('getResultPrimaryImageUrl', () => {
     expect(getResultPrimaryImageUrl(result, 'list')).toMatch(
       /\/thumbnails\/resource-1$/
     );
+  });
+});
+
+describe('native resource geography', () => {
+  it('bypasses stale immutable API map hashes', () => {
+    expect(
+      getResultStaticMapUrl(
+        resultWithUi({
+          static_map: '/api/v1/static-map-assets/' + 'a'.repeat(64),
+        })
+      )
+    ).toMatch(/resource-1\/geometry\/native\?size=thumbnail$/);
+  });
+  it('keeps externally supplied maps', () => {
+    expect(
+      getResultStaticMapUrl(
+        resultWithUi({ static_map: 'https://institution.edu/map.png' })
+      )
+    ).toBe('https://institution.edu/map.png');
   });
 });

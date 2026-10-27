@@ -201,3 +201,37 @@ The overall impression should be sturdy, quiet, and intentionally understated.
 - Don't hardcode BTAA-specific visual language into shared components.
 - Don't use heavy shadows, glassmorphism, or motion that competes with search and map work.
 - Don't let the map overpower the metadata, or the metadata bury the map.
+
+## MapLibre discovery maps
+
+Discovery maps use MapLibre in flat Mercator view, without rotation or pitch.
+Retain cooperative scrolling, keyboard navigation, and reduced-motion behavior.
+OpenFreeMap Liberty is the default discovery basemap, with Positron and Dark
+as additional choices. OGM Viewer uses explicit OpenFreeMap styles.
+
+Reserve the bottom attribution strip and the provider-logo area above it on
+all map sizes. Provider attribution must never collapse. Place hero/carousel overlays above this
+reserved area. Basemap changes retain H3, footprints, selected records, and
+camera position. Network failures use calm inline status and retry controls;
+WebGL failure leaves the surrounding search and metadata experience usable.
+
+### Partner institution tiles
+
+Partner tiles use bundled school logos over API-generated campus map images.
+Load images lazily and keep the branded background while a render is pending or
+unavailable. Request the MapLibre renderer explicitly; never fall back to legacy
+CARTO thumbnails. Keep clickable map credits visible below the grid, outside
+logo overlays. Resolve local logo URLs against the application base path.
+
+Search-result geography images must preserve the full PNG, including its burned-in
+provider credits; use contained sizing rather than cropping. Keep pending-render
+retries bounded and show a localized unavailable state on failure.
+
+### Basemap switcher
+
+Use the production BTAA layer-control pattern: a compact stacked-layers icon
+expands into labeled radio choices. Match neighboring map-control sizing and
+keep choices theme-driven. Support hover, click/touch, native radio keyboard
+navigation, Escape with focus restoration, and dismissal outside the control.
+Long labels wrap and the choices scroll when necessary. Keep provider credits
+outside this control and visible when it is expanded.

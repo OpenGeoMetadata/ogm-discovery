@@ -1,14 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { ChevronLeft, ChevronRight, Home, Pause, Play } from 'lucide-react';
-import { MapContainer, Rectangle, useMap, ZoomControl } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { MapLibreMap, useMap } from '../map/MapLibreMap';
+import { GeometryLayer } from '../map/GeometryLayer';
+import { boundsPolygon, toLngLat, toMapBounds } from '../../utils/mapGeometry';
 import { cellArea, UNITS } from 'h3-js';
-import { leafletGestureMapOptions } from '../../config/leafletConfig';
-import { registerLeafletGestureHandling } from '../../config/leafletGestureHandling';
 
-registerLeafletGestureHandling(L);
 import { MapUpdaterHex, type HexHoverData } from '../map/MapUpdaterHex';
 import { HexLayerToggleControl } from '../map/HexLayerToggleControl';
 import { BboxRectangleSelector } from '../map/BboxRectangleSelector';
@@ -30,9 +27,9 @@ import {
 } from '../../utils/hexLayerPreference';
 import { FeaturedMapController } from './FeaturedMapController';
 import { FeaturedItemPreviewLayer } from './FeaturedItemPreviewLayer';
-import { BasemapSwitcherControl } from '../map/BasemapSwitcherControl';
 import { MapGeosearchControl } from '../map/MapGeosearchControl';
 import { useTheme } from '../../hooks/useTheme';
+import type { ThemeFeaturedItemConfig } from '../../config/institution';
 
 /** Route API thumbnail URLs through app paths for SSR/relative requests. */
 const IMMUTABLE_THUMBNAIL_PATH_RE = /^\/api\/v1\/thumbnails\/[0-9a-f]{64}$/i;
@@ -102,23 +99,10 @@ function MapUserEngagementTracker({
   return null;
 }
 
-const FEATURED_BOUNDS_PANE = 'featuredBoundsPane';
 const FEATURED_ITEM_DURATION_MS = 10_000;
 const FEATURED_PROGRESS_TICK_MS = 100;
 /** Dark Big Ten blue for progress bar (BTAA primary) */
 const DARK_BIG_TEN_BLUE = '#003C5B';
-
-/** Ensures a pane exists for the featured bounds rectangle. Layer order: hexes (back) -> bounds -> preview (front). */
-function useFeaturedBoundsPane() {
-  const map = useMap();
-  useEffect(() => {
-    let pane = map.getPane(FEATURED_BOUNDS_PANE);
-    if (!pane) {
-      pane = map.createPane(FEATURED_BOUNDS_PANE);
-      pane.style.setProperty('z-index', '410', 'important'); // above hexes, below featuredPreviewPane (420)
-    }
-  }, [map]);
-}
 
 /** Renders the active featured item's bounding box on the map when featured is initiated and the active item has a bbox. */
 function FeaturedItemBoundsLayer({
@@ -130,7 +114,6 @@ function FeaturedItemBoundsLayer({
   featuredDetails: (GeoDocumentDetails | null)[];
   featuredInitiated: boolean;
 }) {
-  useFeaturedBoundsPane();
   const detail = featuredDetails[activeIndex];
   const bboxStr = detail?.attributes?.ogm?.dcat_bbox;
   const bounds = parseBboxToLeafletBounds(bboxStr);
@@ -138,15 +121,9 @@ function FeaturedItemBoundsLayer({
   if (!featuredInitiated || !bounds) return null;
 
   return (
-    <Rectangle
-      bounds={bounds}
-      pathOptions={{
-        pane: FEATURED_BOUNDS_PANE,
-        color: '#2563eb',
-        weight: 2,
-        fillColor: '#3b82f6',
-        fillOpacity: 0.15,
-      }}
+    <GeometryLayer
+      id="featured-bounds"
+      data={boundsPolygon(toMapBounds(bounds))}
     />
   );
 }
@@ -176,7 +153,7 @@ function HexHoverCard({ hoveredHex }: { hoveredHex: HexHoverData }) {
   return (
     <div
       data-hex-popover
-      className="absolute bottom-4 left-4 z-[1000] rounded-lg border border-gray-200 bg-white/95 shadow-lg backdrop-blur-sm p-3 min-w-[180px]"
+      className="absolute bottom-20 left-4 z-[1000] rounded-lg border border-gray-200 bg-white/95 shadow-lg backdrop-blur-sm p-3 min-w-[180px]"
       role="status"
       aria-live="polite"
     >
@@ -217,25 +194,12 @@ function MapPanner({
   const panned = useRef(false);
   useEffect(() => {
     if (panned.current) return;
-    map.whenReady(() => {
-      panned.current = true;
-      if (initialPanPx[0] === 0 && initialPanPx[1] === 0) {
-        const center = map.getCenter();
-        onInitialViewReady([center.lat, center.lng], map.getZoom());
-        programmaticFlyRef.current = false;
-        return;
-      }
-
-      programmaticFlyRef.current = true;
-      map.panBy(initialPanPx, { animate: false });
-      const onMoveEnd = () => {
-        const center = map.getCenter();
-        onInitialViewReady([center.lat, center.lng], map.getZoom());
-        programmaticFlyRef.current = false;
-        map.off('moveend', onMoveEnd);
-      };
-      map.on('moveend', onMoveEnd);
-    });
+    panned.current = true;
+    programmaticFlyRef.current = true;
+    map.panBy(initialPanPx, { duration: 0 });
+    const center = map.getCenter();
+    onInitialViewReady([center.lng, center.lat], map.getZoom());
+    programmaticFlyRef.current = false;
   }, [initialPanPx, map, onInitialViewReady, programmaticFlyRef]);
   return null;
 }
@@ -324,20 +288,23 @@ function HomeMapResetListener({
   useEffect(() => {
     const handleReset = () => {
       const homeView = initialHomeViewRef.current ?? {
-        center: HOME_PAGE_MAP_CENTER,
-        zoom: DEFAULT_US_ZOOM,
+        center: toLngLat(HOME_PAGE_MAP_CENTER),
+        zoom: DEFAULT_US_ZOOM - 1,
       };
       programmaticFlyRef.current = true;
-      map.flyTo(
-        L.latLng(homeView.center[0], homeView.center[1]),
-        homeView.zoom,
-        { duration: 0.6 }
-      );
       const onMoveEnd = () => {
         programmaticFlyRef.current = false;
         map.off('moveend', onMoveEnd);
       };
-      map.on('moveend', onMoveEnd);
+      map.once('moveend', onMoveEnd);
+      map.flyTo({
+        center: homeView.center,
+        zoom: homeView.zoom,
+        duration: window.matchMedia?.('(prefers-reduced-motion: reduce)')
+          .matches
+          ? 0
+          : 600,
+      });
     };
 
     window.addEventListener('ogm-viewer:home-map-reset', handleReset);
@@ -349,14 +316,14 @@ function HomeMapResetListener({
 }
 
 /**
- * Non-interactive Leaflet hex map used as the background of the homepage.
+ * Interactive MapLibre hex map used as the background of the homepage.
  * Center is south of the US so North America appears just under the search form.
  * Hovering a hex shows a glowing blue border and popover at bottom-left.
  * Featured resources carousel at bottom; when an item is active, map flies to its bbox and a popup shows thumbnail and link.
  */
 export function HomePageHexMapBackground() {
   const { theme } = useTheme();
-  const featuredItems = useMemo(() => {
+  const featuredItems = useMemo<ThemeFeaturedItemConfig[]>(() => {
     if (theme.homepage?.featured_items?.length) {
       return theme.homepage.featured_items;
     }
@@ -527,12 +494,6 @@ export function HomePageHexMapBackground() {
 
   return (
     <div className="absolute inset-0 z-0">
-      <style>{`.hex-hover-glow { filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.9)); }
-.map-hex-search-popup .leaflet-popup-content-wrapper { background: transparent; box-shadow: none; padding: 0; border-radius: 0; }
-.map-hex-search-popup .leaflet-popup-content { margin: 0; min-width: 0; }
-.map-hex-search-popup .leaflet-popup-tip-container { margin-top: -1px; }
-.map-hex-search-popup .leaflet-popup-tip { background: rgba(255, 255, 255, 0.95); box-shadow: none; }
-.homepage-map .leaflet-top.leaflet-left { top: 1rem; }`}</style>
       <p className="sr-only">
         For a list of hex data, use the hex table button in the bottom-left
         corner of the map.
@@ -542,23 +503,12 @@ export function HomePageHexMapBackground() {
         role="region"
         aria-label="Resource density hex map"
       >
-        <MapContainer
-          center={homeMapCenter}
-          zoom={homeMapZoom}
+        <MapLibreMap
+          center={toLngLat(homeMapCenter)}
+          zoom={homeMapZoom - 1}
           className="homepage-map h-full w-full"
-          zoomControl={false}
-          dragging={true}
-          scrollWheelZoom={true}
-          doubleClickZoom={true}
-          touchZoom={true}
-          keyboard={true}
-          attributionControl={true}
-          zoomAnimationThreshold={1}
-          {...leafletGestureMapOptions}
         >
-          <ZoomControl position="topleft" />
           <MapGeosearchControl />
-          <BasemapSwitcherControl />
           <HexLayerToggleControl
             enabled={hexLayerEnabled}
             hexes={hexDataForTable.hexes}
@@ -627,7 +577,7 @@ export function HomePageHexMapBackground() {
             featuredDetails={featuredDetails}
             featuredInitiated={featuredInitiated}
           />
-        </MapContainer>
+        </MapLibreMap>
 
         {/* Live region: announce active slide change for screen readers */}
         <div aria-live="polite" aria-atomic className="sr-only" role="status">
@@ -714,7 +664,7 @@ export function HomePageHexMapBackground() {
           aria-roledescription="carousel"
           aria-label="Featured resources"
           aria-describedby="featured-carousel-desc"
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2 px-3 py-2 rounded-lg bg-white/60 backdrop-blur-sm shadow-lg border border-gray-200"
+          className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex gap-2 px-3 py-2 rounded-lg bg-white/60 backdrop-blur-sm shadow-lg border border-gray-200"
           data-featured-carousel
           onMouseEnter={() => {
             featuredCardHoverRef.current = true;

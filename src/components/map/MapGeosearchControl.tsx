@@ -6,8 +6,9 @@ import {
   type KeyboardEvent,
 } from 'react';
 import { createPortal } from 'react-dom';
-import L from 'leaflet';
-import { LeafletContext } from '@react-leaflet/core';
+import type { Map as GLMap, ControlPosition } from 'maplibre-gl';
+import { useControlContainer, MapLibreContext } from './MapLibreMap';
+import { useI18n } from '../../hooks/useI18n';
 import { Search, X } from 'lucide-react';
 import { fetchNominatimSearch } from '../../services/api';
 import type { GazetteerPlace } from '../../types/api';
@@ -19,38 +20,35 @@ const MAP_CONTROL_ICON_PROPS = {
 };
 
 interface MapGeosearchControlProps {
-  mapInstance?: L.Map | null;
-  position?: L.ControlPosition;
+  mapInstance?: GLMap | null;
+  position?: ControlPosition;
   placeholder?: string;
   maxResults?: number;
-  onPlaceSelect?: (place: GazetteerPlace, map: L.Map) => void;
+  onPlaceSelect?: (place: GazetteerPlace, map: GLMap) => void;
 }
 
-function fitMapToPlace(map: L.Map, place: GazetteerPlace) {
+function fitMapToPlace(map: GLMap, place: GazetteerPlace) {
   const attrs = place.attributes;
-  const bounds = L.latLngBounds(
-    [attrs.min_latitude, attrs.min_longitude],
-    [attrs.max_latitude, attrs.max_longitude]
-  );
-
-  if (bounds.isValid()) {
-    map.fitBounds(bounds, { padding: [24, 24], maxZoom: 12 });
-    return;
-  }
-
-  map.setView([attrs.latitude, attrs.longitude], 12);
+  const bounds: [[number, number], [number, number]] = [
+    [attrs.min_longitude, attrs.min_latitude],
+    [attrs.max_longitude, attrs.max_latitude],
+  ];
+  if (bounds.flat().every(Number.isFinite)) {
+    map.fitBounds(bounds, { padding: 24, maxZoom: 11 });
+  } else map.jumpTo({ center: [attrs.longitude, attrs.latitude], zoom: 11 });
 }
 
 export function MapGeosearchControl({
   mapInstance,
-  position = 'topleft',
-  placeholder = 'Search places',
+  position = 'top-left',
+  placeholder,
   maxResults = 8,
   onPlaceSelect,
 }: MapGeosearchControlProps) {
-  const context = useContext(LeafletContext);
-  const map = context?.map ?? mapInstance ?? null;
-  const [container, setContainer] = useState<HTMLDivElement | null>(null);
+  const context = useContext(MapLibreContext);
+  const map = context ?? mapInstance ?? null;
+  const container = useControlContainer(map, position);
+  const { t } = useI18n();
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<GazetteerPlace[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -59,44 +57,6 @@ export function MapGeosearchControl({
   const [isExpanded, setIsExpanded] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!map) return;
-
-    const CustomControl = L.Control.extend({
-      onAdd: () => {
-        const div = document.createElement('div');
-        div.className = 'leaflet-control leaflet-bar map-geosearch-control';
-        L.DomEvent.disableClickPropagation(div);
-        L.DomEvent.disableScrollPropagation(div);
-        return div;
-      },
-    });
-
-    const control = new CustomControl({ position });
-    control.addTo(map);
-
-    const controlContainer = control.getContainer();
-    if (position === 'topleft' && controlContainer?.parentElement) {
-      const cornerContainer = controlContainer.parentElement;
-      const zoomControl = cornerContainer.querySelector(
-        '.leaflet-control-zoom'
-      );
-
-      if (zoomControl?.nextSibling) {
-        cornerContainer.insertBefore(controlContainer, zoomControl.nextSibling);
-      } else if (zoomControl) {
-        cornerContainer.appendChild(controlContainer);
-      }
-    }
-
-    setContainer(controlContainer);
-
-    return () => {
-      control.remove();
-      setContainer(null);
-    };
-  }, [map, position]);
 
   useEffect(() => {
     const trimmedQuery = query.trim();
@@ -215,7 +175,7 @@ export function MapGeosearchControl({
         onClick={() => setIsExpanded((open) => !open)}
         aria-label={isExpanded ? 'Hide place search' : 'Search places on map'}
         title={isExpanded ? 'Hide place search' : 'Search places on map'}
-        className="leaflet-control-custom-button focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors"
+        className="discovery-control-button focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors"
       >
         <Search
           {...MAP_CONTROL_ICON_PROPS}
@@ -249,7 +209,7 @@ export function MapGeosearchControl({
                 }
               }}
               onKeyDown={handleKeyDown}
-              placeholder={placeholder}
+              placeholder={placeholder ?? t('map.searchPlaces')}
               aria-label="Search for a place on the map"
               className="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
             />

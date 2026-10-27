@@ -1,169 +1,99 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import L from 'leaflet';
-import { useMap } from 'react-leaflet';
-import { normalizeBboxSearchEnvelope } from '../../utils/bbox';
-
-const BBOX_RECTANGLE_PANE = 'bboxRectangleSelectorPane';
-
-function buildBboxSearchUrl(bounds: L.LatLngBounds, relation = 'intersects') {
-  const ne = bounds.getNorthEast();
-  const sw = bounds.getSouthWest();
-  const bbox = normalizeBboxSearchEnvelope(sw.lng, sw.lat, ne.lng, ne.lat);
-  if (!bbox) return null;
-  const params = new URLSearchParams();
-  params.set('include_filters[geo][type]', 'bbox');
-  params.set('include_filters[geo][field]', 'dcat_bbox');
-  params.set('include_filters[geo][relation]', relation);
-  params.set(
-    'include_filters[geo][top_left][lat]',
-    bbox.topLeft.lat.toString()
-  );
-  params.set(
-    'include_filters[geo][top_left][lon]',
-    bbox.topLeft.lon.toString()
-  );
-  params.set(
-    'include_filters[geo][bottom_right][lat]',
-    bbox.bottomRight.lat.toString()
-  );
-  params.set(
-    'include_filters[geo][bottom_right][lon]',
-    bbox.bottomRight.lon.toString()
-  );
-  return `/search?${params.toString()}`;
-}
+import type { GeoJSONSource } from 'maplibre-gl';
+import { useMap } from './MapLibreMap';
+import {
+  boundsPolygon,
+  writeSearchBounds,
+  type MapBounds,
+} from '../../utils/mapGeometry';
 
 export function BboxRectangleSelector() {
   const map = useMap();
   const navigate = useNavigate();
-  const draggingRef = useRef(false);
-  const startRef = useRef<L.LatLng | null>(null);
-  const rectRef = useRef<L.Rectangle | null>(null);
-  const movedRef = useRef(false);
-  const suppressNextClickRef = useRef(false);
-
   useEffect(() => {
-    const ensurePane = () => {
-      let pane = map.getPane(BBOX_RECTANGLE_PANE);
-      if (!pane) {
-        pane = map.createPane(BBOX_RECTANGLE_PANE);
-        pane.style.setProperty('z-index', '415', 'important');
+    let start: [number, number] | null = null;
+    let bounds: MapBounds | null = null;
+    let suppress = false;
+    const id = 'discovery-drawing';
+    const remove = () => {
+      if (map.getLayer(id)) map.removeLayer(id);
+      if (map.getSource(id)) map.removeSource(id);
+    };
+    const point = (e: MouseEvent): [number, number] => {
+      const rect = map.getContainer().getBoundingClientRect();
+      const p = map.unproject([e.clientX - rect.left, e.clientY - rect.top]);
+      return [p.lng, p.lat];
+    };
+    const cancel = () => {
+      start = null;
+      bounds = null;
+      map.dragPan.enable();
+      remove();
+    };
+    const down = (e: MouseEvent) => {
+      if (e.button || !(e.ctrlKey || e.metaKey)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      start = point(e);
+      map.dragPan.disable();
+    };
+    const move = (e: MouseEvent) => {
+      if (!start || !map.isStyleLoaded()) return;
+      const end = point(e);
+      bounds = [
+        [Math.min(start[0], end[0]), Math.min(start[1], end[1])],
+        [Math.max(start[0], end[0]), Math.max(start[1], end[1])],
+      ];
+      const data = boundsPolygon(bounds);
+      if (map.getSource(id)) (map.getSource(id) as GeoJSONSource).setData(data);
+      else {
+        map.addSource(id, { type: 'geojson', data });
+        map.addLayer({
+          id,
+          type: 'line',
+          source: id,
+          paint: { 'line-color': '#2563eb', 'line-width': 2 },
+        });
       }
     };
-
-    const removeRect = () => {
-      if (rectRef.current && map.hasLayer(rectRef.current)) {
-        map.removeLayer(rectRef.current);
-        rectRef.current = null;
+    const up = (e: MouseEvent) => {
+      if (!start) return;
+      e.preventDefault();
+      const result = bounds;
+      suppress = !!bounds;
+      cancel();
+      if (result) {
+        const params = writeSearchBounds(new URLSearchParams(), result);
+        if (params) navigate(`/search?${params}`);
       }
     };
-
-    const latLngFromClientPoint = (clientX: number, clientY: number) => {
-      const container = map.getContainer();
-      const bounds = container.getBoundingClientRect();
-      const point = L.point(clientX - bounds.left, clientY - bounds.top);
-      return map.containerPointToLatLng(point);
+    const key = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') cancel();
     };
-
-    const handleMouseDown = (event: MouseEvent) => {
-      if (event.button !== 0 || (!event.ctrlKey && !event.metaKey)) {
-        return;
+    const click = (e: MouseEvent) => {
+      if (suppress) {
+        e.stopPropagation();
+        e.preventDefault();
+        suppress = false;
       }
-      event.preventDefault();
-      event.stopPropagation();
-      draggingRef.current = true;
-      movedRef.current = false;
-      startRef.current = latLngFromClientPoint(event.clientX, event.clientY);
-      map.dragging.disable();
-      ensurePane();
     };
-
-    const handleMouseMove = (event: MouseEvent) => {
-      if (!draggingRef.current || !startRef.current) return;
-      event.preventDefault();
-
-      const latlng = latLngFromClientPoint(event.clientX, event.clientY);
-      movedRef.current = true;
-      const bounds = L.latLngBounds(startRef.current, latlng);
-
-      removeRect();
-      rectRef.current = L.rectangle(bounds, {
-        pane: BBOX_RECTANGLE_PANE,
-        color: '#2563eb',
-        weight: 2,
-        fillColor: '#3b82f6',
-        fillOpacity: 0.15,
-      });
-      rectRef.current.addTo(map);
-    };
-
-    const handleMouseUp = (event: MouseEvent) => {
-      if (!draggingRef.current) return;
-      event.preventDefault();
-      event.stopPropagation();
-
-      map.dragging.enable();
-      draggingRef.current = false;
-      suppressNextClickRef.current = movedRef.current;
-
-      if (!rectRef.current) {
-        startRef.current = null;
-        removeRect();
-        return;
-      }
-
-      const bounds = rectRef.current.getBounds();
-      startRef.current = null;
-      removeRect();
-
-      const sw = bounds.getSouthWest();
-      const ne = bounds.getNorthEast();
-      if (
-        Math.abs(ne.lat - sw.lat) < 1e-8 ||
-        Math.abs(ne.lng - sw.lng) < 1e-8
-      ) {
-        return;
-      }
-
-      const url = buildBboxSearchUrl(bounds);
-      if (url) navigate(url);
-    };
-
-    const handleClickCapture = (event: MouseEvent) => {
-      if (!suppressNextClickRef.current) return;
-      event.preventDefault();
-      event.stopPropagation();
-      suppressNextClickRef.current = false;
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || !draggingRef.current) return;
-      map.dragging.enable();
-      draggingRef.current = false;
-      startRef.current = null;
-      removeRect();
-    };
-
-    const container = map.getContainer();
-    container.addEventListener('mousedown', handleMouseDown, true);
-    container.addEventListener('click', handleClickCapture, true);
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    document.addEventListener('keydown', handleKeyDown);
-
+    const host = map.getContainer();
+    host.addEventListener('mousedown', down, true);
+    host.addEventListener('click', click, true);
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+    document.addEventListener('keydown', key);
+    window.addEventListener('blur', cancel);
     return () => {
-      container.removeEventListener('mousedown', handleMouseDown, true);
-      container.removeEventListener('click', handleClickCapture, true);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.removeEventListener('keydown', handleKeyDown);
-      removeRect();
-      if (draggingRef.current) {
-        map.dragging.enable();
-      }
+      host.removeEventListener('mousedown', down, true);
+      host.removeEventListener('click', click, true);
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', up);
+      document.removeEventListener('keydown', key);
+      window.removeEventListener('blur', cancel);
+      cancel();
     };
   }, [map, navigate]);
-
   return null;
 }

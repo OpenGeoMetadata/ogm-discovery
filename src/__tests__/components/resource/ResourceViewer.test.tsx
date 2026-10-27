@@ -57,6 +57,10 @@ describe('ResourceViewer', () => {
       gbl_mdVersion_s: 'Aardvark',
     });
     expect(container.querySelector('ogm-viewer')).toHaveAttribute(
+      'light-basemap',
+      'https://tiles.openfreemap.org/styles/liberty'
+    );
+    expect(container.querySelector('ogm-viewer')).toHaveAttribute(
       'aria-label',
       'Resource preview'
     );
