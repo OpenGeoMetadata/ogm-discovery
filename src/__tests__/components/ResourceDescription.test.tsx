@@ -82,7 +82,8 @@ describe('ResourceDescription Component', () => {
 
     it('returns null when description is null', () => {
       const { container } = render(
-        <ResourceDescription description={null as any} />
+        // @ts-expect-error Deliberately exercise a missing API value.
+        <ResourceDescription description={null} />
       );
 
       expect(container.firstChild).toBeNull();
@@ -90,7 +91,8 @@ describe('ResourceDescription Component', () => {
 
     it('returns null when description is undefined', () => {
       const { container } = render(
-        <ResourceDescription description={undefined as any} />
+        // @ts-expect-error Deliberately exercise a missing API value.
+        <ResourceDescription description={undefined} />
       );
 
       expect(container.firstChild).toBeNull();

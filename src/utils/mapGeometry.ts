@@ -248,3 +248,11 @@ export function writeSearchBounds(
   }
   return params;
 }
+
+export function spiderOffsets(count: number): [number, number][] {
+  return Array.from({ length: count }, (_, i) => {
+    const angle = count < 9 ? (i * 2 * Math.PI) / count : i * 0.8;
+    const radius = count < 9 ? Math.max(40, count * 7) : 35 + i * 5;
+    return [Math.cos(angle) * radius, Math.sin(angle) * radius];
+  });
+}

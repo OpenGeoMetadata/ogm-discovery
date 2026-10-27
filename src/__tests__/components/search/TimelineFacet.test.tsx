@@ -1,15 +1,19 @@
+import type { ComponentProps, PropsWithChildren } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import { TimelineFacet } from '../../../components/search/TimelineFacet';
 
 // Mock Recharts since it renders on canvas/SVG and is hard to test interactively in JSDOM
-vi.mock('recharts', () => {
-  const OriginalModule = vi.importActual('recharts');
+vi.mock('recharts', async () => {
+  const OriginalModule =
+    await vi.importActual<typeof import('recharts')>('recharts');
   return {
     ...OriginalModule,
-    ResponsiveContainer: ({ children }: any) => <div>{children}</div>,
-    BarChart: ({ children }: any) => (
+    ResponsiveContainer: ({ children }: PropsWithChildren) => (
+      <div>{children}</div>
+    ),
+    BarChart: ({ children }: PropsWithChildren) => (
       <div data-testid="bar-chart">{children}</div>
     ),
     Bar: () => <div data-testid="bar" />,
@@ -21,19 +25,17 @@ vi.mock('recharts', () => {
 });
 
 describe('TimelineFacet', () => {
-  const mockFacet = {
+  const mockFacet: ComponentProps<typeof TimelineFacet>['facet'] = {
     id: 'year_histogram',
     type: 'terms',
     attributes: {
-      hits: 100,
       label: 'Year',
       items: [
         [1900, 10],
         [1950, 20],
         [2000, 30],
-      ] as any,
+      ],
     },
-    links: { self: '...' },
   };
 
   it('renders the selected range label and always-visible year fields', () => {
@@ -86,7 +88,7 @@ describe('TimelineFacet', () => {
   it('prefills manual entry fields with available min and max years when no range is active', () => {
     render(
       <TimelineFacet
-        facet={mockFacet as any}
+        facet={mockFacet}
         selectedRange={null}
         onChange={() => {}}
       />
@@ -99,7 +101,7 @@ describe('TimelineFacet', () => {
   it('prefills manual entry fields from the selected range', () => {
     render(
       <TimelineFacet
-        facet={mockFacet as any}
+        facet={mockFacet}
         selectedRange={{ start: 1950, end: 2000 }}
         onChange={() => {}}
       />
@@ -112,7 +114,7 @@ describe('TimelineFacet', () => {
   it('preserves a partial active range in manual entry', () => {
     render(
       <TimelineFacet
-        facet={mockFacet as any}
+        facet={mockFacet}
         selectedRange={{ start: 1950, end: null }}
         onChange={() => {}}
       />
@@ -126,7 +128,7 @@ describe('TimelineFacet', () => {
     const onChange = vi.fn();
     render(
       <TimelineFacet
-        facet={mockFacet as any}
+        facet={mockFacet}
         selectedRange={null}
         onChange={onChange}
       />
@@ -147,7 +149,7 @@ describe('TimelineFacet', () => {
     const onChange = vi.fn();
     render(
       <TimelineFacet
-        facet={mockFacet as any}
+        facet={mockFacet}
         selectedRange={null}
         onChange={onChange}
       />
@@ -168,7 +170,7 @@ describe('TimelineFacet', () => {
     const onChange = vi.fn();
     render(
       <TimelineFacet
-        facet={mockFacet as any}
+        facet={mockFacet}
         selectedRange={null}
         onChange={onChange}
       />
@@ -187,7 +189,7 @@ describe('TimelineFacet', () => {
     const onChange = vi.fn();
     render(
       <TimelineFacet
-        facet={mockFacet as any}
+        facet={mockFacet}
         selectedRange={null}
         onChange={onChange}
       />
@@ -206,7 +208,7 @@ describe('TimelineFacet', () => {
     const onChange = vi.fn();
     render(
       <TimelineFacet
-        facet={mockFacet as any}
+        facet={mockFacet}
         selectedRange={null}
         onChange={onChange}
       />
@@ -226,7 +228,7 @@ describe('TimelineFacet', () => {
     const onChange = vi.fn();
     render(
       <TimelineFacet
-        facet={mockFacet as any}
+        facet={mockFacet}
         selectedRange={{ start: 1950, end: 2000 }}
         onChange={onChange}
       />
@@ -242,7 +244,7 @@ describe('TimelineFacet', () => {
     const onChange = vi.fn();
     render(
       <TimelineFacet
-        facet={mockFacet as any}
+        facet={mockFacet}
         selectedRange={null}
         onChange={onChange}
       />
@@ -255,7 +257,7 @@ describe('TimelineFacet', () => {
   });
 
   it('selects a decade bucket from a focused chart bar control', async () => {
-    const manyYearFacet = {
+    const manyYearFacet: ComponentProps<typeof TimelineFacet>['facet'] = {
       ...mockFacet,
       attributes: {
         ...mockFacet.attributes,
@@ -266,7 +268,7 @@ describe('TimelineFacet', () => {
 
     render(
       <TimelineFacet
-        facet={manyYearFacet as any}
+        facet={manyYearFacet}
         selectedRange={null}
         onChange={onChange}
       />

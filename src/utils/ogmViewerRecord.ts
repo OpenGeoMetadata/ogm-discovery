@@ -1,5 +1,5 @@
 import type { GeoBlacklightSchemaAardvark } from 'ogm-viewer/lib';
-import type { GeoDocument } from '../types/api';
+import type { GeoDocument, GeoDocumentDetails } from '../types/api';
 import { getBboxFromGeometry } from './geometryUtils';
 
 export type ViewerDocument = Pick<GeoDocument, 'attributes' | 'meta'> & {
@@ -110,4 +110,12 @@ export function toOgmViewerRecord(
     dcat_bbox: bbox,
     dct_references_s: JSON.stringify(references),
   };
+}
+
+export function hasAllmapsViewer(detail: GeoDocumentDetails | null): boolean {
+  const allmaps = detail?.meta?.ui?.allmaps;
+  return !!(
+    allmaps?.allmaps_annotated &&
+    (allmaps.allmaps_annotation_url || allmaps.allmaps_manifest_uri)
+  );
 }

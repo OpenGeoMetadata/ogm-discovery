@@ -57,37 +57,8 @@ const SIMILAR_ITEM_ID_SEPARATOR = '\u001f';
 
 // Define the ResourceData type to match the actual API response
 interface ResourceData extends GeoDocument {
-  meta?: {
-    ui?: {
-      viewer?: {
-        protocol?: string;
-        endpoint?: string;
-        geometry?: string;
-      };
-      downloads?: Array<{
-        label: string;
-        url: string;
-        type: string;
-        format?: string;
-        generated?: boolean;
-        generation_path?: string;
-        download_type?: string;
-      }>;
-      citation?: string;
-      thumbnail_url?: string;
-      static_map?: string;
-      links?: Record<
-        string,
-        Array<{
-          label: string;
-          url: string;
-          format?: 'iso' | 'fgdc' | 'html';
-          wxs_identifier?: string;
-          request_url?: string;
-          request_label?: string;
-        }>
-      >;
-      relationships?: Record<string, unknown>;
+  meta?: GeoDocument['meta'] & {
+    ui?: NonNullable<NonNullable<GeoDocument['meta']>['ui']> & {
       similar_items?: Array<{
         id: string;
         attributes: {

@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { axeWithWCAG22 } from '../../test-utils/axe';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router';
-import { FacetList } from '../../components/FacetList';
+import { FacetList, type JsonApiFacet } from '../../components/FacetList';
 import { vi } from 'vitest';
 
 // Mock useSearchParams
@@ -58,7 +58,9 @@ vi.mock('../../components/search/TimelineFacet', () => ({
     onChange,
     selectedRange,
   }: {
-    onChange: (range: { start: number | null; end: number | null } | null) => void;
+    onChange: (
+      range: { start: number | null; end: number | null } | null
+    ) => void;
     selectedRange: { start: number | null; end: number | null } | null;
   }) => (
     <div data-testid="timeline-facet">
@@ -67,13 +69,22 @@ vi.mock('../../components/search/TimelineFacet', () => ({
           ? `${selectedRange.start ?? 'null'}-${selectedRange.end ?? 'null'}`
           : 'no-range'}
       </span>
-      <button type="button" onClick={() => onChange({ start: 1900, end: 1949 })}>
+      <button
+        type="button"
+        onClick={() => onChange({ start: 1900, end: 1949 })}
+      >
         Apply year range
       </button>
-      <button type="button" onClick={() => onChange({ start: 1900, end: null })}>
+      <button
+        type="button"
+        onClick={() => onChange({ start: 1900, end: null })}
+      >
         Apply start-only year range
       </button>
-      <button type="button" onClick={() => onChange({ start: null, end: 1949 })}>
+      <button
+        type="button"
+        onClick={() => onChange({ start: null, end: 1949 })}
+      >
         Apply end-only year range
       </button>
       <button type="button" onClick={() => onChange(null)}>
@@ -204,7 +215,7 @@ const mockFacetData = [
   },
 ];
 
-const mockTimelineFacetData: any = [
+const mockTimelineFacetData: JsonApiFacet[] = [
   {
     type: 'timeline' as const,
     id: 'year_histogram',
@@ -276,7 +287,7 @@ describe('FacetList Component', () => {
     });
 
     it('renders facets when items are compact tuples', () => {
-      const compactFacetData = [
+      const compactFacetData: JsonApiFacet[] = [
         {
           type: 'facet' as const,
           id: 'dct_spatial_sm',
@@ -296,7 +307,7 @@ describe('FacetList Component', () => {
 
       render(
         <TestWrapper>
-          <FacetList facets={compactFacetData as any} />
+          <FacetList facets={compactFacetData} />
         </TestWrapper>
       );
 
@@ -351,7 +362,8 @@ describe('FacetList Component', () => {
     it('displays message when facets is null', () => {
       render(
         <TestWrapper>
-          <FacetList facets={null as any} />
+          {/* @ts-expect-error Deliberately exercise a missing API value. */}
+          <FacetList facets={null} />
         </TestWrapper>
       );
 
@@ -677,7 +689,8 @@ describe('FacetList Component', () => {
 
       render(
         <TestWrapper>
-          <FacetList facets={facetsWithMissingItems as any} />
+          {/* @ts-expect-error Deliberately exercise a facet missing required items. */}
+          <FacetList facets={facetsWithMissingItems} />
         </TestWrapper>
       );
 
@@ -812,7 +825,9 @@ describe('FacetList Component', () => {
         </TestWrapper>
       );
 
-      expect(screen.getByRole('heading', { level: 3, name: 'Year' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { level: 3, name: 'Year' })
+      ).toBeInTheDocument();
       expect(screen.getByTestId('timeline-selected-range')).toHaveTextContent(
         '1910-1932'
       );
@@ -859,11 +874,15 @@ describe('FacetList Component', () => {
       );
 
       const user = userEvent.setup();
-      await user.click(screen.getByRole('button', { name: 'Apply year range' }));
+      await user.click(
+        screen.getByRole('button', { name: 'Apply year range' })
+      );
 
       expect(mockSetSearchParams).toHaveBeenCalled();
       const lastCallArgs = mockSetSearchParams.mock.lastCall?.[0];
-      expect(lastCallArgs.get('include_filters[year_range][start]')).toBe('1900');
+      expect(lastCallArgs.get('include_filters[year_range][start]')).toBe(
+        '1900'
+      );
       expect(lastCallArgs.get('include_filters[year_range][end]')).toBe('1949');
       expect(lastCallArgs.get('page')).toBeNull();
       expect(lastCallArgs.get('q')).toBe('maps');
@@ -887,7 +906,9 @@ describe('FacetList Component', () => {
 
       expect(mockSetSearchParams).toHaveBeenCalled();
       const lastCallArgs = mockSetSearchParams.mock.lastCall?.[0];
-      expect(lastCallArgs.get('include_filters[year_range][start]')).toBe('1900');
+      expect(lastCallArgs.get('include_filters[year_range][start]')).toBe(
+        '1900'
+      );
       expect(lastCallArgs.get('include_filters[year_range][end]')).toBeNull();
       expect(lastCallArgs.get('page')).toBeNull();
       expect(lastCallArgs.get('q')).toBe('maps');
@@ -929,7 +950,9 @@ describe('FacetList Component', () => {
       );
 
       const user = userEvent.setup();
-      await user.click(screen.getByRole('button', { name: 'Clear year range' }));
+      await user.click(
+        screen.getByRole('button', { name: 'Clear year range' })
+      );
 
       expect(mockSetSearchParams).toHaveBeenCalled();
       const lastCallArgs = mockSetSearchParams.mock.lastCall?.[0];

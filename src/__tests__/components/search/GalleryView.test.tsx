@@ -37,6 +37,7 @@ const mockResults: GeoDocument[] = Array.from({ length: 25 }, (_, i) => ({
   id: `result-${i + 1}`,
   attributes: {
     ogm: {
+      id: `result-${i + 1}`,
       dct_title_s: `Result ${i + 1}`,
       gbl_resourceClass_sm: ['Map'],
       gbl_indexYear_im: [2020],
@@ -292,7 +293,10 @@ describe('GalleryView', () => {
       }
     ).mock.calls[0][0];
     const entry = { isIntersecting: true };
-    observerCallback([entry]);
+    observerCallback(
+      [entry as IntersectionObserverEntry],
+      new IntersectionObserver(() => {})
+    );
 
     expect(onLoadMore).toHaveBeenCalled();
   });
@@ -306,7 +310,10 @@ describe('GalleryView', () => {
         mock: { calls: Array<[IntersectionObserverCallback]> };
       }
     ).mock.calls[0][0];
-    observerCallback([{ isIntersecting: true }]);
+    observerCallback(
+      [{ isIntersecting: true } as IntersectionObserverEntry],
+      new IntersectionObserver(() => {})
+    );
 
     expect(onLoadMore).not.toHaveBeenCalled();
   });
@@ -343,3 +350,21 @@ describe('GalleryView', () => {
     });
   });
 });
+
+// Layout and scheduling use normal images here; resolver responses are covered separately.
+vi.mock('../../../components/search/ThumbnailImage', () => ({
+  ThumbnailImage: ({
+    resourceId,
+    fallback,
+    imageRef,
+    onUnavailable,
+    ...props
+  }: import('react').ComponentProps<
+    typeof import('../../../components/search/ThumbnailImage').ThumbnailImage
+  >) => {
+    void resourceId;
+    void fallback;
+    void onUnavailable;
+    return <img ref={imageRef} {...props} />;
+  },
+}));

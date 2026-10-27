@@ -12,6 +12,7 @@
     "update-imports": "node scripts/update-react-router-imports.js",
     "scaffold": "node scripts/scaffold-site.mjs",
     "lint": "eslint 'src/**/*.{ts,tsx}' 'scripts/**/*.{js,mjs}'",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json",
     "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'scripts/**/*.{js,mjs}' --fix",
     "format": "prettier --write 'src/**/*.{ts,tsx,css,md,json}' 'scripts/**/*.{js,mjs}' 'docs/**/*.md' '*.md' '*.yaml' 'themes/**/*.yaml'",
     "format:check": "prettier --check 'src/**/*.{ts,tsx,css,md,json}' 'scripts/**/*.{js,mjs}' 'docs/**/*.md' '*.md' '*.yaml' 'themes/**/*.yaml'",

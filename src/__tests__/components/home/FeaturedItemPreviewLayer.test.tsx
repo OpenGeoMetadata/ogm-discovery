@@ -15,7 +15,7 @@ vi.mock('ogm-viewer/lib', () => ({
   },
 }));
 import { Map } from '../../helpers/maplibre';
-import { MapLibreContext } from '../../../components/map/MapLibreMap';
+import { MapLibreContext } from '../../../context/MapLibreContext';
 import { FeaturedItemPreviewLayer } from '../../../components/home/FeaturedItemPreviewLayer';
 const detail = {
   id: 'one',

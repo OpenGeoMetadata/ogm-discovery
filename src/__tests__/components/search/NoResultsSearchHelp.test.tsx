@@ -1,3 +1,4 @@
+import { gazetteerResponse, gazetteerPlace } from '../../helpers/gazetteer';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -26,7 +27,7 @@ describe('NoResultsSearchHelp', () => {
 
   it('shows empty suggestion states when services return no matches', async () => {
     vi.mocked(fetchSuggestions).mockResolvedValue([]);
-    vi.mocked(fetchNominatimSearch).mockResolvedValue({ data: [] });
+    vi.mocked(fetchNominatimSearch).mockResolvedValue(gazetteerResponse());
 
     renderHelp('zzzzzz');
 
@@ -50,23 +51,13 @@ describe('NoResultsSearchHelp', () => {
         attributes: { text: 'Minnesota', score: 1 },
       },
     ]);
-    vi.mocked(fetchNominatimSearch).mockResolvedValue({
-      data: [
-        {
-          type: 'gazetteer_place',
-          id: 'osm-1',
-          attributes: {
-            name: 'Minneapolis',
-            display_name: 'Minneapolis, Hennepin County, Minnesota',
-            placetype: 'city',
-            min_latitude: 44.8,
-            max_latitude: 45.1,
-            min_longitude: -93.4,
-            max_longitude: -93.1,
-          },
-        },
-      ],
-    });
+    vi.mocked(fetchNominatimSearch).mockResolvedValue(
+      gazetteerResponse([
+        gazetteerPlace({
+          display_name: 'Minneapolis, Hennepin County, Minnesota',
+        }),
+      ])
+    );
 
     renderHelp('minnesota');
 

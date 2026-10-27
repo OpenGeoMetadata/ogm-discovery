@@ -385,20 +385,6 @@ const geoblacklightFixtures: Fixture[] = [
 ];
 
 // BTAA GIN fixtures - All fixtures from btaa_fixtures_list.csv
-// Helper function to extract ID from URL
-const extractIdFromUrl = (url: string): string => {
-  if (!url || !url.trim()) return '';
-  const match = url.match(/\/catalog\/([^\/]+)/);
-  if (match) return match[1];
-  // Handle non-standard URLs like geodata.wisc.edu
-  const match2 = url.match(/\/catalog\/([^\/\?]+)/);
-  if (match2) return match2[1];
-  // Handle resources URLs
-  const match3 = url.match(/\/resources\/([^\/\?]+)/);
-  if (match3) return match3[1];
-  return url;
-};
-
 const btaaGinFixtures: Fixture[] = [
   {
     id: '219ffed3-3e58-4fb7-ad82-4c264aae1b17',
@@ -501,6 +487,7 @@ const btaaGinFixtures: Fixture[] = [
     name: 'external link in Description field',
     description: 'Aging and Disability Resource Center Regions, Wisconsin 2020',
     category: 'Metadata Block',
+    source: 'btaa',
   },
   {
     id: '88be737b-4fea-4f23-9433-a008ed6b18b5',
@@ -529,6 +516,7 @@ const btaaGinFixtures: Fixture[] = [
     description:
       'Street Centerlines [Philadelphia--Pennsylvania] {2025} - Could have nested values',
     category: 'Modal Window',
+    source: 'btaa',
   },
   {
     id: '09a-04',
@@ -703,6 +691,7 @@ const btaaGinFixtures: Fixture[] = [
     name: 'OGC web service',
     description: 'Adirondack Park Boundary, 1993',
     category: 'Viewer',
+    source: 'btaa',
   },
   {
     id: 'utaustin_121171',
@@ -883,7 +872,7 @@ export function FixturesTestPage() {
   // Calculate category counts - this simulates what would be shown when that category is selected
   // This ensures the count exactly matches what appears in the filtered results
   const getCategoryCount = (
-    source: 'gbl' | 'btaa',
+    _source: 'gbl' | 'btaa',
     category: string
   ): number => {
     // Simulate filtering with this specific category selected

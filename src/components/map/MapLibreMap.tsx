@@ -1,20 +1,15 @@
-import { Layers } from 'lucide-react';
 import {
-  createContext,
-  useContext,
-  useId,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
+  MapLibreContext,
+  useMap,
+  useControlContainer,
+} from '../../context/MapLibreContext';
+import { Layers } from 'lucide-react';
+import { useId, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   Map as GLMap,
   NavigationControl,
   AttributionControl,
   type MapOptions,
-  type ControlPosition,
-  type IControl,
   type ErrorEvent,
 } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -30,41 +25,7 @@ import {
   saveBasemapKey,
 } from '../../config/basemaps';
 import type { BasemapConfig } from '../../config/institution';
-
-export const MapLibreContext = createContext<GLMap | null>(null);
-export function useMap() {
-  const map = useContext(MapLibreContext);
-  if (!map) throw new Error('Map component must be inside MapLibreMap');
-  return map;
-}
-
-/** Native controls host React portals; MapLibre owns positioning and cleanup. */
-export function useControlContainer(
-  map: GLMap | null,
-  position: ControlPosition = 'top-left'
-) {
-  const [container, setContainer] = useState<HTMLDivElement | null>(null);
-  useEffect(() => {
-    if (!map) return;
-    const div = document.createElement('div');
-    div.className =
-      'maplibregl-ctrl maplibregl-ctrl-group discovery-map-control';
-    const stop = (e: Event) => e.stopPropagation();
-    for (const event of ['mousedown', 'dblclick', 'touchstart', 'wheel'])
-      div.addEventListener(event, stop);
-    const control: IControl = {
-      onAdd: () => div,
-      onRemove: () => div.remove(),
-    };
-    map.addControl(control, position);
-    setContainer(div);
-    return () => {
-      map.removeControl(control);
-      setContainer(null);
-    };
-  }, [map, position]);
-  return container;
-}
+import { mapLifecycleEvents } from '../../utils/mapEvents';
 
 export function MapLibreMap({
   children,
@@ -164,7 +125,7 @@ export function MapLibreMap({
         !basemap ? 'empty' : basemap.id === requested.id ? 'ready' : 'fallback'
       );
       // Revoke async overlay adapters before a new style can receive their work.
-      map.fire('discovery:stylechanging');
+      mapLifecycleEvents(map).fire('discovery:stylechanging');
       // Full replacement reliably removes provider-specific sources and glyphs.
       map.setStyle(basemap ? basemapStyle(basemap) : EMPTY_STYLE, {
         diff: false,

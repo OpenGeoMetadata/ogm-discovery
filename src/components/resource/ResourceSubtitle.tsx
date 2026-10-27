@@ -1,4 +1,3 @@
-import React from 'react';
 import type { GeoDocument } from '../../types/api';
 
 interface ResourceSubtitleProps {

@@ -5,6 +5,7 @@ import type { GeoDocument } from '../../types/api';
 import { getResourceIcon } from '../../utils/resourceIcons';
 import { getResultPrimaryImageUrl } from '../../utils/resourceAssets';
 import { ResultCardPill } from '../search/ResultCardPill';
+import { ThumbnailImage } from '../search/ThumbnailImage';
 import { debugLog, debugWarn } from '../../utils/logger';
 
 interface SimilarItemsCarouselProps {
@@ -63,7 +64,13 @@ function SimilarItemCard({ item }: SimilarItemCardProps) {
         {/* Image Container */}
         <div className="aspect-video w-full bg-gray-50 relative overflow-hidden">
           {primaryImageUrl && !imageError ? (
-            <img
+            <ThumbnailImage
+              resourceId={item.id}
+              fallback={
+                <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                  {getResourceIcon(resourceClass)}
+                </div>
+              }
               src={primaryImageUrl}
               alt={title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -210,9 +217,7 @@ export function SimilarItemsCarousel({
                 >
                   <span
                     className={`block w-2 h-2 rounded-full transition-colors ${
-                      i === currentPage
-                        ? 'bg-blue-600'
-                        : 'bg-gray-300'
+                      i === currentPage ? 'bg-blue-600' : 'bg-gray-300'
                     }`}
                     aria-hidden
                   />

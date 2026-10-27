@@ -222,6 +222,7 @@ npm run preview         # preview the built site
 npm run test            # run Vitest
 npm run test:ci         # run Vitest once with coverage thresholds
 npm run lint            # run ESLint
+npm run typecheck       # check application, tests, and Vite configuration
 npm run lint:fix        # run ESLint with automatic fixes
 npm run format          # run Prettier
 npm run format:check    # check formatting
@@ -307,6 +308,18 @@ For deployments with a Content Security Policy, follow OGM Viewer's
 including `worker-src blob:`, `script-src 'wasm-unsafe-eval'`, and `connect-src data:`
 alongside the metadata, basemap, and layer service origins.
 
+### Thumbnail fallbacks
+
+Search-result and related-item thumbnails use the canonical API thumbnail
+resolver, with the BTAA Geoportal's `variant=icon-gradient` fallback for list
+cards. Missing, restricted, or failed thumbnails show a resource-class icon;
+HTTP-success SVGs containing "Thumbnail unavailable" are never displayed.
+Ready immutable thumbnails retain normal browser image loading. Queued captures
+retry at most 12 times and stop when the card is removed. For cross-origin
+pending-thumbnail updates, the API must expose `X-Thumbnail-Pending` and
+`X-Placeholder` through CORS; unavailable SVG detection also works without those
+headers. Requests use the configured API base URL and need no frontend proxy.
+
 ### Interactive maps and basemap resilience
 
 Discovery uses MapLibre GL JS for its hero, search filter, search results,
@@ -314,6 +327,12 @@ bookmarks, and resource location maps. H3 aggregation still comes directly from
 `api.map_h3_path`; cell IDs, search filters, counts, and resolution levels 2–8
 retain the existing API contract. The accessible hex table remains available.
 OGM Viewer continues to own resource previews and IIIF rendering.
+
+The Place facet fits each new search to its full H3 result extent using a
+resolution-2 request without a viewport bounding box. Active search filters still
+apply, and explicit location bounds take precedence. Panning, zooming, and
+pagination preserve the camera; visible hexes continue loading for the current
+viewport. Empty results leave the camera in place.
 
 `map` in `theme.yaml` (or an institutional theme) configures the basemaps:
 

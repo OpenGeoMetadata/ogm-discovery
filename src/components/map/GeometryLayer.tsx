@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import type { GeoJSONSource } from 'maplibre-gl';
-import { useMap } from './MapLibreMap';
+import { useMap } from '../../context/MapLibreContext';
 import { geometryData } from '../../utils/mapGeometry';
 
 export function GeometryLayer({

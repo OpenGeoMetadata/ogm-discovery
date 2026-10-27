@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
-import { MapLibreMap, useMap } from '../map/MapLibreMap';
+import { MapLibreMap } from '../map/MapLibreMap';
+import { useMap } from '../../context/MapLibreContext';
 import { GeometryLayer } from '../map/GeometryLayer';
 import {
   boundsPolygon,
@@ -9,12 +10,7 @@ import {
 } from '../../utils/mapGeometry';
 import { useI18n } from '../../hooks/useI18n';
 interface LocationMapProps {
-  geometry:
-    | string
-    | GeoJSON.Polygon
-    | GeoJSON.MultiPolygon
-    | { wkt: string }
-    | null;
+  geometry: string | GeoJSON.Geometry | { wkt: string } | null;
 }
 function LocationGeometry({ geometry }: LocationMapProps) {
   const map = useMap();

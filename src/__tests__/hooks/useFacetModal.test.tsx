@@ -41,8 +41,7 @@ describe('useFacetModal', () => {
       totalPages: 1,
       currentPage: 1,
       perPage: 10,
-      facetName: 'dct_spatial_sm',
-      sort: 'count_desc',
+      facet: { id: 'dct_spatial_sm', label: 'Place' },
     },
   };
 

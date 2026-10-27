@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import type { GeoDocument } from '../types/api';
 import { BookOpen } from 'lucide-react';
@@ -12,6 +11,7 @@ import { getResultPrimaryImageUrl } from '../utils/resourceAssets';
 import { fetchResourceDetails } from '../services/api';
 import { scheduleAnalyticsBatch } from '../services/analytics';
 import { StaticResultMap } from './search/StaticResultMap';
+import { ThumbnailImage } from './search/ThumbnailImage';
 import { ResultCardPill } from './search/ResultCardPill';
 import { SEARCH_RESULTS_PER_PAGE } from '../constants/search';
 
@@ -41,7 +41,6 @@ export function SearchResults({
   const { setHoveredGeometry, setHoveredResourceId, setGeometryIfHovering } =
     useMap();
   const { isBookmarked } = useBookmarks();
-  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
   const isCompact = variant === 'compact';
   const thumbnailWrapperClass = isCompact ? 'w-24' : 'w-24 md:w-48';
@@ -150,37 +149,22 @@ export function SearchResults({
               <div
                 className={`${thumbnailWrapperClass} flex-shrink-0 relative group/thumb`}
               >
-                {(() => {
-                  const primaryImageUrl = getResultPrimaryImageUrl(
-                    result,
-                    searchView
-                  );
-                  const hasThumbnail = !imageErrors.has(result.id);
-
-                  return hasThumbnail ? (
-                    <div className={`${thumbnailSizeClass} rounded-l-lg`}>
-                      <img
-                        src={primaryImageUrl}
-                        alt=""
-                        loading={index < 2 ? 'eager' : 'lazy'}
-                        decoding="async"
-                        fetchPriority={index < 2 ? 'high' : 'low'}
-                        className={`${thumbnailSizeClass} object-cover rounded-l-lg`}
-                        onError={() => {
-                          setImageErrors((prev) =>
-                            new Set(prev).add(result.id)
-                          );
-                        }}
-                      />
-                    </div>
-                  ) : (
+                <ThumbnailImage
+                  resourceId={result.id}
+                  src={getResultPrimaryImageUrl(result, searchView)}
+                  alt=""
+                  loading={index < 2 ? 'eager' : 'lazy'}
+                  decoding="async"
+                  fetchPriority={index < 2 ? 'high' : 'low'}
+                  className={`${thumbnailSizeClass} object-cover rounded-l-lg`}
+                  fallback={
                     <div
                       className={`${thumbnailSizeClass} flex items-center justify-center bg-gray-50 rounded-l-lg`}
                     >
                       {getResourceIcon(resourceClass)}
                     </div>
-                  );
-                })()}
+                  }
+                />
 
                 {/* Bookmark Button - Absolute Top Left on Image */}
                 <div

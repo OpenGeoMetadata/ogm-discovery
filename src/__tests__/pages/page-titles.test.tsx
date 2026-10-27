@@ -8,7 +8,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('react-router', async (importOriginal) => {
-  const actual = await importOriginal();
+  const actual = await importOriginal<typeof import('react-router')>();
   return {
     ...actual,
     useParams: () => ({ id: 'test-id' }),

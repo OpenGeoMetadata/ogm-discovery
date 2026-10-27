@@ -1,3 +1,4 @@
+import { gazetteerResponse } from '../helpers/gazetteer';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { HelmetProvider } from 'react-helmet-async';
@@ -97,7 +98,7 @@ function createMockApiResponse(
 describe('SearchPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(fetchNominatimSearch).mockResolvedValue({ data: [] });
+    vi.mocked(fetchNominatimSearch).mockResolvedValue(gazetteerResponse());
     vi.mocked(fetchSuggestions).mockResolvedValue([]);
     localStorage.clear();
     sessionStorage.clear();
@@ -109,8 +110,7 @@ describe('SearchPage', () => {
 
   const renderWithRouter = (
     initialUrl = '/search',
-    searchResults: JsonApiResponse | null = null,
-    options?: { returnRouter?: boolean }
+    searchResults: JsonApiResponse | null = null
   ) => {
     const routes = [
       {
@@ -132,7 +132,7 @@ describe('SearchPage', () => {
     });
 
     const result = render(<RouterProvider router={router} />);
-    return options?.returnRouter ? { ...result, router } : result;
+    return { ...result, router };
   };
 
   it('renders map view by default', async () => {
@@ -190,9 +190,7 @@ describe('SearchPage', () => {
       '&include_filters%5Bgbl_resourceClass_sm%5D%5B%5D=Maps';
 
     const results = createMockApiResponse(mockResults.slice(0, 20));
-    const { router } = renderWithRouter(bboxAndMapsUrl, results, {
-      returnRouter: true,
-    });
+    const { router } = renderWithRouter(bboxAndMapsUrl, results);
 
     const mapsButton = screen.getByRole('button', {
       name: /Resource Class: Maps/i,

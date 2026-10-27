@@ -1,4 +1,3 @@
-import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router';
 import { useTheme } from '../hooks/useTheme';

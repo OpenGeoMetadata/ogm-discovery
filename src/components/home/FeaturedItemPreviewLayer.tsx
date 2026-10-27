@@ -1,17 +1,11 @@
 import { previewMapLease } from '../../utils/previewMapLease';
+import { mapLifecycleEvents } from '../../utils/mapEvents';
 import { useEffect, useState } from 'react';
 import type { MapPreviewer } from 'ogm-viewer/lib';
-import { useMap } from '../map/MapLibreMap';
+import { useMap } from '../../context/MapLibreContext';
 import type { GeoDocumentDetails } from '../../types/api';
 import { toOgmViewerRecord } from '../../utils/ogmViewerRecord';
 import { useI18n } from '../../hooks/useI18n';
-export function hasAllmapsViewer(detail: GeoDocumentDetails | null): boolean {
-  const allmaps = detail?.meta?.ui?.allmaps;
-  return !!(
-    allmaps?.allmaps_annotated &&
-    (allmaps.allmaps_annotation_url || allmaps.allmaps_manifest_uri)
-  );
-}
 export function FeaturedItemPreviewLayer({
   activeIndex,
   featuredDetails,
@@ -86,12 +80,12 @@ export function FeaturedItemPreviewLayer({
       }
     };
     void draw();
-    map.on('discovery:stylechanging', reset);
+    mapLifecycleEvents(map).on('discovery:stylechanging', reset);
     map.on('style.load', draw);
     map.on('idle', draw);
     return () => {
       disposed = true;
-      map.off('discovery:stylechanging', reset);
+      mapLifecycleEvents(map).off('discovery:stylechanging', reset);
       map.off('style.load', draw);
       map.off('idle', draw);
       reset();

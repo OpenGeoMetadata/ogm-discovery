@@ -509,7 +509,7 @@ describe('SearchResults Component', () => {
       );
 
       const thumbnail = container.querySelector(
-        'img[src="/api/v1/thumbnails/nyu-2451-34564"]'
+        'img[src="/api/v1/resources/nyu-2451-34564/thumbnail?variant=icon-gradient"]'
       );
       expect(thumbnail).toBeInTheDocument();
       expect(thumbnail).toHaveAttribute('alt', '');
@@ -544,7 +544,7 @@ describe('SearchResults Component', () => {
       );
 
       const thumbnail = container.querySelector(
-        'img[src="/api/v1/thumbnails/nyu-2451-34564"]'
+        'img[src="/api/v1/resources/nyu-2451-34564/thumbnail?variant=icon-gradient"]'
       );
       expect(thumbnail).toBeInTheDocument();
     });
@@ -578,7 +578,7 @@ describe('SearchResults Component', () => {
       );
 
       const thumbnail = container.querySelector(
-        'img[src="/api/v1/thumbnails/nyu-2451-34564"]'
+        'img[src="/api/v1/resources/nyu-2451-34564/thumbnail?variant=icon-gradient"]'
       );
       expect(thumbnail).toBeInTheDocument();
       expect(thumbnail).toHaveAttribute('alt', '');
@@ -884,11 +884,11 @@ describe('SearchResults Component', () => {
       );
 
       const thumbnail = container.querySelector(
-        'img[src="/api/v1/thumbnails/missing-thumb-test"]'
+        'img[src="/api/v1/resources/missing-thumb-test/thumbnail?variant=icon-gradient"]'
       );
       expect(thumbnail).toHaveAttribute(
         'src',
-        '/api/v1/thumbnails/missing-thumb-test'
+        '/api/v1/resources/missing-thumb-test/thumbnail?variant=icon-gradient'
       );
       expect(thumbnail).toHaveAttribute('alt', '');
     });
@@ -1063,3 +1063,19 @@ describe('SearchResults Component', () => {
     });
   });
 });
+
+// URL selection is tested here; response handling has dedicated integration tests.
+vi.mock('../../components/search/ThumbnailImage', () => ({
+  ThumbnailImage: ({
+    resourceId,
+    fallback,
+    ...props
+  }: import('react').ComponentProps<'img'> & {
+    resourceId: string;
+    fallback: import('react').ReactNode;
+  }) => {
+    void resourceId;
+    void fallback;
+    return <img {...props} />;
+  },
+}));
