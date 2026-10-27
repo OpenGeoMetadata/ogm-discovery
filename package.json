@@ -2,7 +2,7 @@
   "name": "ogm-discovery",
   "homepage": "https://opengeometadata.github.io/ogm-discovery",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "scripts": {
     "generate:site": "node scripts/generate-site-files.mjs",
