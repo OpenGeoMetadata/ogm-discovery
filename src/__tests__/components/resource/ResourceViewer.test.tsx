@@ -64,6 +64,10 @@ describe('ResourceViewer', () => {
       'aria-label',
       'Resource preview'
     );
+    expect(container.querySelector('ogm-viewer')).toHaveAttribute(
+      'dark-basemap',
+      'https://tiles.openfreemap.org/styles/dark'
+    );
     expect(container.querySelector('[data-controller]')).toBeNull();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
