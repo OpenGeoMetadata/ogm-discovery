@@ -412,68 +412,144 @@ describe('historical edition research', () => {
       },
     ];
   });
-  it('distinguishes editions from printings, updates assets, and links map cameras in both directions', async () => {
+  it('shows every edition, switches printings independently, and links all map cameras without feedback loops', async () => {
     const view = setup('usgs-htmc');
     await waitFor(() =>
       expect(
         screen.getAllByTestId('scan-preview').map((e) => e.textContent)
-      ).toEqual(['usgs-htmc-314254', 'usgs-htmc-464619'])
+      ).toEqual(['usgs-htmc-314254', 'middle', 'usgs-htmc-464619'])
     );
+    expect(
+      screen
+        .getAllByRole('article')
+        .map((e) => e.getAttribute('aria-labelledby'))
+    ).toHaveLength(3);
     expect(
       screen.getByText('editions across 4 scans / printings')
     ).toBeVisible();
-    const first = screen.getByLabelText('02 / First edition or printing');
+    const first = screen.getByLabelText('Printing / scan · 1903');
     expect(
-      within(first).getByRole('option', { name: /1903 · printed 1957/ })
+      within(first).getByRole('option', { name: /printed 1957/ })
     ).toBeInTheDocument();
-    const [left, right] = instances;
-    left.jumpTo.mockClear();
-    right.jumpTo.mockClear();
-    right.jumpTo.mockImplementation(() => right.fire('move'));
-    left.jumpTo.mockImplementation(() => left.fire('move'));
-    left.center = { lng: -112.1, lat: 36.1 };
-    left.zoom = 12;
-    act(() => left.fire('move'));
-    expect(right.jumpTo).toHaveBeenCalledExactlyOnceWith({
-      center: left.center,
-      zoom: 12,
-      bearing: 0,
-      pitch: 0,
-    });
-    expect(left.jumpTo).not.toHaveBeenCalled();
-    act(() => right.fire('move'));
-    expect(left.jumpTo).toHaveBeenCalledTimes(1);
-    const fits = left.fitBounds.mock.calls.length;
+    const [firstMap, middleMap, lastMap] = instances;
+    for (const map of instances) {
+      map.jumpTo.mockClear();
+      map.jumpTo.mockImplementation(() => map.fire('move'));
+    }
+    middleMap.center = { lng: -112.1, lat: 36.1 };
+    middleMap.zoom = 12;
+    act(() => middleMap.fire('move'));
+    for (const map of [firstMap, lastMap])
+      expect(map.jumpTo).toHaveBeenCalledExactlyOnceWith({
+        center: middleMap.center,
+        zoom: 12,
+        bearing: 0,
+        pitch: 0,
+      });
+    expect(middleMap.jumpTo).not.toHaveBeenCalled();
+    act(() => lastMap.fire('move'));
+    expect(firstMap.jumpTo).toHaveBeenCalledTimes(2);
+    expect(middleMap.jumpTo).toHaveBeenCalledTimes(1);
+    const fits = firstMap.fitBounds.mock.calls.length;
     fireEvent.change(first, { target: { value: 'reprint' } });
     await waitFor(() =>
-      expect(screen.getAllByTestId('scan-preview')[0]).toHaveTextContent(
-        'reprint'
-      )
+      expect(
+        screen.getAllByTestId('scan-preview').map((e) => e.textContent)
+      ).toEqual(['reprint', 'middle', 'usgs-htmc-464619'])
     );
-    expect(left.fitBounds).toHaveBeenCalledTimes(fits);
-    fireEvent.click(
-      screen.getByRole('button', { name: '1906 1 scans / printings' })
-    );
-    expect(route().get('right')).toBe('middle');
-    fireEvent.change(screen.getByLabelText('03 / Second edition or printing'), {
-      target: { value: 'usgs-htmc-464619' },
-    });
-    expect(route().get('right')).toBe('usgs-htmc-464619');
+    expect(firstMap.fitBounds).toHaveBeenCalledTimes(fits);
+    expect(route().get('printings')).toBe('reprint,middle,usgs-htmc-464619');
     fireEvent.change(screen.getByLabelText('Map sheet'), {
       target: { value: 'other' },
     });
     await waitFor(() =>
       expect(
-        screen
-          .getAllByTestId('scan-preview')
-          .every((e) => e.textContent === 'other')
-      ).toBe(true)
+        screen.getAllByTestId('scan-preview').map((e) => e.textContent)
+      ).toEqual(['other'])
     );
-    expect(route().has('left')).toBe(false);
-    expect(route().has('right')).toBe(false);
+    expect(route().has('printings')).toBe(false);
+    for (const map of [firstMap, middleMap, lastMap])
+      expect(map.listeners.get('move')?.size).toBe(0);
     view.unmount();
-    expect(left.listeners.get('move')?.size).toBe(0);
-    expect(right.listeners.get('move')?.size).toBe(0);
+    expect(instances.at(-1)?.listeners.get('move')?.size).toBe(0);
+  });
+  it.each([
+    '?left=reprint&right=usgs-htmc-464619',
+    '?printings=reprint,middle,usgs-htmc-464619',
+  ])(
+    'restores printing selections from %s without hiding other editions',
+    async (query) => {
+      setup('usgs-htmc', query);
+      await waitFor(() =>
+        expect(
+          screen.getAllByTestId('scan-preview').map((e) => e.textContent)
+        ).toEqual(['reprint', 'middle', 'usgs-htmc-464619'])
+      );
+      expect(screen.getByLabelText('Printing / scan · 1903')).toHaveValue(
+        'reprint'
+      );
+      expect(screen.getByLabelText('Printing / scan · 1906')).toHaveValue(
+        'middle'
+      );
+    }
+  );
+  it('mounts only nearby maps, releases listeners offscreen, and restores the shared camera on return', async () => {
+    const observers: Array<{
+      notify: (visible: boolean) => void;
+      disconnect: ReturnType<typeof vi.fn>;
+    }> = [];
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        disconnect = vi.fn();
+        observe = vi.fn();
+        constructor(callback: IntersectionObserverCallback) {
+          observers.push({
+            notify: (visible) =>
+              callback(
+                [{ isIntersecting: visible } as IntersectionObserverEntry],
+                this as unknown as IntersectionObserver
+              ),
+            disconnect: this.disconnect,
+          });
+        }
+      }
+    );
+    const view = setup('usgs-htmc');
+    await screen.findByRole('article', { name: '1903' });
+    expect(screen.getAllByRole('article')).toHaveLength(3);
+    expect(screen.queryByTestId('scan-preview')).not.toBeInTheDocument();
+    act(() => observers[0].notify(true));
+    await screen.findByTestId('scan-preview');
+    const firstMap = instances[0];
+    firstMap.center = { lng: -112.1, lat: 36.1 };
+    firstMap.zoom = 11;
+    act(() => firstMap.fire('move'));
+    act(() => observers[0].notify(false));
+    expect(firstMap.listeners.get('move')?.size).toBe(0);
+    act(() => observers[2].notify(true));
+    await screen.findByTestId('scan-preview');
+    expect(instances[1].jumpTo).toHaveBeenCalledWith({
+      center: firstMap.center,
+      zoom: 11,
+      bearing: 0,
+      pitch: 0,
+    });
+    act(() => observers[0].notify(true));
+    await waitFor(() =>
+      expect(screen.getAllByTestId('scan-preview')).toHaveLength(2)
+    );
+    expect(instances[2].jumpTo).toHaveBeenCalledWith({
+      center: firstMap.center,
+      zoom: 11,
+      bearing: 0,
+      pitch: 0,
+    });
+    view.unmount();
+    for (const observer of observers)
+      expect(observer.disconnect).toHaveBeenCalled();
+    for (const map of instances)
+      expect(map.listeners.get('move')?.size).toBe(0);
   });
   it('finds another state without opening a disclosure and replaces the old sheet and scans', async () => {
     vi.mocked(fetchSearchResults).mockResolvedValue({
@@ -493,7 +569,10 @@ describe('historical edition research', () => {
         features: String(url).includes('another-index') ? [madison] : features,
       }),
     }));
-    setup('usgs-htmc', '?sheet=reprint&left=reprint&right=middle');
+    setup(
+      'usgs-htmc',
+      '?sheet=reprint&left=reprint&right=middle&printings=reprint'
+    );
     await screen.findAllByTestId('scan-preview');
     expect(
       screen.queryByText('Find more in this collection')
@@ -514,7 +593,7 @@ describe('historical edition research', () => {
     await waitFor(() =>
       expect(
         screen.getAllByTestId('scan-preview').map((e) => e.textContent)
-      ).toEqual(['wisconsin-scan', 'wisconsin-scan'])
+      ).toEqual(['wisconsin-scan'])
     );
     expect(screen.getByLabelText('Map sheet')).toHaveTextContent('Madison');
     expect(screen.getByLabelText('Map sheet')).not.toHaveTextContent(
@@ -524,7 +603,7 @@ describe('historical edition research', () => {
       'another-index'
     );
     expect(route().get('index')).toBe('another-index');
-    for (const key of ['sheet', 'left', 'right'])
+    for (const key of ['sheet', 'left', 'right', 'printings'])
       expect(route().has(key)).toBe(false);
   });
   it('browses all indexes with forward and backward pagination and resets to page one for a new search', async () => {
@@ -582,7 +661,7 @@ describe('historical edition research', () => {
     expect(
       await screen.findByText('No matching records. Try a broader search.')
     ).toBeVisible();
-    expect(screen.getAllByTestId('scan-preview')).toHaveLength(2);
+    expect(screen.getAllByTestId('scan-preview')).toHaveLength(3);
   });
   it('reports an empty index without mounting a comparison', async () => {
     features = [];

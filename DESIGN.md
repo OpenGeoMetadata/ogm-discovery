@@ -284,3 +284,10 @@ Historical comparison must expose place discovery above the selected index and
 sheet. Keep state/region search and “Browse all map indexes” visible; paginate
 metadata results so the starter index is never a geographic limit. Explain that
 panning the comparison views does not discover or replace map sheets.
+
+Historical comparison shows every publication year as its own map card in date
+order, with printing selection and asset links inside that edition. Use three
+columns on wide screens, two on medium screens, and one on mobile. Link all
+active cameras and preserve the shared view when a card leaves and reenters the
+viewport. Keep every edition's controls in the document while mounting only
+nearby map renderers, so long histories do not exhaust browser map contexts.

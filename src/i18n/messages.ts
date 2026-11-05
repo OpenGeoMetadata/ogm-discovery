@@ -92,6 +92,12 @@ export const messages = {
       linkedMaps:
         'Linked views · Pan or zoom to inspect the selected scans. To find maps elsewhere, change the index and map sheet above.',
       noSheets: 'No sheets are available in this index.',
+      allEditions: 'All editions',
+      allEditionsHelp:
+        'One map for each publication year, in date order. Choose a printing within an edition. Pan or zoom any map to move the linked views together.',
+      printingForYear: 'Printing / scan · {year}',
+      mapLoadsOnScroll:
+        'The interactive map loads as this edition comes into view.',
       editionA: '02 / First edition or printing',
       editionB: '03 / Second edition or printing',
       survey: 'Survey year',

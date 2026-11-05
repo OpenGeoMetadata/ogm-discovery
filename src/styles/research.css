@@ -338,9 +338,9 @@
   font-size: 12px;
   max-width: 120px;
 }
-.research-edition-pair {
+.research-edition-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
 }
 .research-edition-heading {
@@ -354,35 +354,51 @@
   margin-top: 8px;
 }
 .research-edition-map {
-  height: 440px;
+  height: 340px;
 }
-.research-edition-pair .research-assets {
-  padding: 16px 20px;
+.research-grid-intro {
+  margin: 24px 0 18px;
 }
-.research-chronology {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0;
-  margin: 24px 0 0;
-  border-top: 2px solid #9b8b6d;
-}
-.research-chronology button {
-  flex: 1;
-  text-align: left;
-  padding: 14px 20px;
-  border-right: 1px solid #c7baa2;
-}
-.research-chronology button[aria-pressed='true'] {
-  background: #e5dcc6;
-}
-.research-chronology strong {
-  display: block;
+.research-grid-intro h2 {
   font:
-    26px Georgia,
+    28px Georgia,
+    serif;
+  margin-bottom: 8px;
+}
+.research-grid-intro p {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.research-edition-year {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.research-edition-year h3 {
+  font:
+    32px Georgia,
     serif;
 }
-.research-chronology span {
+.research-edition-year span {
   font-size: 12px;
+}
+.research-map-placeholder {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  font-size: 13px;
+  color: #53656c;
+  background: #edf1f0;
+}
+@media (max-width: 1150px) {
+  .research-edition-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.research-edition-grid .research-assets {
+  padding: 16px 20px;
 }
 .research-skip {
   position: absolute;
@@ -436,7 +452,7 @@
   }
   .research-imagery-layout,
   .research-elevation-layout,
-  .research-edition-pair,
+  .research-edition-grid,
   .research-sheet-bar {
     grid-template-columns: 1fr;
   }
@@ -448,9 +464,6 @@
   }
   .research-sheet-bar {
     gap: 16px;
-  }
-  .research-chronology button {
-    padding: 12px;
   }
   .research-elevation-map .research-area-map {
     height: 340px;

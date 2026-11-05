@@ -1,5 +1,12 @@
 import { useRecord, useIndex, useResearchParams } from './hooks';
-import { useEffect, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { Map as GLMap } from 'maplibre-gl';
 import type { ThemeResearchConfig } from '../../config/institution';
 import { useI18n } from '../../hooks/useI18n';
@@ -23,22 +30,20 @@ function EditionMap({
   const { t } = useI18n();
   const [map, setMap] = useState<GLMap | null>(null);
   const details = useMemo(() => (data ? [data] : []), [data]);
-  useEffect(() => {
-    onMap(map);
-    return () => onMap(null);
-  }, [map, onMap]);
   const boundsKey = featureBounds(feature).join(',');
   const bounds = useMemo(() => boundsKey.split(',').map(Number), [boundsKey]);
   useEffect(() => {
-    if (map)
-      map.fitBounds(
-        [
-          [bounds[0], bounds[1]],
-          [bounds[2], bounds[3]],
-        ],
-        { padding: 18, duration: 0 }
-      );
-  }, [map, bounds]);
+    if (!map) return;
+    map.fitBounds(
+      [
+        [bounds[0], bounds[1]],
+        [bounds[2], bounds[3]],
+      ],
+      { padding: 18, duration: 0 }
+    );
+    onMap(map);
+    return () => onMap(null);
+  }, [map, bounds, onMap]);
   return (
     <>
       <MapLibreMap className="research-edition-map" onMap={setMap}>
@@ -57,13 +62,183 @@ function EditionMap({
     </>
   );
 }
+type MapCamera = {
+  center: { lng: number; lat: number };
+  zoom: number;
+  bearing: number;
+  pitch: number;
+};
+function cameraFor(map: GLMap): MapCamera {
+  const { lng, lat } = map.getCenter();
+  return {
+    center: { lng, lat },
+    zoom: map.getZoom(),
+    bearing: map.getBearing(),
+    pitch: map.getPitch(),
+  };
+}
+
+// The grid is keyed by sheet, so its camera and registrations reset together.
+function EditionGrid({
+  editions,
+  preferredIds,
+  onSelect,
+}: {
+  editions: IndexFeature[];
+  preferredIds: string[];
+  onSelect: (ids: string[]) => void;
+}) {
+  const { t } = useI18n();
+  const maps = useRef(new Map<string, { map: GLMap; move: () => void }>());
+  const camera = useRef<MapCamera | null>(null);
+  const syncing = useRef(false);
+  const register = useCallback((year: string, map: GLMap | null) => {
+    const previous = maps.current.get(year);
+    if (previous) previous.map.off('move', previous.move);
+    maps.current.delete(year);
+    if (!map) return;
+    if (camera.current) map.jumpTo(camera.current);
+    else camera.current = cameraFor(map);
+    const move = () => {
+      if (syncing.current) return;
+      syncing.current = true;
+      try {
+        camera.current = cameraFor(map);
+        for (const peer of maps.current.values()) {
+          if (peer.map !== map) peer.map.jumpTo(camera.current);
+        }
+      } finally {
+        syncing.current = false;
+      }
+    };
+    maps.current.set(year, { map, move });
+    map.on('move', move);
+  }, []);
+  const years = [
+    ...new Set(editions.map((f) => String(f.properties.datePub || ''))),
+  ];
+  const selected = years.map((year) => {
+    const scans = editions.filter(
+      (f) => String(f.properties.datePub || '') === year
+    );
+    return (
+      preferredIds
+        .map((id) => scans.find((f) => f.properties.recId === id))
+        .find(Boolean) ?? scans[0]
+    );
+  });
+  return (
+    <section aria-label={t('research.allEditions')}>
+      <div className="research-grid-intro">
+        <h2>{t('research.allEditions')}</h2>
+        <p>{t('research.allEditionsHelp')}</p>
+      </div>
+      <div className="research-edition-grid">
+        {selected.map((feature, i) => (
+          <EditionCard
+            key={years[i]}
+            year={years[i]}
+            feature={feature}
+            scans={editions.filter(
+              (f) => String(f.properties.datePub || '') === years[i]
+            )}
+            register={register}
+            onSelect={(id) =>
+              onSelect(
+                selected.map((f, index) =>
+                  index === i ? id : f.properties.recId
+                )
+              )
+            }
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function EditionCard({
+  year,
+  feature,
+  scans,
+  register,
+  onSelect,
+}: {
+  year: string;
+  feature: IndexFeature;
+  scans: IndexFeature[];
+  register: (year: string, map: GLMap | null) => void;
+  onSelect: (id: string) => void;
+}) {
+  const { t } = useI18n();
+  const headingId = useId();
+  const host = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(
+    () => typeof IntersectionObserver === 'undefined'
+  );
+  const onMap = useCallback(
+    (map: GLMap | null) => register(year, map),
+    [register, year]
+  );
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined' || !host.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setVisible(entry.isIntersecting),
+      { rootMargin: '160px' }
+    );
+    observer.observe(host.current);
+    return () => observer.disconnect();
+  }, []);
+  const label = year || t('research.unknown');
+  return (
+    <article
+      ref={host}
+      className="research-panel research-edition-card"
+      aria-labelledby={headingId}
+    >
+      <div className="research-edition-heading">
+        <div className="research-edition-year">
+          <h3 id={headingId}>{label}</h3>
+          <span>{t('research.printings', { count: scans.length })}</span>
+        </div>
+        <label className="research-field">
+          {t('research.printingForYear', { year: label })}
+          <select
+            value={feature.properties.recId}
+            onChange={(e) => onSelect(e.target.value)}
+          >
+            {scans.map((f) => (
+              <option key={f.properties.recId} value={f.properties.recId}>
+                {f.properties.dateReprnt
+                  ? t('research.printed', { year: f.properties.dateReprnt })
+                  : t('research.printUnknown')}{' '}
+                · {f.properties.recId}
+              </option>
+            ))}
+          </select>
+        </label>
+        <span>
+          {t('research.survey')}:{' '}
+          {feature.properties.dateSurvey || t('research.unknown')}
+        </span>
+      </div>
+      {visible ? (
+        <EditionMap feature={feature} onMap={onMap} />
+      ) : (
+        <div className="research-edition-map research-map-placeholder">
+          <p>{t('research.mapLoadsOnScroll')}</p>
+        </div>
+      )}
+      <Assets id={feature.properties.recId} />
+    </article>
+  );
+}
+
 export function EditionsPathway({ config }: { config: ThemeResearchConfig }) {
   const { t, text } = useI18n();
   const { params, update } = useResearchParams();
   const id = params.get('index') || config.records[0].id;
   const { features, error } = useIndex(id);
-  const [leftMap, setLeftMap] = useState<GLMap | null>(null);
-  const [rightMap, setRightMap] = useState<GLMap | null>(null);
   const groups = useMemo(() => {
     const groups = new Map<string, IndexFeature[]>();
     features?.forEach((f) => {
@@ -95,42 +270,12 @@ export function EditionsPathway({ config }: { config: ThemeResearchConfig }) {
         : [],
     [group]
   );
-  const left =
-    editions.find(
-      (f) => f.properties.recId === (params.get('left') || config.editions?.[0])
-    ) ?? editions[0];
-  const right =
-    editions.find(
-      (f) =>
-        f.properties.recId === (params.get('right') || config.editions?.[1])
-    ) ?? editions[editions.length - 1];
-  useEffect(() => {
-    if (!leftMap || !rightMap) return;
-    let syncing = false;
-    const sync = (from: GLMap, to: GLMap) => {
-      if (syncing) return;
-      syncing = true;
-      to.jumpTo({
-        center: from.getCenter(),
-        zoom: from.getZoom(),
-        bearing: from.getBearing(),
-        pitch: from.getPitch(),
-      });
-      syncing = false;
-    };
-    const fromLeft = () => sync(leftMap, rightMap);
-    const fromRight = () => sync(rightMap, leftMap);
-    fromLeft();
-    leftMap.on('move', fromLeft);
-    rightMap.on('move', fromRight);
-    return () => {
-      leftMap.off('move', fromLeft);
-      rightMap.off('move', fromRight);
-    };
-  }, [leftMap, rightMap]);
-  function editionLabel(f: IndexFeature) {
-    return `${f.properties.datePub || t('research.unknown')} · ${f.properties.dateReprnt ? t('research.printed', { year: f.properties.dateReprnt }) : t('research.printUnknown')} · ${f.properties.recId}`;
-  }
+  const preferredIds = [
+    ...(params.get('printings')?.split(',') ?? []),
+    params.get('left'),
+    params.get('right'),
+    ...(config.editions ?? []),
+  ].filter((id): id is string => Boolean(id));
   return (
     <div className="research-editions-layout">
       <section className="research-panel research-sheet-bar">
@@ -140,7 +285,7 @@ export function EditionsPathway({ config }: { config: ThemeResearchConfig }) {
             config={config}
             value={id}
             onChange={(index) =>
-              update({ index, sheet: '', left: '', right: '' })
+              update({ index, sheet: '', left: '', right: '', printings: '' })
             }
             label={t('research.selectedIndex')}
             indexSearch
@@ -151,7 +296,12 @@ export function EditionsPathway({ config }: { config: ThemeResearchConfig }) {
           <select
             value={group?.[1][0].properties.recId ?? ''}
             onChange={(e) =>
-              update({ sheet: e.target.value, left: '', right: '' })
+              update({
+                sheet: e.target.value,
+                left: '',
+                right: '',
+                printings: '',
+              })
             }
           >
             {groups.map(([key, fs]) => (
@@ -173,74 +323,18 @@ export function EditionsPathway({ config }: { config: ThemeResearchConfig }) {
         <p role="alert">{t('research.indexError')}</p>
       ) : !features ? (
         <p role="status">{t('research.loading')}</p>
-      ) : !left || !right ? (
+      ) : !editions.length ? (
         <p>{t('research.noSheets')}</p>
       ) : (
         <>
-          <div className="research-edition-pair">
-            {[left, right].map((feature, i) => (
-              <section className="research-panel" key={i}>
-                <div className="research-edition-heading">
-                  <label className="research-field">
-                    {t(i ? 'research.editionB' : 'research.editionA')}
-                    <select
-                      value={feature.properties.recId}
-                      onChange={(e) =>
-                        update({ [i ? 'right' : 'left']: e.target.value })
-                      }
-                    >
-                      {editions.map((f) => (
-                        <option
-                          key={f.properties.recId}
-                          value={f.properties.recId}
-                        >
-                          {editionLabel(f)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <span>
-                    {t('research.survey')}:{' '}
-                    {feature.properties.dateSurvey || t('research.unknown')}
-                  </span>
-                </div>
-                <EditionMap
-                  feature={feature}
-                  onMap={i ? setRightMap : setLeftMap}
-                />
-                <Assets id={feature.properties.recId} />
-              </section>
-            ))}
-          </div>
-          <div
-            className="research-chronology"
-            aria-label={t('research.chronology')}
-          >
-            {[...new Set(editions.map((f) => f.properties.datePub))].map(
-              (year) => (
-                <button
-                  key={year}
-                  onClick={() =>
-                    update({
-                      right: editions.find(
-                        (f) => f.properties.datePub === year
-                      )!.properties.recId,
-                    })
-                  }
-                  aria-pressed={right.properties.datePub === year}
-                >
-                  <strong>{year}</strong>
-                  <span>
-                    {t('research.printings', {
-                      count: editions.filter(
-                        (f) => f.properties.datePub === year
-                      ).length,
-                    })}
-                  </span>
-                </button>
-              )
-            )}
-          </div>
+          <EditionGrid
+            key={`${id}:${group?.[0]}`}
+            editions={editions}
+            preferredIds={preferredIds}
+            onSelect={(ids) =>
+              update({ printings: ids.join(','), left: '', right: '' })
+            }
+          />
           <p className="research-note">{text(config.note)}</p>
         </>
       )}
