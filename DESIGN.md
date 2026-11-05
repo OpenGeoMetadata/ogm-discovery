@@ -253,3 +253,18 @@ Historical Topographic Maps uses forest navigation, warm paper, rust accents
 and serif headings to complement the scanned sheets. The collection symbols
 are original navigation graphics, not official NASA or USGS insignia. Keep the
 community-prototype notice visible. Existing institutional heroes are unchanged.
+
+## Asset-specific research workspaces
+
+Federal research homes use a compact institutional header and task-specific
+workspaces. Imagery has a dark two-date comparison stage with a shared extent;
+elevation pairs a prominent tile-index map with a selection/download ledger;
+historical maps use paper tones, linked georeferenced views and edition chronology.
+Retain the existing theme colors, typography, source attribution and scoped catalog.
+These layouts are selected by workflow capability in config, never institution IDs.
+
+Keep asset meaning visible: exact imagery dates, nominal versus actual tile bounds,
+and edition versus printing years. Unsupported capabilities have explicit states.
+Use original services and georeferenced assets for research comparison; browse
+thumbnails are only discovery aids. On narrow screens, stack controls and views
+without hiding metadata or download access. Every shared label is localizable.

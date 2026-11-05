@@ -10,10 +10,14 @@ export function FeaturedItemPreviewLayer({
   activeIndex,
   featuredDetails,
   featuredInitiated,
+  opacity = 0.75,
+  errorMessage,
 }: {
   activeIndex: number;
   featuredDetails: (GeoDocumentDetails | null)[];
   featuredInitiated: boolean;
+  opacity?: number;
+  errorMessage?: string;
 }) {
   const map = useMap();
   const { t } = useI18n();
@@ -63,7 +67,7 @@ export function FeaturedItemPreviewLayer({
           return;
         }
         const style = new MapLibreTheme(map.getContainer(), 'light').getStyle();
-        style.opacity = 0.75;
+        style.opacity = opacity;
         active = previewer;
         previewer.onError = () => {
           if (!disposed && current === generation) setFailed(true);
@@ -90,10 +94,10 @@ export function FeaturedItemPreviewLayer({
       map.off('idle', draw);
       reset();
     };
-  }, [map, activeIndex, featuredDetails, featuredInitiated]);
+  }, [map, activeIndex, featuredDetails, featuredInitiated, opacity]);
   return failed ? (
     <p className="discovery-map-status" role="status">
-      {t('map.overlayError')}
+      {errorMessage ?? t('map.overlayError')}
     </p>
   ) : null;
 }

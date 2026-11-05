@@ -213,3 +213,25 @@ footer:
           href: https://opengeometadata.org/
           external: true
   show_api_debug: false
+
+research:
+  search: {}
+  kind: imagery
+  title: { en: See the same place on two dates }
+  description:
+    { en: Compare daily satellite imagery across a shared study area. }
+  note:
+    {
+      en: 'Rendered imagery supports visual interpretation. Follow the source dataset for numerical analysis; cloud cover and acquisition gaps can obscure change.',
+    }
+  records:
+    - id: nasa-gibs-modis_terra_correctedreflectance_truecolor
+      label: { en: Terra / MODIS · True color }
+    - id: nasa-gibs-modis_aqua_correctedreflectance_truecolor
+      label: { en: Aqua / MODIS · True color }
+  bbox: [-125, 32, -114, 42]
+  dates: ['2024-06-01', '2024-12-01']
+  imagery:
+    map_endpoint: https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi
+    domain_endpoint: https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/wmts.cgi
+    tile_matrix_set: GoogleMapsCompatible_Level9

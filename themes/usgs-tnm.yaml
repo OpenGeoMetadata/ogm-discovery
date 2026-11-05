@@ -222,3 +222,19 @@ footer:
           href: https://opengeometadata.org/
           external: true
   show_api_debug: false
+
+research:
+  kind: elevation
+  title: { en: Assemble elevation for your study area }
+  description:
+    {
+      en: Select a geographic extent and collect the original DEM tiles that overlap it.,
+    }
+  note:
+    {
+      en: '1/3 arc-second spacing is approximately 10 meters. Downloads are original tiles, not clipped or mosaicked rasters. Nominal index footprints may differ from raster edges.',
+    }
+  records:
+    - id: usgs-tnm-index-dem13
+      label: { en: 3DEP · 1/3 arc-second DEM }
+  bbox: [-92.2, 41.2, -91.6, 41.8]

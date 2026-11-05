@@ -142,7 +142,26 @@ export interface ThemeMapConfig {
   viewer_dark_style?: string;
 }
 
+export interface ThemeResearchConfig {
+  kind: 'imagery' | 'elevation' | 'editions';
+  search?: { resource_type?: string };
+  title: LocalizedText;
+  description: LocalizedText;
+  note: LocalizedText;
+  records: { id: string; label: LocalizedText }[];
+  bbox: [number, number, number, number];
+  dates?: [string, string];
+  sheet?: string;
+  editions?: [string, string];
+  imagery?: {
+    map_endpoint: string;
+    domain_endpoint: string;
+    tile_matrix_set: string;
+  };
+}
+
 export interface ThemeConfig {
+  research?: ThemeResearchConfig;
   map?: ThemeMapConfig;
   id?: ThemeId;
   label?: string;

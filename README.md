@@ -451,3 +451,23 @@ for actions, map coverage, previews and palette. Local images resolve against th
 Vite base path. No new API or server is required. See
 [the collection research and asset notes](docs/federal-collection-themes.md)
 for source provenance, preview limitations and screenshots.
+
+### Asset-specific research workspaces
+
+An optional top-level `research` configuration opens an asset-specific home at
+`#/research`. Existing themes without it retain their current homepage. The
+original introduction remains available at `#/about-collection`.
+
+- `kind`: `imagery`, `elevation`, or `editions` (workflow capabilities, not institution IDs).
+- `title`, `description`, `note`: localized text objects.
+- `records`: initial metadata record IDs with localized `label` objects.
+- `bbox`: default `[west, south, east, north]` geographic study area.
+- `search`: optional collection metadata search; optional `resource_type` adds an existing API facet filter.
+- Imagery: `dates` and `imagery.map_endpoint`, `imagery.domain_endpoint`, `imagery.tile_matrix_set` configure a daily WMS/WMTS adapter.
+- Editions: `sheet` and `editions` select the initial sheet name and pair of record IDs.
+
+See the federal YAML presets for complete examples and
+[research pathways and API gaps](docs/federal-research-pathways.md) for semantics,
+supported assets, URL state, and limitations. The elevation example deliberately
+supports the configured rectangular DEM index rather than treating every TNM
+asset as an elevation raster.

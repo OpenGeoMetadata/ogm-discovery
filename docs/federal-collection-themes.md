@@ -1,5 +1,10 @@
 # Federal collection prototypes
 
+The collection homes now open [asset-specific research workspaces](federal-research-pathways.md).
+This document records the initial branding/source review; its original landing-page
+screenshots remain useful for reviewing `#/about-collection`. Current workflow
+screenshots are in `screenshots/research-pathways/`.
+
 Reviewed November 4, 2026. These are OpenGeoMetadata community interfaces, not
 agency websites. All three use the existing API, record viewer, search and map
 components. No metadata mirror, proxy, dependency or agency-specific component

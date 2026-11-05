@@ -2,6 +2,88 @@ export type MessageValue = string | { [key: string]: MessageValue };
 
 export const messages = {
   en: {
+    research: {
+      previewError:
+        'Scan preview unavailable. Use the metadata and download links below.',
+      moreTiles: 'Show more tiles ({count} remaining)',
+      findMore: 'Find more in this collection',
+      searchCollection: 'Search collection metadata',
+      search: 'Search',
+      searchError:
+        'Search could not be completed. Try again or browse the catalog.',
+      searchHelp:
+        'Showing up to 20 matching records ({count} returned). Refine your search for more specific results. Comparison support is checked after selection.',
+      skip: 'Skip to research workspace',
+      navigation: 'Collection navigation',
+      catalog: 'Browse catalog',
+      about: 'About the collection',
+      switch: 'Switch collection',
+      prototype: 'Research workspace · prototype',
+      linkHelp:
+        'Your selections stay in this page’s URL. Copy it to share this workspace.',
+      record: 'Metadata & citation',
+      assetsError:
+        'Asset metadata could not be loaded. Open the record to retry.',
+      extent: 'Study area bounds',
+      bboxHelp: 'West, south, east, north · longitude / latitude',
+      bboxError:
+        'Enter four valid coordinates, west < east and south < north, between ±180° longitude and ±85° latitude. Areas crossing the antimeridian are not supported.',
+      applyArea: 'Apply extent',
+      useMap: 'Use map view',
+      observation: 'Observation date',
+      imageError:
+        'Imagery could not be loaded. Open the image request to inspect the service response.',
+      loading: 'Loading live collection data…',
+      imageryAlt:
+        'Satellite imagery for {date}, covering the shared study area.',
+      openImage: 'Open full image request ↗',
+      imageryStep: '01 / Layer, dates & place',
+      layer: 'Imagery layer',
+      before: 'First date',
+      after: 'Second date',
+      dateRange:
+        'Daily coverage: {start} – {end}, across {count} intervals. Gaps are checked before requesting imagery.',
+      invalidDates:
+        'A chosen date is outside the available daily intervals. Choose another date; the service may otherwise substitute a nearby day.',
+      source: 'Open source viewer ↗',
+      comparison: 'Imagery comparison',
+      sameExtent: 'ONE LAYER · SHARED GEOGRAPHIC EXTENT',
+      domainError:
+        'Daily availability could not be verified for this layer. Comparison is unavailable. Open its metadata or source viewer, or reload to retry.',
+      chooseDates: 'Choose two available dates to compare.',
+      areaStep: '01 / Product & study area',
+      product: 'Elevation product',
+      studyArea: 'Study area',
+      tileFootprints: 'Nominal tile footprints',
+      downloadStep: '02 / Select original tiles',
+      overlapping: '{count} overlapping tiles',
+      indexError:
+        'The source index could not be loaded. Reload to retry, or browse the catalog.',
+      noTiles:
+        'No indexed tiles overlap this extent. Move the map or edit the bounds.',
+      selectAll: 'Select all',
+      clear: 'Clear selection',
+      published: 'Published',
+      unknown: 'Not recorded',
+      selected: '{count} tiles selected',
+      export: 'Export tile manifest ↓',
+      manifestHelp:
+        'The manifest contains original download URLs and your study-area bounds. Review each tile’s source metadata for vertical datum, units and nodata before analysis.',
+      sheetStep: '01 / Index & sheet',
+      index: 'Map index',
+      sheet: 'Map sheet',
+      editionsCount: 'editions across {count} scans / printings',
+      linkedMaps:
+        'Linked views · Pan or zoom either map to inspect the same place in both scans.',
+      noSheets: 'No sheets are available in this index.',
+      editionA: '02 / First edition or printing',
+      editionB: '03 / Second edition or printing',
+      survey: 'Survey year',
+      printed: 'printed {year}',
+      printUnknown: 'printing year not recorded',
+      chronology: 'Choose an edition for the second map',
+      printings: '{count} scans / printings',
+    },
     map: {
       label: 'Interactive map',
       basemap: 'Basemap',

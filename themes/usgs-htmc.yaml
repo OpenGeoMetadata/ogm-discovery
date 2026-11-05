@@ -216,3 +216,22 @@ footer:
           href: https://opengeometadata.org/
           external: true
   show_api_debug: false
+
+research:
+  search: { resource_type: Index maps }
+  kind: editions
+  title: { en: Read a landscape through its map editions }
+  description:
+    {
+      en: Choose a sheet and compare georeferenced scans at the same location and zoom.,
+    }
+  note:
+    {
+      en: 'Edition, survey and printing years describe different events. Shared sheet footprints do not guarantee pixel-perfect registration; use these scans for visual comparison.',
+    }
+  records:
+    - id: usgs-htmc-index-az-48000
+      label: { en: 'Arizona · 1:48,000' }
+  bbox: [-112.25, 36, -112, 36.25]
+  sheet: Bright Angel
+  editions: [usgs-htmc-314254, usgs-htmc-464619]
