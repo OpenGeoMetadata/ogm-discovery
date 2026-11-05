@@ -101,11 +101,13 @@ export class NavigationControl {
   onRemove() {}
 }
 export class AttributionControl extends NavigationControl {}
+export const markers: Marker[] = [];
 export class Marker {
   element: HTMLElement;
   position: any;
   constructor(options: any) {
     this.element = options.element;
+    markers.push(this);
   }
   setLngLat(position: any) {
     this.position = position;

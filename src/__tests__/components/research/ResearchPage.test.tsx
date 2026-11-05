@@ -23,8 +23,9 @@ import {
 } from '../../../services/api';
 import { bboxFeature, type IndexFeature } from '../../../services/research';
 import type { GeoDocument, JsonApiResponse } from '../../../types/api';
-import { Map as MockMap, instances } from '../../helpers/maplibre';
+import { Map as MockMap, instances, markers } from '../../helpers/maplibre';
 import ResearchPage from '../../../pages/ResearchPage';
+vi.mock('maplibre-gl', () => import('../../helpers/maplibre'));
 
 // Replace only the browser renderer and external viewer; use real workflow,
 // metadata/index parsing, URL state, i18n, asset links and controls.
@@ -82,6 +83,7 @@ function record(id: string): GeoDocument {
     },
     meta: {
       ui: {
+        citation: `Citation for ${id}`,
         downloads: [
           {
             url: `https://assets.example/${id}.tif`,
@@ -177,6 +179,7 @@ async function readManifest() {
 beforeEach(() => {
   localStorage.clear();
   instances.length = 0;
+  markers.length = 0;
   blobs = new Map();
   features = [tile('east'), tile('west', [-93, 41, -92, 42])];
   vi.mocked(fetchResourceDetails)
@@ -412,144 +415,246 @@ describe('historical edition research', () => {
       },
     ];
   });
-  it('shows every edition, switches printings independently, and links all map cameras without feedback loops', async () => {
+
+  it('shares a geographic cursor, pins on click, restores markers after a style change and supports keyboard coordinates', async () => {
     const view = setup('usgs-htmc');
-    await waitFor(() =>
-      expect(
-        screen.getAllByTestId('scan-preview').map((e) => e.textContent)
-      ).toEqual(['usgs-htmc-314254', 'middle', 'usgs-htmc-464619'])
+    await screen.findByLabelText('Printing / scan · 1903');
+    fireEvent.click(screen.getByRole('button', { name: 'Compare maps' }));
+    await screen.findByLabelText('Printing / scan · 1962');
+    fireEvent.click(screen.getByText('Go to coordinates'));
+    const maps = [...instances];
+    act(() =>
+      maps[0].fire('mousemove', { lngLat: { lng: -112.2, lat: 36.12 } })
     );
-    expect(
-      screen
-        .getAllByRole('article')
-        .map((e) => e.getAttribute('aria-labelledby'))
-    ).toHaveLength(3);
-    expect(
-      screen.getByText('editions across 4 scans / printings')
-    ).toBeVisible();
-    const first = screen.getByLabelText('Printing / scan · 1903');
-    expect(
-      within(first).getByRole('option', { name: /printed 1957/ })
-    ).toBeInTheDocument();
-    const [firstMap, middleMap, lastMap] = instances;
-    for (const map of instances) {
-      map.jumpTo.mockClear();
-      map.jumpTo.mockImplementation(() => map.fire('move'));
-    }
-    middleMap.center = { lng: -112.1, lat: 36.1 };
-    middleMap.zoom = 12;
-    act(() => middleMap.fire('move'));
-    for (const map of [firstMap, lastMap])
-      expect(map.jumpTo).toHaveBeenCalledExactlyOnceWith({
-        center: middleMap.center,
+    for (const marker of markers)
+      expect(marker.getLngLat()).toEqual([-112.19999999999999, 36.12]);
+    act(() => maps[0].fire('click', { lngLat: { lng: -112.1, lat: 36.1 } }));
+    expect(route().get('point')).toBe('-112.10000, 36.10000');
+    act(() => maps[1].fire('mousemove', { lngLat: { lng: 0, lat: 0 } }));
+    for (const marker of markers)
+      expect(marker.getLngLat()).toEqual([-112.1, 36.1]);
+    act(() => {
+      maps[0].setStyle();
+      maps[0].styleLoaded();
+    });
+    expect(markers[0].getLngLat()).toEqual([-112.1, 36.1]);
+    fireEvent.change(screen.getByLabelText('Longitude, latitude (WGS84)'), {
+      target: { value: '200, 90' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Locate & pin' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Enter longitude');
+    fireEvent.change(screen.getByLabelText('Longitude, latitude (WGS84)'), {
+      target: { value: '-112.15, 36.15' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Locate & pin' }));
+    for (const map of maps)
+      expect(map.jumpTo).toHaveBeenLastCalledWith(
+        expect.objectContaining({ center: { lng: -112.15, lat: 36.15 } })
+      );
+    fireEvent.click(screen.getByRole('button', { name: 'Clear pin' }));
+    expect(route().has('point')).toBe(false);
+    for (const marker of markers) expect(marker.getElement().hidden).toBe(true);
+    view.unmount();
+    for (const map of maps)
+      for (const event of ['move', 'mousemove', 'mouseout', 'click'])
+        expect(map.listeners.get(event)?.size).toBe(0);
+  });
+  it('restores and shares the selected printings, exact view and point through a collection URL', async () => {
+    setup(
+      'usgs-htmc',
+      '?printings=reprint&point=-112.2,36.1&view=-112.2,36.1,12'
+    );
+    await screen.findByLabelText('Printing / scan · 1903');
+    for (const map of instances)
+      expect(map.jumpTo).toHaveBeenCalledWith({
+        center: { lng: -112.2, lat: 36.1 },
         zoom: 12,
         bearing: 0,
         pitch: 0,
       });
-    expect(middleMap.jumpTo).not.toHaveBeenCalled();
-    act(() => lastMap.fire('move'));
-    expect(firstMap.jumpTo).toHaveBeenCalledTimes(2);
-    expect(middleMap.jumpTo).toHaveBeenCalledTimes(1);
-    const fits = firstMap.fitBounds.mock.calls.length;
-    fireEvent.change(first, { target: { value: 'reprint' } });
-    await waitFor(() =>
-      expect(
-        screen.getAllByTestId('scan-preview').map((e) => e.textContent)
-      ).toEqual(['reprint', 'middle', 'usgs-htmc-464619'])
+    instances[0].center = { lng: -112.21, lat: 36.11 };
+    instances[0].zoom = 13;
+    act(() => instances[0].fire('move'));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Create link to this view' })
     );
-    expect(firstMap.fitBounds).toHaveBeenCalledTimes(fits);
-    expect(route().get('printings')).toBe('reprint,middle,usgs-htmc-464619');
-    fireEvent.change(screen.getByLabelText('Map sheet'), {
-      target: { value: 'other' },
+    const link = new URL(
+      screen
+        .getByRole('link', { name: 'Open saved view' })
+        .getAttribute('href')!
+    );
+    expect(link.pathname).toMatch(/usgs-htmc\/$/);
+    const params = new URLSearchParams(link.hash.split('?')[1]);
+    expect(params.get('view')).toBe('-112.21000,36.11000,13.000');
+    expect(params.get('point')).toBe('-112.20000, 36.10000');
+    expect(params.get('printings')).toBe('reprint,middle,usgs-htmc-464619');
+  });
+  it('opens original map margins and distinguishes index, survey and printing dates with the API citation', async () => {
+    vi.mocked(fetchResourceDetails).mockImplementation(async (id) => {
+      const data = record(id);
+      data.meta!.ui!.downloads!.push({
+        label: 'GeoPDF',
+        type: 'pdf',
+        url: 'https://assets.example/full-map.pdf',
+      });
+      data.attributes.ogm.dct_description_sm = [
+        'Surveyed in 1903; printed in 1957.',
+      ];
+      return data;
+    });
+    setup('usgs-htmc', '?printings=reprint');
+    await screen.findByLabelText('Printing / scan · 1903');
+    const card = screen.getByRole('article', { name: '1903' });
+    fireEvent.click(
+      within(card).getByText('Inspect dates, map margins & citation')
+    );
+    expect(
+      await within(card).findByRole('link', { name: /Open full map PDF/ })
+    ).toHaveAttribute('href', 'https://assets.example/full-map.pdf');
+    expect(within(card).getByText('Citation for reprint')).toBeVisible();
+    expect(within(card).getByText('1957')).toBeVisible();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    });
+    fireEvent.click(
+      within(card).getByRole('button', { name: 'Copy citation' })
+    );
+    await within(card).findByText('Citation copied.');
+    expect(writeText).toHaveBeenCalledWith('Citation for reprint');
+    writeText.mockRejectedValue(new Error('denied'));
+    fireEvent.click(
+      within(card).getByRole('button', { name: 'Copy citation' })
+    );
+    await within(card).findByText('Select and copy the citation above.');
+  });
+
+  it('starts with one map and an edition strip, preserves the view across editions, and compares only on request', async () => {
+    const view = setup('usgs-htmc');
+    expect(await screen.findByTestId('scan-preview')).toHaveTextContent(
+      'usgs-htmc-314254'
+    );
+    expect(screen.getAllByRole('article')).toHaveLength(1);
+    for (const year of ['1903', '1906', '1962'])
+      expect(
+        screen.getByRole('button', { name: `View ${year} edition` })
+      ).toBeVisible();
+    expect(
+      screen.queryByRole('button', { name: /Record an observation/ })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText('editions across 4 scans / printings')
+    ).toBeVisible();
+    const primary = instances[0];
+    primary.center = { lng: -112.1, lat: 36.1 };
+    primary.zoom = 12;
+    act(() => primary.fire('move'));
+    fireEvent.click(screen.getByRole('button', { name: 'View 1906 edition' }));
+    await waitFor(() =>
+      expect(screen.getByTestId('scan-preview')).toHaveTextContent('middle')
+    );
+    expect(route().get('active')).toBe('middle');
+    expect(instances).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Compare maps' }));
+    await screen.findByLabelText('Printing / scan · 1962');
+    const secondary = instances[1];
+    expect(secondary.jumpTo).toHaveBeenCalledWith({
+      center: primary.center,
+      zoom: 12,
+      bearing: 0,
+      pitch: 0,
+    });
+    for (const map of instances) {
+      map.jumpTo.mockClear();
+      map.jumpTo.mockImplementation(() => map.fire('move'));
+    }
+    act(() => primary.fire('move'));
+    expect(secondary.jumpTo).toHaveBeenCalledTimes(1);
+    expect(primary.jumpTo).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText('Compare with'), {
+      target: { value: '1903' },
+    });
+    fireEvent.change(await screen.findByLabelText('Printing / scan · 1903'), {
+      target: { value: 'reprint' },
     });
     await waitFor(() =>
       expect(
         screen.getAllByTestId('scan-preview').map((e) => e.textContent)
-      ).toEqual(['other'])
+      ).toEqual(['middle', 'reprint'])
     );
-    expect(route().has('printings')).toBe(false);
-    for (const map of [firstMap, middleMap, lastMap])
-      expect(map.listeners.get('move')?.size).toBe(0);
+    expect(route().get('compare')).toBe('reprint');
+    fireEvent.click(screen.getByRole('button', { name: 'Compare maps' }));
+    expect(screen.getAllByRole('article')).toHaveLength(1);
+    expect(secondary.listeners.get('move')?.size).toBe(0);
+    fireEvent.change(screen.getByLabelText('Map sheet'), {
+      target: { value: 'other' },
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId('scan-preview')).toHaveTextContent('other')
+    );
+    for (const key of ['printings', 'active', 'compare', 'point', 'view'])
+      expect(route().has(key)).toBe(false);
     view.unmount();
-    expect(instances.at(-1)?.listeners.get('move')?.size).toBe(0);
+    for (const map of instances)
+      expect(map.listeners.get('move')?.size).toBe(0);
   });
   it.each([
     '?left=reprint&right=usgs-htmc-464619',
     '?printings=reprint,middle,usgs-htmc-464619',
   ])(
-    'restores printing selections from %s without hiding other editions',
+    'restores preferred printings from %s while keeping every edition selectable',
     async (query) => {
       setup('usgs-htmc', query);
-      await waitFor(() =>
-        expect(
-          screen.getAllByTestId('scan-preview').map((e) => e.textContent)
-        ).toEqual(['reprint', 'middle', 'usgs-htmc-464619'])
+      expect(await screen.findByTestId('scan-preview')).toHaveTextContent(
+        'reprint'
       );
       expect(screen.getByLabelText('Printing / scan · 1903')).toHaveValue(
         'reprint'
       );
-      expect(screen.getByLabelText('Printing / scan · 1906')).toHaveValue(
-        'middle'
+      fireEvent.click(
+        screen.getByRole('button', { name: 'View 1906 edition' })
+      );
+      await waitFor(() =>
+        expect(screen.getByTestId('scan-preview')).toHaveTextContent('middle')
+      );
+      fireEvent.click(
+        screen.getByRole('button', { name: 'View 1903 edition' })
+      );
+      await waitFor(() =>
+        expect(screen.getByTestId('scan-preview')).toHaveTextContent('reprint')
+      );
+      expect(screen.getByLabelText('Printing / scan · 1903')).toHaveValue(
+        'reprint'
       );
     }
   );
-  it('mounts only nearby maps, releases listeners offscreen, and restores the shared camera on return', async () => {
-    const observers: Array<{
-      notify: (visible: boolean) => void;
-      disconnect: ReturnType<typeof vi.fn>;
-    }> = [];
-    vi.stubGlobal(
-      'IntersectionObserver',
-      class {
-        disconnect = vi.fn();
-        observe = vi.fn();
-        constructor(callback: IntersectionObserverCallback) {
-          observers.push({
-            notify: (visible) =>
-              callback(
-                [{ isIntersecting: visible } as IntersectionObserverEntry],
-                this as unknown as IntersectionObserver
-              ),
-            disconnect: this.disconnect,
-          });
-        }
-      }
+  it('restores optional comparison and can compare two printings of the same publication year', async () => {
+    setup(
+      'usgs-htmc',
+      '?active=usgs-htmc-314254&compare=reprint&point=-112.1,36.1&view=-112.1,36.1,12'
     );
-    const view = setup('usgs-htmc');
-    await screen.findByRole('article', { name: '1903' });
-    expect(screen.getAllByRole('article')).toHaveLength(3);
-    expect(screen.queryByTestId('scan-preview')).not.toBeInTheDocument();
-    act(() => observers[0].notify(true));
-    await screen.findByTestId('scan-preview');
-    const firstMap = instances[0];
-    firstMap.center = { lng: -112.1, lat: 36.1 };
-    firstMap.zoom = 11;
-    act(() => firstMap.fire('move'));
-    act(() => observers[0].notify(false));
-    expect(firstMap.listeners.get('move')?.size).toBe(0);
-    act(() => observers[2].notify(true));
-    await screen.findByTestId('scan-preview');
-    expect(instances[1].jumpTo).toHaveBeenCalledWith({
-      center: firstMap.center,
-      zoom: 11,
-      bearing: 0,
-      pitch: 0,
-    });
-    act(() => observers[0].notify(true));
     await waitFor(() =>
-      expect(screen.getAllByTestId('scan-preview')).toHaveLength(2)
+      expect(
+        screen.getAllByTestId('scan-preview').map((e) => e.textContent)
+      ).toEqual(['usgs-htmc-314254', 'reprint'])
     );
-    expect(instances[2].jumpTo).toHaveBeenCalledWith({
-      center: firstMap.center,
-      zoom: 11,
-      bearing: 0,
-      pitch: 0,
-    });
-    view.unmount();
-    for (const observer of observers)
-      expect(observer.disconnect).toHaveBeenCalled();
-    for (const map of instances)
-      expect(map.listeners.get('move')?.size).toBe(0);
+    expect(
+      screen.getByRole('button', { name: 'Compare maps' })
+    ).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Create link to this view' })
+    );
+    const params = new URLSearchParams(
+      screen
+        .getByRole('link', { name: 'Open saved view' })
+        .getAttribute('href')!
+        .split('?')[1]
+    );
+    expect(params.get('active')).toBe('usgs-htmc-314254');
+    expect(params.get('compare')).toBe('reprint');
+    expect(params.get('point')).toBe('-112.10000, 36.10000');
+    expect(params.get('view')).toBe('-112.10000,36.10000,12.000');
   });
   it('finds another state without opening a disclosure and replaces the old sheet and scans', async () => {
     vi.mocked(fetchSearchResults).mockResolvedValue({
@@ -661,7 +766,7 @@ describe('historical edition research', () => {
     expect(
       await screen.findByText('No matching records. Try a broader search.')
     ).toBeVisible();
-    expect(screen.getAllByTestId('scan-preview')).toHaveLength(3);
+    expect(screen.getAllByTestId('scan-preview')).toHaveLength(1);
   });
   it('reports an empty index without mounting a comparison', async () => {
     features = [];

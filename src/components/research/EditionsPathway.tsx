@@ -1,12 +1,5 @@
 import { useRecord, useIndex, useResearchParams } from './hooks';
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import type { Map as GLMap } from 'maplibre-gl';
 import type { ThemeResearchConfig } from '../../config/institution';
 import { useI18n } from '../../hooks/useI18n';
@@ -18,6 +11,18 @@ import {
 import { MapLibreMap } from '../map/MapLibreMap';
 import { FeaturedItemPreviewLayer } from '../home/FeaturedItemPreviewLayer';
 import { Assets, RecordSelect } from './shared';
+import { useTheme } from '../../hooks/useTheme';
+import { EditionSource } from './EditionSource';
+import { ResearchFocus } from './ResearchFocus';
+import { useEditionMapLink } from './useEditionMapLink';
+import {
+  cameraText,
+  parseResearchCamera,
+  parseResearchPoint,
+  pointText,
+  researchUrl,
+  type ResearchPoint,
+} from './editionEvidence';
 
 function EditionMap({
   feature,
@@ -62,109 +67,16 @@ function EditionMap({
     </>
   );
 }
-type MapCamera = {
-  center: { lng: number; lat: number };
-  zoom: number;
-  bearing: number;
-  pitch: number;
-};
-function cameraFor(map: GLMap): MapCamera {
-  const { lng, lat } = map.getCenter();
-  return {
-    center: { lng, lat },
-    zoom: map.getZoom(),
-    bearing: map.getBearing(),
-    pitch: map.getPitch(),
-  };
-}
-
-// The grid is keyed by sheet, so its camera and registrations reset together.
-function EditionGrid({
-  editions,
-  preferredIds,
-  onSelect,
-}: {
-  editions: IndexFeature[];
-  preferredIds: string[];
-  onSelect: (ids: string[]) => void;
-}) {
-  const { t } = useI18n();
-  const maps = useRef(new Map<string, { map: GLMap; move: () => void }>());
-  const camera = useRef<MapCamera | null>(null);
-  const syncing = useRef(false);
-  const register = useCallback((year: string, map: GLMap | null) => {
-    const previous = maps.current.get(year);
-    if (previous) previous.map.off('move', previous.move);
-    maps.current.delete(year);
-    if (!map) return;
-    if (camera.current) map.jumpTo(camera.current);
-    else camera.current = cameraFor(map);
-    const move = () => {
-      if (syncing.current) return;
-      syncing.current = true;
-      try {
-        camera.current = cameraFor(map);
-        for (const peer of maps.current.values()) {
-          if (peer.map !== map) peer.map.jumpTo(camera.current);
-        }
-      } finally {
-        syncing.current = false;
-      }
-    };
-    maps.current.set(year, { map, move });
-    map.on('move', move);
-  }, []);
-  const years = [
-    ...new Set(editions.map((f) => String(f.properties.datePub || ''))),
-  ];
-  const selected = years.map((year) => {
-    const scans = editions.filter(
-      (f) => String(f.properties.datePub || '') === year
-    );
-    return (
-      preferredIds
-        .map((id) => scans.find((f) => f.properties.recId === id))
-        .find(Boolean) ?? scans[0]
-    );
-  });
-  return (
-    <section aria-label={t('research.allEditions')}>
-      <div className="research-grid-intro">
-        <h2>{t('research.allEditions')}</h2>
-        <p>{t('research.allEditionsHelp')}</p>
-      </div>
-      <div className="research-edition-grid">
-        {selected.map((feature, i) => (
-          <EditionCard
-            key={years[i]}
-            year={years[i]}
-            feature={feature}
-            scans={editions.filter(
-              (f) => String(f.properties.datePub || '') === years[i]
-            )}
-            register={register}
-            onSelect={(id) =>
-              onSelect(
-                selected.map((f, index) =>
-                  index === i ? id : f.properties.recId
-                )
-              )
-            }
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
-
 function EditionCard({
   year,
+  mapKey,
   feature,
   scans,
   register,
   onSelect,
 }: {
   year: string;
+  mapKey: string;
   feature: IndexFeature;
   scans: IndexFeature[];
   register: (year: string, map: GLMap | null) => void;
@@ -172,27 +84,13 @@ function EditionCard({
 }) {
   const { t } = useI18n();
   const headingId = useId();
-  const host = useRef<HTMLElement>(null);
-  const [visible, setVisible] = useState(
-    () => typeof IntersectionObserver === 'undefined'
-  );
   const onMap = useCallback(
-    (map: GLMap | null) => register(year, map),
-    [register, year]
+    (map: GLMap | null) => register(mapKey, map),
+    [register, mapKey]
   );
-  useEffect(() => {
-    if (typeof IntersectionObserver === 'undefined' || !host.current) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setVisible(entry.isIntersecting),
-      { rootMargin: '160px' }
-    );
-    observer.observe(host.current);
-    return () => observer.disconnect();
-  }, []);
   const label = year || t('research.unknown');
   return (
     <article
-      ref={host}
       className="research-panel research-edition-card"
       aria-labelledby={headingId}
     >
@@ -222,20 +120,17 @@ function EditionCard({
           {feature.properties.dateSurvey || t('research.unknown')}
         </span>
       </div>
-      {visible ? (
-        <EditionMap feature={feature} onMap={onMap} />
-      ) : (
-        <div className="research-edition-map research-map-placeholder">
-          <p>{t('research.mapLoadsOnScroll')}</p>
-        </div>
-      )}
+      <EditionMap feature={feature} onMap={onMap} />
       <Assets id={feature.properties.recId} />
+      <EditionSource key={feature.properties.recId} feature={feature} />
     </article>
   );
 }
 
 export function EditionsPathway({ config }: { config: ThemeResearchConfig }) {
   const { t, text } = useI18n();
+  const { themeId } = useTheme();
+  const [hover, setHover] = useState<ResearchPoint | null>(null);
   const { params, update } = useResearchParams();
   const id = params.get('index') || config.records[0].id;
   const { features, error } = useIndex(id);
@@ -276,6 +171,71 @@ export function EditionsPathway({ config }: { config: ThemeResearchConfig }) {
     params.get('right'),
     ...(config.editions ?? []),
   ].filter((id): id is string => Boolean(id));
+  const years = [
+    ...new Set(editions.map((f) => String(f.properties.datePub || ''))),
+  ];
+  const selected = years.map((year) => {
+    const scans = editions.filter(
+      (f) => String(f.properties.datePub || '') === year
+    );
+    return (
+      preferredIds
+        .map((id) => scans.find((f) => f.properties.recId === id))
+        .find(Boolean) ?? scans[0]
+    );
+  });
+  const active =
+    editions.find(
+      (f) =>
+        f.properties.recId ===
+        (params.get('active') || params.get('left') || params.get('right'))
+    ) ?? selected[0];
+  const comparison = editions.find(
+    (f) => f.properties.recId === params.get('compare')
+  );
+  const activeYear = String(active?.properties.datePub || '');
+  const compareYear = String(comparison?.properties.datePub || '');
+  function selectPrinting(scanId: string) {
+    const scan = editions.find((f) => f.properties.recId === scanId)!;
+    update({
+      active: scanId,
+      printings: selected
+        .map((f) =>
+          f.properties.datePub === scan.properties.datePub
+            ? scanId
+            : f.properties.recId
+        )
+        .join(','),
+      left: '',
+      right: '',
+    });
+  }
+  const pinned = useMemo(
+    () => parseResearchPoint(params.get('point')),
+    [params]
+  );
+  const linked = useEditionMapLink(
+    `${id}:${group?.[0] ?? ''}:${params.get('view') ?? ''}`,
+    parseResearchCamera(params.get('view')),
+    pinned,
+    (point) => update({ point: pointText(point) }),
+    setHover
+  );
+  function workspaceUrl() {
+    const snapshot = new URLSearchParams();
+    snapshot.set('index', id);
+    if (active) snapshot.set('active', active.properties.recId);
+    if (comparison) snapshot.set('compare', comparison.properties.recId);
+    if (group) snapshot.set('sheet', group[1][0].properties.recId);
+    snapshot.set(
+      'printings',
+      selected.map((f) => f.properties.recId).join(',')
+    );
+    if (pinned) snapshot.set('point', pointText(pinned));
+    const camera = linked.camera();
+    if (camera) snapshot.set('view', cameraText(camera));
+    return researchUrl(themeId, '/research', snapshot);
+  }
   return (
     <div className="research-editions-layout">
       <section className="research-panel research-sheet-bar">
@@ -285,7 +245,17 @@ export function EditionsPathway({ config }: { config: ThemeResearchConfig }) {
             config={config}
             value={id}
             onChange={(index) =>
-              update({ index, sheet: '', left: '', right: '', printings: '' })
+              update({
+                index,
+                sheet: '',
+                left: '',
+                right: '',
+                printings: '',
+                point: '',
+                view: '',
+                active: '',
+                compare: '',
+              })
             }
             label={t('research.selectedIndex')}
             indexSearch
@@ -301,6 +271,10 @@ export function EditionsPathway({ config }: { config: ThemeResearchConfig }) {
                 left: '',
                 right: '',
                 printings: '',
+                point: '',
+                view: '',
+                active: '',
+                compare: '',
               })
             }
           >
@@ -319,25 +293,142 @@ export function EditionsPathway({ config }: { config: ThemeResearchConfig }) {
         </div>
         <p className="research-muted">{t('research.linkedMaps')}</p>
       </section>
-      {error ? (
-        <p role="alert">{t('research.indexError')}</p>
-      ) : !features ? (
-        <p role="status">{t('research.loading')}</p>
-      ) : !editions.length ? (
-        <p>{t('research.noSheets')}</p>
-      ) : (
-        <>
-          <EditionGrid
-            key={`${id}:${group?.[0]}`}
-            editions={editions}
-            preferredIds={preferredIds}
-            onSelect={(ids) =>
-              update({ printings: ids.join(','), left: '', right: '' })
-            }
-          />
-          <p className="research-note">{text(config.note)}</p>
-        </>
-      )}
+      <div className="research-editions-workbench">
+        {error ? (
+          <p role="alert">{t('research.indexError')}</p>
+        ) : !features ? (
+          <p role="status">{t('research.loading')}</p>
+        ) : !editions.length ? (
+          <p>{t('research.noSheets')}</p>
+        ) : (
+          <>
+            <section
+              className="research-timeline"
+              aria-label={t('research.editionStrip')}
+            >
+              <div className="research-timeline-heading">
+                <h2>{t('research.editionStrip')}</h2>
+                <button
+                  type="button"
+                  aria-pressed={Boolean(comparison)}
+                  disabled={editions.length < 2}
+                  onClick={() =>
+                    update({
+                      compare: comparison
+                        ? ''
+                        : (
+                            [...selected]
+                              .reverse()
+                              .find(
+                                (f) =>
+                                  f.properties.recId !== active.properties.recId
+                              ) ?? active
+                          ).properties.recId,
+                    })
+                  }
+                >
+                  {t('research.compareMaps')}
+                </button>
+              </div>
+              <div className="research-edition-strip">
+                {selected.map((feature) => {
+                  const year = String(
+                    feature.properties.datePub || t('research.unknown')
+                  );
+                  return (
+                    <button
+                      type="button"
+                      key={year}
+                      aria-pressed={
+                        feature.properties.datePub === active.properties.datePub
+                      }
+                      aria-label={t('research.viewEdition', { year })}
+                      onClick={() => selectPrinting(feature.properties.recId)}
+                    >
+                      <strong>{year}</strong>
+                      <span>
+                        {t('research.printings', {
+                          count: editions.filter(
+                            (f) =>
+                              f.properties.datePub ===
+                              feature.properties.datePub
+                          ).length,
+                        })}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              {comparison && (
+                <label className="research-field research-compare-picker">
+                  {t('research.compareWith')}
+                  <select
+                    value={comparison.properties.datePub || ''}
+                    onChange={(event) =>
+                      update({
+                        compare: selected.find(
+                          (f) =>
+                            String(f.properties.datePub || '') ===
+                            event.target.value
+                        )!.properties.recId,
+                      })
+                    }
+                  >
+                    {selected.map((f) => (
+                      <option
+                        key={f.properties.recId}
+                        value={f.properties.datePub || ''}
+                      >
+                        {f.properties.datePub || t('research.unknown')}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+            </section>
+            {editions.length > 0 && (
+              <ResearchFocus
+                pinned={pinned}
+                hover={hover}
+                onLocate={linked.locate}
+                onClear={() => {
+                  setHover(null);
+                  update({ point: '' });
+                }}
+                workspaceUrl={workspaceUrl}
+              />
+            )}
+            <div
+              className={`research-map-stage${comparison ? ' is-comparing' : ''}`}
+            >
+              <EditionCard
+                mapKey="primary"
+                year={activeYear}
+                feature={active}
+                scans={editions.filter(
+                  (f) => String(f.properties.datePub || '') === activeYear
+                )}
+                register={linked.register}
+                onSelect={selectPrinting}
+              />
+              {comparison && (
+                <EditionCard
+                  mapKey="comparison"
+                  year={compareYear}
+                  feature={comparison}
+                  scans={editions.filter(
+                    (f) => String(f.properties.datePub || '') === compareYear
+                  )}
+                  register={linked.register}
+                  onSelect={(compare) => update({ compare })}
+                />
+              )}
+            </div>
+            <p className="research-muted">{t('research.editionStripHelp')}</p>
+            <p className="research-note">{text(config.note)}</p>
+          </>
+        )}
+      </div>
     </div>
   );
 }

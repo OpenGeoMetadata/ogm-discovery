@@ -285,9 +285,12 @@ sheet. Keep state/region search and “Browse all map indexes” visible; pagina
 metadata results so the starter index is never a geographic limit. Explain that
 panning the comparison views does not discover or replace map sheets.
 
-Historical comparison shows every publication year as its own map card in date
-order, with printing selection and asset links inside that edition. Use three
-columns on wide screens, two on medium screens, and one on mobile. Link all
-active cameras and preserve the shared view when a card leaves and reenters the
-viewport. Keep every edition's controls in the document while mounting only
-nearby map renderers, so long histories do not exhaust browser map contexts.
+Historical maps open with one large map and a publication-year strip. Keep place
+search and the selected index/sheet visible beside the map on wide screens.
+“Compare maps” optionally opens a second synchronized map; allow comparison of
+printings within the same year. At most two map renderers are active. Stack the
+controls and comparison on narrow screens; let the edition strip scroll horizontally.
+Source dates, map margins, citations and downloads belong below the selected map.
+Keep coordinates and view-sharing compact, with coordinate entry disclosed on demand.
+A shared cursor or pin must remain visible above the raster preview canvas, without
+intercepting gestures. No observation notebook or annotation workflow is included.

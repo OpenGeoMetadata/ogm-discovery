@@ -3,6 +3,40 @@ export type MessageValue = string | { [key: string]: MessageValue };
 export const messages = {
   en: {
     research: {
+      samePlace: 'Map tools',
+      locateCoordinates: 'Go to coordinates',
+      viewEdition: 'View {year} edition',
+      compareMaps: 'Compare maps',
+      compareWith: 'Compare with',
+      editionStrip: 'Map editions',
+      editionStripHelp:
+        'Choose a publication year. Different printings may depict the same survey; inspect source dates below the map.',
+      focusHelp:
+        'Pan and zoom to explore. In comparison view, both maps follow the same location. Click a map to pin a location.',
+      pinnedLocation: 'Pinned location',
+      cursorLocation: 'Shared cursor',
+      movePointer: 'Move over a map',
+      pointCoordinates: 'Longitude, latitude (WGS84)',
+      pointExample: 'For example: -89.40, 43.07',
+      locatePoint: 'Locate & pin',
+      clearPin: 'Clear pin',
+      pointError:
+        'Enter longitude, latitude as two numbers, within ±180° longitude and ±85° latitude.',
+      shareWorkspace: 'Create link to this view',
+      shareLink: 'Snapshot link · selected scans, location and zoom',
+      openSharedView: 'Open saved view',
+      inspectSource: 'Inspect dates, map margins & citation',
+      indexPublicationYear: 'Publication year in index',
+      printingYear: 'Printing year',
+      scale: 'Scale',
+      dateEvidenceHelp:
+        'A later printing is not necessarily a new survey. Check the full map’s margins for compilation, revision and aerial-photo dates, legends and datums. Different features may represent different dates.',
+      openCollar: 'Open full map PDF · dates & legend ↗',
+      sourceRecord: 'USGS source record ↗',
+      sourceMetadata: 'Original source metadata ↗',
+      copyCitation: 'Copy citation',
+      citationCopied: 'Citation copied.',
+      citationCopyFallback: 'Select and copy the citation above.',
       pathways: 'Collection pathways',
       discoveryMode: 'Search & browse',
       discoveryDescription:
@@ -92,12 +126,7 @@ export const messages = {
       linkedMaps:
         'Linked views · Pan or zoom to inspect the selected scans. To find maps elsewhere, change the index and map sheet above.',
       noSheets: 'No sheets are available in this index.',
-      allEditions: 'All editions',
-      allEditionsHelp:
-        'One map for each publication year, in date order. Choose a printing within an edition. Pan or zoom any map to move the linked views together.',
       printingForYear: 'Printing / scan · {year}',
-      mapLoadsOnScroll:
-        'The interactive map loads as this edition comes into view.',
       editionA: '02 / First edition or printing',
       editionB: '03 / Second edition or printing',
       survey: 'Survey year',

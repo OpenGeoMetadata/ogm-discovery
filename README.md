@@ -480,7 +480,7 @@ The older `#/about-collection` link remains a compatible alias for the discovery
 - `bbox`: default `[west, south, east, north]` geographic study area.
 - `search`: optional collection metadata search; optional `resource_type` adds an existing API facet filter.
 - Imagery: `dates` and `imagery.map_endpoint`, `imagery.domain_endpoint`, `imagery.tile_matrix_set` configure a daily WMS/WMTS adapter.
-- Editions: `sheet` selects the initial sheet name; `editions` supplies preferred scan IDs within their publication years. Every publication year is shown, with a printing selector in each card.
+- Editions: `sheet` selects the initial sheet name; `editions` supplies preferred scan IDs within their publication years. An edition strip selects one large map. Optional comparison opens a second linked map, including another printing of the same year. Source dates, original map margins and citations expand below each map. Use “Create link to this view” to share the selected scans, geographic pin and current zoom.
 
 See the federal YAML presets for complete examples and
 [research pathways and API gaps](docs/federal-research-pathways.md) for semantics,
