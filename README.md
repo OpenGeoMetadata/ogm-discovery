@@ -478,9 +478,9 @@ The older `#/about-collection` link remains a compatible alias for the discovery
 - `title`, `description`, `note`: localized text objects.
 - `records`: initial metadata record IDs with localized `label` objects.
 - `bbox`: default `[west, south, east, north]` geographic study area.
-- `search`: optional collection metadata search; optional `resource_type` adds an existing API facet filter.
+- `search`: optional collection metadata search; `resource_type` scopes index/layer discovery. For `editions`, `map_resource_type` scopes scans using the existing resource-type facet (HTMC uses `Topographic maps`). If omitted, edition discovery excludes `Index maps`. Collection scope still comes from `api.default_query_params`.
 - Imagery: `dates` and `imagery.map_endpoint`, `imagery.domain_endpoint`, `imagery.tile_matrix_set` configure a daily WMS/WMTS adapter.
-- Editions: `sheet` and `editions` select the initial sheet name and pair of record IDs.
+- Editions: `bbox` sets the initial overview. Location lookup, map clicks and **Search this area** discover scans spatially; a separate map-name search queries collection metadata. Publication-year filtering and incremental result loading use the existing API. Select a scan to preview it on the large map; related loaded scans appear in a strip, with an optional second synchronized view. `sheet` and `editions` theme fields remain accepted for configuration compatibility but no longer force a starting sheet. Legacy record URLs still open the specified scan. Use **Create link to this view** to capture the current camera and selections.
 
 See the federal YAML presets for complete examples and
 [research pathways and API gaps](docs/federal-research-pathways.md) for semantics,

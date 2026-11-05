@@ -144,7 +144,7 @@ export interface ThemeMapConfig {
 
 export interface ThemeResearchConfig {
   kind: 'imagery' | 'elevation' | 'editions';
-  search?: { resource_type?: string };
+  search?: { resource_type?: string; map_resource_type?: string };
   title: LocalizedText;
   description: LocalizedText;
   note: LocalizedText;

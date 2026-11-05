@@ -279,3 +279,23 @@ and `aria-current`, and describe the research task using localized theme copy.
 The switch also belongs on search results and record pages so neither experience
 becomes a dead end. Keep conventional catalog filters and research URL parameters
 independent; both pathways remain shareable through static hash routes.
+
+Historical exploration follows topoView’s location-first workflow. Keep location
+lookup separate from map-name search, distinguish ambiguous places, and search
+for map records intersecting the selected place’s bounds. A map click searches
+a clearly labeled nearby area; panning waits for an explicit “Search this area”
+action. Do not require choosing a state index before discovering maps.
+
+Use one persistent large map with a compact results sidebar, year filters and
+loaded-result coverage outlines. Keep the loaded/total count and pagination
+explicit. Distinguish request failure from a successful empty search. Selecting
+a record overlays its georeferenced scan; provide opacity, fit and return-to-coverage
+controls. A horizontal strip exposes related loaded scans without claiming a
+canonical or complete edition series. Optional comparison adds one synchronized
+map, never more than two renderers. Stack maps and results on narrow screens.
+
+Preserve source titles and descriptions, original downloads, map margins and
+citations. Do not infer typed scale, printing or survey events from title text.
+Shared cursors must remain visible above the raster canvas without intercepting
+gestures. Coordinate search and view sharing stay compact. No observation
+notebook or annotation workflow is included.
