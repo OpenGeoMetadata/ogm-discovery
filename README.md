@@ -230,6 +230,19 @@ npm run scaffold        # create a starter themes/<theme-id>.yaml file
 npm run deploy          # publish dist/ with gh-pages
 ```
 
+### Matching CI locally
+
+CI runs on the current Node LTS release. Verify its reported Node version when
+reproducing a failure; a passing run on a different runtime is not a CI result.
+Run `npm ci`, `npm run lint -- --max-warnings=0`, `npm run typecheck`,
+`npm run test:ci`, and `npm run build`. The coverage command enforces the existing
+80% line and statement thresholds; a plain `vitest run` does not.
+
+Vitest workers disable Node's native Web Storage with
+`--no-experimental-webstorage` so happy-dom and jsdom provide isolated browser
+storage. This avoids the Node 25+ / Vitest 3 global collision without a shared
+storage file or changing application behavior.
+
 ## Creating A New Institution Theme
 
 Use the scaffold helper to create a starter theme file:
@@ -414,3 +427,63 @@ resource thumbnails before deployment. A cold render still depends on remote
 basemap data and available worker capacity. The local preview harness now loads
 missing public resource geometry into its isolated test database on demand;
 this behavior is not installed in the production API.
+
+### Federal collection prototypes
+
+The theme selector includes three collection portals, also available at stable
+static paths (append to your deployment base URL):
+
+| Theme                            | Home path    | Catalog scope                                        |
+| -------------------------------- | ------------ | ---------------------------------------------------- |
+| NASA GIBS                        | `nasa-gibs/` | `pcdm_memberOf_sm = nasa-gibs`                       |
+| USGS The National Map            | `usgs-tnm/`  | USGS provider + `dcat_keyword_sm = The National Map` |
+| USGS Historical Topographic Maps | `usgs-htmc/` | `pcdm_memberOf_sm = usgs-htmc`                       |
+
+For example, `https://opengeometadata.github.io/ogm-discovery/nasa-gibs/`
+and `https://opengeometadata.github.io/ogm-discovery/usgs-htmc/#/resources/usgs-htmc-314262`.
+The existing `?ogm_theme=<id>` entry point also works. Selecting a theme opens
+its home URL and clears the previous collection's route and filters. These are
+community prototypes, not official agency websites.
+
+Set the optional `homepage.collection_intro` to use an asset-led collection
+home above the interactive discovery map. Existing themes keep their current
+hero layout when the field is absent. All copy fields accept localized objects:
+
+- `eyebrow`: short collection identifier above the existing `institution.hero_text`
+  and `institution.hero_description`.
+- `image`: `src` (bundled or remote), localized `alt` and `caption`, and an internal
+  `href` to a record or search. The caption should include source attribution.
+- `facts`: an array of localized `value` / `label` pairs. Use stable collection
+  characteristics, not hardcoded live record counts.
+- `pathways`: an array of localized `label`, `title`, `description`, plus an internal
+  `href` for a curated discovery route.
+- `map_heading` and `map_description`: localized context for the live map.
+
+Reuse `homepage.hero_actions`, `hero_map`, `featured_items`, and branding tokens
+for actions, map coverage, previews and palette. Local images resolve against the
+Vite base path. No new API or server is required. See
+[the collection research and asset notes](docs/federal-collection-themes.md)
+for source provenance, preview limitations and screenshots.
+
+### Asset-specific research workspaces
+
+An optional top-level `research` configuration enables an asset-specific workspace
+at `#/research` alongside the standard discovery experience. Every collection
+home (`#/`) retains its search, browse and map interface. A shared “Search & browse” /
+“Research workspace” switch appears in both interfaces, including catalog results
+and record pages. Themes without `research` keep their existing navigation.
+The older `#/about-collection` link remains a compatible alias for the discovery home.
+
+- `kind`: `imagery`, `elevation`, or `editions` (workflow capabilities, not institution IDs).
+- `title`, `description`, `note`: localized text objects.
+- `records`: initial metadata record IDs with localized `label` objects.
+- `bbox`: default `[west, south, east, north]` geographic study area.
+- `search`: optional collection metadata search; optional `resource_type` adds an existing API facet filter.
+- Imagery: `dates` and `imagery.map_endpoint`, `imagery.domain_endpoint`, `imagery.tile_matrix_set` configure a daily WMS/WMTS adapter.
+- Editions: `sheet` and `editions` select the initial sheet name and pair of record IDs.
+
+See the federal YAML presets for complete examples and
+[research pathways and API gaps](docs/federal-research-pathways.md) for semantics,
+supported assets, URL state, and limitations. The elevation example deliberately
+supports the configured rectangular DEM index rather than treating every TNM
+asset as an elevation raster.

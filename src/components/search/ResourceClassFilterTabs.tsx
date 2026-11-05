@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { fetchSearchResults } from '../../services/api';
 import { normalizeFacetId } from '../../utils/facetLabels';
+import { getActiveThemeId } from '../../config/institution';
 
 interface ResourceClassItem {
   value: string;
@@ -45,10 +46,10 @@ function isFacetItemObject(item: unknown): item is FacetItemObject {
   );
 }
 
-function getCachedResourceClasses(): ResourceClassItem[] | null {
+function getCachedResourceClasses(themeId: string): ResourceClassItem[] | null {
   try {
-    const cached = localStorage.getItem(CACHE_KEY);
-    const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+    const cached = localStorage.getItem(`${CACHE_KEY}:${themeId}`);
+    const timestamp = localStorage.getItem(`${CACHE_TIMESTAMP_KEY}:${themeId}`);
 
     if (cached && timestamp) {
       const age = Date.now() - parseInt(timestamp, 10);
@@ -62,10 +63,16 @@ function getCachedResourceClasses(): ResourceClassItem[] | null {
   return null;
 }
 
-function setCachedResourceClasses(items: ResourceClassItem[]): void {
+function setCachedResourceClasses(
+  items: ResourceClassItem[],
+  themeId: string
+): void {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(items));
-    localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+    localStorage.setItem(`${CACHE_KEY}:${themeId}`, JSON.stringify(items));
+    localStorage.setItem(
+      `${CACHE_TIMESTAMP_KEY}:${themeId}`,
+      Date.now().toString()
+    );
   } catch (error) {
     console.error('Error caching resource classes:', error);
   }
@@ -126,9 +133,10 @@ export function ResourceClassFilterTabs({
     null;
 
   useEffect(() => {
+    const themeId = getActiveThemeId();
     const fetchResourceClasses = async () => {
       // Check cache first
-      const cached = getCachedResourceClasses();
+      const cached = getCachedResourceClasses(themeId);
       if (cached) {
         setResourceClasses(cached);
         setIsLoading(false);
@@ -191,7 +199,7 @@ export function ResourceClassFilterTabs({
           // Sort by hits (descending), with "Other" placed last
           const sortedItems = sortResourceClasses(items);
           setResourceClasses(sortedItems);
-          setCachedResourceClasses(sortedItems);
+          setCachedResourceClasses(sortedItems, themeId);
         }
       } catch (error) {
         console.error('Error fetching resource classes:', error);

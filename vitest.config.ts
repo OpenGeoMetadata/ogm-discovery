@@ -9,6 +9,13 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     globals: true,
     environment: 'happy-dom',
+    // Node 25+ exposes native Web Storage globals that Vitest 3 otherwise
+    // preserves instead of the isolated happy-dom/jsdom implementations.
+    // Apply this to test workers only; do not create a shared storage file.
+    poolOptions: {
+      forks: { execArgv: ['--no-experimental-webstorage'] },
+      threads: { execArgv: ['--no-experimental-webstorage'] },
+    },
     setupFiles: ['./src/setupTests.ts'],
     css: true,
     reporters: ['default', a11yReporter],

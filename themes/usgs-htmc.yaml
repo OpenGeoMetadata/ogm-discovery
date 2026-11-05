@@ -1,0 +1,237 @@
+id: usgs-htmc
+label: USGS · Historical Topographic Maps
+site:
+  title:
+    en: Historical Topographic Maps | OpenGeoMetadata
+  short_name: Historical Topographic Maps
+  description:
+    en: >-
+      Read the contours of the past. Discover historical USGS quadrangles by place and edition,
+      explore sheet indexes, and download georeferenced scans for closer study.
+  locale: en
+  supported_locales:
+    - en
+  show_theme_selector: true
+  routing:
+    mode: hash
+  banner:
+    enabled: true
+    tone: notice
+    text:
+      en: OpenGeoMetadata community prototype · Not an official NASA or USGS website.
+institution:
+  name: Historical Topographic Maps
+  logo_url: /collection-assets/usgs-htmc.svg
+  logo_alt:
+    en: Historical Topographic Maps collection symbol
+  logo_lockup:
+    separator: none
+    right_text:
+      en: Historical Topographic Maps
+    subtext:
+      en: OpenGeoMetadata / Collection explorer
+  header:
+    logo_height_rem: 3.5
+    lockup_text_size_rem: 1.35
+  hero_text:
+    en: Every landscape has a history.
+  hero_description:
+    en: >-
+      Read the contours of the past. Discover historical USGS quadrangles by place and edition,
+      explore sheet indexes, and download georeferenced scans for closer study.
+branding:
+  colors:
+    primary: '#8C432E'
+    active: '#285E79'
+    surface: '#FFFCF5'
+    surface_alt: '#F1EBDD'
+    text: '#302C25'
+    muted: '#6A5D4D'
+    border: '#D7CBBB'
+    page_background: '#F8F4EB'
+    header_background: '#25382F'
+    header_text: '#FFF9EB'
+    utility_background: '#182920'
+    utility_text: '#F2EBDC'
+    hero_panel_accent: '#A25337'
+    button_primary_hover: '#703321'
+    button_secondary_text: '#8C432E'
+    button_secondary_border: '#D7CBBB'
+    button_secondary_background: '#FFFCF5'
+    button_secondary_hover: '#F1EBDD'
+    lockup_background: '#25382F'
+    lockup_foreground: '#FFF9EB'
+  fonts:
+    sans: '"Work Sans", Arial, sans-serif'
+    heading: Georgia, "Times New Roman", serif
+    ui: '"Work Sans", Arial, sans-serif'
+api:
+  base_url: https://ogm.geo4lib.app/api/v1/
+  client_name: ogm-usgs-htmc
+  default_query_params:
+    - include_filters[pcdm_memberOf_sm][]=usgs-htmc
+navigation:
+  utility_links:
+    - label:
+        en: USGS map archive
+      href: >-
+        https://www.usgs.gov/programs/national-geospatial-program/historical-topographic-maps-preserving-past
+      external: true
+  cta:
+    label:
+      en: Source metadata
+    href: https://github.com/OpenGeoMetadata/gov.usgs.htmc
+    external: true
+  cta_style: utility
+  links:
+    - label:
+        en: Search
+      href: /search?q=
+      external: false
+    - label:
+        en: Bookmarks
+      href: /bookmarks
+      external: false
+homepage:
+  collection_intro:
+    eyebrow:
+      en: USGS / Historical Topographic Map Collection
+    image:
+      src: /collection-assets/bright-angel-1906.jpg
+      alt:
+        en: >-
+          Scanned Bright Angel, Arizona topographic sheet with brown contours and blue Colorado
+          River, edition 1906, printed 1918
+      caption:
+        en: Bright Angel, Arizona · 1906 edition / 1918 printing · 1:48,000 · USGS
+      href: /resources/usgs-htmc-314262
+    facts:
+      - value:
+          en: 1884–2006
+        label:
+          en: Collection era
+      - value:
+          en: GeoTIFF + GeoPDF
+        label:
+          en: Map downloads
+      - value:
+          en: State + scale
+        label:
+          en: Sheet indexes
+    pathways:
+      - label:
+          en: 01 / Place
+        title:
+          en: Discover your landscape
+        description:
+          en: Browse the map gallery and narrow by place to find familiar terrain in another era.
+        href: /search?q=&view=gallery
+      - label:
+          en: 02 / Sheets
+        title:
+          en: Navigate the map index
+        description:
+          en: Explore Arizona’s 1:48,000 sheets. Overlapping outlines reveal editions and printings.
+        href: /resources/usgs-htmc-index-az-48000
+      - label:
+          en: 03 / Time
+        title:
+          en: Start with the earliest maps
+        description:
+          en: Browse topographic sheets in date order, from early surveys to later editions.
+        href: >-
+          /search?include_filters[gbl_resourceType_sm][]=Topographic%20maps&sort=year_asc&view=gallery
+    map_heading:
+      en: Put history in its place
+    map_description:
+      en: Search a location or explore map coverage, then open a sheet to inspect the scan.
+  hero_actions:
+    - label:
+        en: Explore historical maps
+      href: /search?q=&view=gallery
+      external: false
+    - label:
+        en: Open topoView
+      href: https://ngmdb.usgs.gov/topoview/
+      external: true
+  hero_map:
+    center:
+      - 39
+      - -98
+    zoom: 5
+    initial_pan_px:
+      - 0
+      - 0
+  featured_items:
+    - id: usgs-htmc-314262
+      camera:
+        mode: fitBounds
+        maxZoom: 8
+        padding:
+          - 48
+          - 48
+        duration: 1
+    - id: usgs-htmc-index-az-48000
+      camera:
+        mode: fitBounds
+        maxZoom: 8
+        padding:
+          - 48
+          - 48
+        duration: 1
+  collection_spotlights: []
+  partner_institutions: []
+  blog:
+    enabled: false
+footer:
+  style: network
+  title:
+    en: Historical Topographic Maps
+  copyright:
+    en: >-
+      USGS maps are in the U.S. public domain. Edition, survey and printing years can differ;
+      consult each sheet’s metadata when comparing maps.
+  link_groups:
+    - title:
+        en: Explore the source
+      links:
+        - label:
+            en: USGS historical maps
+          href: >-
+            https://www.usgs.gov/programs/national-geospatial-program/historical-topographic-maps-preserving-past
+          external: true
+        - label:
+            en: topoView
+          href: https://ngmdb.usgs.gov/topoview/
+          external: true
+    - title:
+        en: Open metadata
+      links:
+        - label:
+            en: Collection repository
+          href: https://github.com/OpenGeoMetadata/gov.usgs.htmc
+          external: true
+        - label:
+            en: About OpenGeoMetadata
+          href: https://opengeometadata.org/
+          external: true
+  show_api_debug: false
+
+research:
+  search: { resource_type: Index maps }
+  kind: editions
+  title: { en: Read a landscape through its map editions }
+  description:
+    {
+      en: Choose a sheet and compare georeferenced scans at the same location and zoom.,
+    }
+  note:
+    {
+      en: 'Edition, survey and printing years describe different events. Shared sheet footprints do not guarantee pixel-perfect registration; use these scans for visual comparison.',
+    }
+  records:
+    - id: usgs-htmc-index-az-48000
+      label: { en: 'Arizona · 1:48,000' }
+  bbox: [-112.25, 36, -112, 36.25]
+  sheet: Bright Angel
+  editions: [usgs-htmc-314254, usgs-htmc-464619]

@@ -1,0 +1,237 @@
+id: nasa-gibs
+label: NASA · Global Imagery Browse Services
+site:
+  title:
+    en: GIBS imagery explorer | OpenGeoMetadata
+  short_name: GIBS imagery explorer
+  description:
+    en: >-
+      Explore Earth through satellite observations. Discover imagery of our atmosphere, oceans and
+      land, then open a layer to inspect its services or continue in NASA Worldview.
+  locale: en
+  supported_locales:
+    - en
+  show_theme_selector: true
+  routing:
+    mode: hash
+  banner:
+    enabled: true
+    tone: notice
+    text:
+      en: OpenGeoMetadata community prototype · Not an official NASA or USGS website.
+institution:
+  name: GIBS imagery explorer
+  logo_url: /collection-assets/nasa-gibs.svg
+  logo_alt:
+    en: GIBS imagery explorer collection symbol
+  logo_lockup:
+    separator: none
+    right_text:
+      en: GIBS imagery explorer
+    subtext:
+      en: OpenGeoMetadata / Collection explorer
+  header:
+    logo_height_rem: 3.5
+    lockup_text_size_rem: 1.35
+  hero_text:
+    en: A new perspective on our planet.
+  hero_description:
+    en: >-
+      Explore Earth through satellite observations. Discover imagery of our atmosphere, oceans and
+      land, then open a layer to inspect its services or continue in NASA Worldview.
+branding:
+  colors:
+    primary: '#174A8B'
+    active: '#176BBD'
+    surface: '#FFFFFF'
+    surface_alt: '#EDF3FA'
+    text: '#101F35'
+    muted: '#4D6077'
+    border: '#C7D4E3'
+    page_background: '#F7FAFE'
+    header_background: '#07182E'
+    header_text: '#FFFFFF'
+    utility_background: '#020C1B'
+    utility_text: '#DDE9F7'
+    hero_panel_accent: '#256DB4'
+    button_primary_hover: '#10396D'
+    button_secondary_text: '#174A8B'
+    button_secondary_border: '#C7D4E3'
+    button_secondary_background: '#FFFFFF'
+    button_secondary_hover: '#EDF3FA'
+    lockup_background: '#07182E'
+    lockup_foreground: '#FFFFFF'
+  fonts:
+    sans: '"Work Sans", Arial, sans-serif'
+    heading: '"Work Sans", Arial, sans-serif'
+    ui: '"Work Sans", Arial, sans-serif'
+api:
+  base_url: https://ogm.geo4lib.app/api/v1/
+  client_name: ogm-nasa-gibs
+  default_query_params:
+    - include_filters[pcdm_memberOf_sm][]=nasa-gibs
+navigation:
+  utility_links:
+    - label:
+        en: NASA Earth science
+      href: https://worldview.earthdata.nasa.gov/
+      external: true
+  cta:
+    label:
+      en: Source metadata
+    href: https://github.com/OpenGeoMetadata/gov.nasa.gibs
+    external: true
+  cta_style: utility
+  links:
+    - label:
+        en: Search
+      href: /search?q=
+      external: false
+    - label:
+        en: Bookmarks
+      href: /bookmarks
+      external: false
+homepage:
+  collection_intro:
+    eyebrow:
+      en: NASA / Global Imagery Browse Services
+    image:
+      src: /collection-assets/earth-at-night.jpg
+      alt:
+        en: North America illuminated by city lights in the 2012 VIIRS night-time composite
+      caption:
+        en: Earth at Night · Suomi NPP / VIIRS · 2012 · NASA GIBS
+      href: /resources/nasa-gibs-viirs_citylights_2012
+    facts:
+      - value:
+          en: Global
+        label:
+          en: Earth observations
+      - value:
+          en: WMS · WMTS · XYZ
+        label:
+          en: Imagery services
+      - value:
+          en: Worldview
+        label:
+          en: Explore across time
+    pathways:
+      - label:
+          en: 01 / Observe
+        title:
+          en: The visible Earth
+        description:
+          en: >-
+            Start with true-color imagery from Terra / MODIS. Inspect the layer and open its latest
+            imagery.
+        href: /resources/nasa-gibs-modis_terra_correctedreflectance_truecolor
+      - label:
+          en: 02 / Discover
+        title:
+          en: Atmosphere & climate
+        description:
+          en: Find observations of clouds, aerosols and atmospheric conditions.
+        href: /search?include_filters[dcat_theme_sm][]=Climate
+      - label:
+          en: 03 / Explore
+        title:
+          en: Earth after dark
+        description:
+          en: See the geography of human activity in a night-time satellite composite.
+        href: /resources/nasa-gibs-viirs_citylights_2012
+    map_heading:
+      en: Explore the imagery catalog
+    map_description:
+      en: Search by place or select a featured layer. Many observations cover the entire globe.
+  hero_actions:
+    - label:
+        en: Explore imagery
+      href: /search?q=&view=gallery
+      external: false
+    - label:
+        en: Open Worldview
+      href: https://worldview.earthdata.nasa.gov/
+      external: true
+  hero_map:
+    center:
+      - 20
+      - 0
+    zoom: 3
+    initial_pan_px:
+      - 0
+      - 0
+  featured_items:
+    - id: nasa-gibs-modis_terra_correctedreflectance_truecolor
+      camera:
+        mode: fitBounds
+        maxZoom: 8
+        padding:
+          - 48
+          - 48
+        duration: 1
+    - id: nasa-gibs-viirs_citylights_2012
+      camera:
+        mode: fitBounds
+        maxZoom: 8
+        padding:
+          - 48
+          - 48
+        duration: 1
+  collection_spotlights: []
+  partner_institutions: []
+  blog:
+    enabled: false
+footer:
+  style: network
+  title:
+    en: GIBS imagery explorer
+  copyright:
+    en: >-
+      We acknowledge imagery from NASA’s Global Imagery Browse Services (GIBS), part of the Earth
+      Science Data and Information System (ESDIS).
+  link_groups:
+    - title:
+        en: Explore the source
+      links:
+        - label:
+            en: NASA Worldview
+          href: https://worldview.earthdata.nasa.gov/
+          external: true
+        - label:
+            en: GIBS documentation
+          href: https://nasa-gibs.github.io/gibs-api-docs/
+          external: true
+    - title:
+        en: Open metadata
+      links:
+        - label:
+            en: Collection repository
+          href: https://github.com/OpenGeoMetadata/gov.nasa.gibs
+          external: true
+        - label:
+            en: About OpenGeoMetadata
+          href: https://opengeometadata.org/
+          external: true
+  show_api_debug: false
+
+research:
+  search: {}
+  kind: imagery
+  title: { en: See the same place on two dates }
+  description:
+    { en: Compare daily satellite imagery across a shared study area. }
+  note:
+    {
+      en: 'Rendered imagery supports visual interpretation. Follow the source dataset for numerical analysis; cloud cover and acquisition gaps can obscure change.',
+    }
+  records:
+    - id: nasa-gibs-modis_terra_correctedreflectance_truecolor
+      label: { en: Terra / MODIS · True color }
+    - id: nasa-gibs-modis_aqua_correctedreflectance_truecolor
+      label: { en: Aqua / MODIS · True color }
+  bbox: [-125, 32, -114, 42]
+  dates: ['2024-06-01', '2024-12-01']
+  imagery:
+    map_endpoint: https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi
+    domain_endpoint: https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/wmts.cgi
+    tile_matrix_set: GoogleMapsCompatible_Level9

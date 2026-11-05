@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useSearchParams } from 'react-router';
 import { HelmetProvider } from 'react-helmet-async';
 import { SearchPage } from './pages/SearchPage';
@@ -13,6 +14,8 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { ServerErrorPage } from './pages/ServerErrorPage';
 import { TurnstileGate } from './components/security/TurnstileGate';
 
+const ResearchPage = lazy(() => import('./pages/ResearchPage'));
+
 function App() {
   const [searchParams] = useSearchParams();
   const hasSearchParams = Array.from(searchParams.entries()).length > 0;
@@ -24,6 +27,15 @@ function App() {
     <HelmetProvider>
       <TurnstileGate>
         <Routes>
+          <Route
+            path="/research"
+            element={
+              <Suspense fallback={null}>
+                <ResearchPage />
+              </Suspense>
+            }
+          />
+          <Route path="/about-collection" element={<HomePage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/mirador" element={<MiradorViewerPage />} />
           <Route path="/bookmarks" element={<BookmarksPage />} />

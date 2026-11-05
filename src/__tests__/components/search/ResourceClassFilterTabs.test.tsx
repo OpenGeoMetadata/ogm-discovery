@@ -12,7 +12,9 @@ vi.mock('../../../services/api', () => ({
 const mockFetchSearchResults = vi.mocked(api.fetchSearchResults);
 
 function makeFacetItems(
-  items: Array<[string, number] | { value: string; hits: number; label?: string }>
+  items: Array<
+    [string, number] | { value: string; hits: number; label?: string }
+  >
 ) {
   return items.map((item) =>
     Array.isArray(item)
@@ -74,18 +76,36 @@ describe('ResourceClassFilterTabs', () => {
     renderWithRouter();
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /show all resources/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /show all resources/i })
+      ).toBeInTheDocument();
     });
 
-    expect(screen.getByRole('button', { name: /filter by maps/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /filter by datasets/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /filter by web services/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /filter by imagery/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /filter by websites/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /filter by maps/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /filter by datasets/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /filter by web services/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /filter by imagery/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /filter by websites/i })
+    ).toBeInTheDocument();
 
-    expect(screen.queryByRole('button', { name: /filter by collections/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /filter by series/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /filter by other/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /filter by collections/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /filter by series/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /filter by other/i })
+    ).not.toBeInTheDocument();
   });
 
   it('navigates to search with filter when a tab is clicked', async () => {
@@ -116,15 +136,52 @@ describe('ResourceClassFilterTabs', () => {
     render(<RouterProvider router={router} />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /filter by maps/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /filter by maps/i })
+      ).toBeInTheDocument();
     });
 
-    await userEvent.click(screen.getByRole('button', { name: /filter by maps/i }));
+    await userEvent.click(
+      screen.getByRole('button', { name: /filter by maps/i })
+    );
 
     await waitFor(() => {
       expect(router.state.location.pathname).toBe('/search');
       expect(router.state.location.search).toContain('gbl_resourceClass_sm');
       expect(router.state.location.search).toContain('Maps');
     });
+  });
+  it('does not reuse NASA resource classes after switching to historical maps', async () => {
+    const response = (value: string) =>
+      ({
+        data: [],
+        meta: {},
+        links: {},
+        included: [
+          {
+            type: 'facet',
+            id: 'resource_class_agg',
+            attributes: { items: [[value, 10]] },
+          },
+        ],
+      }) as unknown as Awaited<ReturnType<typeof api.fetchSearchResults>>;
+    window.history.replaceState(null, '', '/');
+    localStorage.setItem('ogm.theme', 'nasa-gibs');
+    mockFetchSearchResults.mockResolvedValueOnce(response('Imagery'));
+    const nasa = renderWithRouter();
+    expect(
+      await screen.findByRole('button', { name: /filter by imagery/i })
+    ).toBeInTheDocument();
+    nasa.unmount();
+    localStorage.setItem('ogm.theme', 'usgs-htmc');
+    mockFetchSearchResults.mockResolvedValueOnce(response('Maps'));
+    renderWithRouter();
+    expect(
+      await screen.findByRole('button', { name: /filter by maps/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /filter by imagery/i })
+    ).not.toBeInTheDocument();
+    expect(mockFetchSearchResults).toHaveBeenCalledTimes(2);
   });
 });
