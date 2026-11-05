@@ -2,7 +2,7 @@
 
 These workspaces test whether the same metadata API can support three different research tasks. They are prototypes for evaluating workflows, not evidence of improved researcher outcomes. Task-based usability testing remains necessary: measure time to a valid comparison or GIS-ready asset selection, errors, confidence in provenance, and whether the source application is still needed.
 
-The collection themes now open their research workspace. The original collection introduction remains at `#/about-collection`, and the complete scoped catalog at `#/search`. Theme selection uses the existing shareable theme paths. No server or API contract changes are required.
+Both pathways are first-class. Each collection opens the standard discovery home at `#/`, with the existing search, browse, map, filters and record interface. The optimized workspace remains directly linkable at `#/research`. A shared, always-visible “Search & browse” / “Research workspace” switch appears in both headers and on catalog results and record pages. It identifies the active pathway and remains visible on mobile. The older `#/about-collection` route remains a discovery-home alias, and the complete scoped catalog stays at `#/search`. Switching pathways does not convert catalog filters into workflow parameters; browser Back returns to the previous URL and its selections. Theme selection uses the existing shareable theme paths. No server or API contract changes are required.
 
 ## What each workspace does
 

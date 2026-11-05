@@ -1,6 +1,6 @@
 # Federal collection prototypes
 
-The collection homes now open [asset-specific research workspaces](federal-research-pathways.md).
+The collection homes retain standard discovery alongside [asset-specific research workspaces](federal-research-pathways.md), with a visible switch between both pathways.
 This document records the initial branding/source review; its original landing-page
 screenshots remain useful for reviewing `#/about-collection`. Current workflow
 screenshots are in `screenshots/research-pathways/`.

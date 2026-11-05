@@ -256,7 +256,7 @@ community-prototype notice visible. Existing institutional heroes are unchanged.
 
 ## Asset-specific research workspaces
 
-Federal research homes use a compact institutional header and task-specific
+Federal research workspaces use a compact institutional header and task-specific
 workspaces. Imagery has a dark two-date comparison stage with a shared extent;
 elevation pairs a prominent tile-index map with a selection/download ledger;
 historical maps use paper tones, linked georeferenced views and edition chronology.
@@ -268,3 +268,14 @@ and edition versus printing years. Unsupported capabilities have explicit states
 Use original services and georeferenced assets for research comparison; browse
 thumbnails are only discovery aids. On narrow screens, stack controls and views
 without hiding metadata or download access. Every shared label is localizable.
+
+### Two complementary collection pathways
+
+Keep the standard discovery home as each collection’s entry point. When a theme
+configures research tools, show the same two-link pathway navigation in both the
+standard header and the research header: “Search & browse” and “Research workspace.”
+Keep both links visible on mobile, indicate the current pathway with an underline
+and `aria-current`, and describe the research task using localized theme copy.
+The switch also belongs on search results and record pages so neither experience
+becomes a dead end. Keep conventional catalog filters and research URL parameters
+independent; both pathways remain shareable through static hash routes.

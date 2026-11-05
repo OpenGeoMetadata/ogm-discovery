@@ -6,6 +6,7 @@ import {
   type MouseEvent,
 } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
+import { CollectionPathways } from './CollectionPathways';
 import { Menu, X } from 'lucide-react';
 import { SearchField } from '../SearchField';
 import { ResourceClassFilterTabs } from '../search/ResourceClassFilterTabs';
@@ -455,6 +456,7 @@ export function Header() {
           onClick={() => setMobileNavOpen(false)}
         />
       )}
+      <CollectionPathways />
     </header>
   );
 }

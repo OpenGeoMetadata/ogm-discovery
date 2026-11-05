@@ -1,5 +1,4 @@
 import { lazy, Suspense } from 'react';
-import { useTheme } from './hooks/useTheme';
 import { Routes, Route, Navigate, useSearchParams } from 'react-router';
 import { HelmetProvider } from 'react-helmet-async';
 import { SearchPage } from './pages/SearchPage';
@@ -18,7 +17,6 @@ import { TurnstileGate } from './components/security/TurnstileGate';
 const ResearchPage = lazy(() => import('./pages/ResearchPage'));
 
 function App() {
-  const { theme } = useTheme();
   const [searchParams] = useSearchParams();
   const hasSearchParams = Array.from(searchParams.entries()).length > 0;
 
@@ -56,8 +54,6 @@ function App() {
             element={
               hasSearchParams ? (
                 <Navigate to={`/search${searchString}`} replace />
-              ) : theme.research ? (
-                <Navigate to="/research" replace />
               ) : (
                 <HomePage />
               )

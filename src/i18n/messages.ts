@@ -3,6 +3,11 @@ export type MessageValue = string | { [key: string]: MessageValue };
 export const messages = {
   en: {
     research: {
+      pathways: 'Collection pathways',
+      discoveryMode: 'Search & browse',
+      discoveryDescription:
+        'Explore the catalog, map, filters and full metadata.',
+      researchMode: 'Research workspace',
       previewError:
         'Scan preview unavailable. Use the metadata and download links below.',
       moreTiles: 'Show more tiles ({count} remaining)',

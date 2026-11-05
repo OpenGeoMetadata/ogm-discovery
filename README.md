@@ -454,9 +454,12 @@ for source provenance, preview limitations and screenshots.
 
 ### Asset-specific research workspaces
 
-An optional top-level `research` configuration opens an asset-specific home at
-`#/research`. Existing themes without it retain their current homepage. The
-original introduction remains available at `#/about-collection`.
+An optional top-level `research` configuration enables an asset-specific workspace
+at `#/research` alongside the standard discovery experience. Every collection
+home (`#/`) retains its search, browse and map interface. A shared “Search & browse” /
+“Research workspace” switch appears in both interfaces, including catalog results
+and record pages. Themes without `research` keep their existing navigation.
+The older `#/about-collection` link remains a compatible alias for the discovery home.
 
 - `kind`: `imagery`, `elevation`, or `editions` (workflow capabilities, not institution IDs).
 - `title`, `description`, `note`: localized text objects.

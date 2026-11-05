@@ -2,6 +2,7 @@ import { Link, Navigate } from 'react-router';
 import { Helmet } from 'react-helmet-async';
 import { useTheme } from '../hooks/useTheme';
 import { useI18n } from '../hooks/useI18n';
+import { CollectionPathways } from '../components/layout/CollectionPathways';
 import { Footer } from '../components/layout/Footer';
 import { resolveThemeAssetUrl } from '../utils/themeUrls';
 import { ImageryPathway } from '../components/research/ImageryPathway';
@@ -38,7 +39,6 @@ export default function ResearchPage() {
         </Link>
         <nav aria-label={t('research.navigation')}>
           <Link to="/search">{t('research.catalog')}</Link>
-          <Link to="/about-collection">{t('research.about')}</Link>
           <a
             href="#footer"
             onClick={(event) => {
@@ -52,6 +52,7 @@ export default function ResearchPage() {
           </a>
         </nav>
       </header>
+      <CollectionPathways />
       <main tabIndex={-1} id="research-main" className="research-main">
         <div className="research-title">
           <div>
