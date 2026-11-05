@@ -3,6 +3,51 @@ export type MessageValue = string | { [key: string]: MessageValue };
 export const messages = {
   en: {
     research: {
+      findBy: 'Search by',
+      location: 'Location',
+      mapName: 'Map name',
+      findLocation: 'Find a city, place or address',
+      findMapName: 'Find maps by name',
+      locationHelp: 'Choose a place to find maps covering its area.',
+      mapNameHelp:
+        'Search map metadata across this collection, independent of the map extent.',
+      findingPlaces: 'Finding locations…',
+      placeError:
+        'Locations could not be loaded. Check your connection and search again.',
+      noPlaces: 'No locations found. Add a state or country and try again.',
+      mapExplorer: 'Historical map explorer',
+      searchArea: 'Search this area',
+      clickToSearch: 'Click the map to search nearby.',
+      footprints: 'Show loaded map footprints',
+      closeMap: 'Back to coverage',
+      fitMap: 'Fit selected map',
+      showScan: 'Show historical scan',
+      opacity: 'Scan opacity',
+      relatedScans: 'Related scans',
+      relatedHelp:
+        'Scans with matching names and bounds among loaded results. Load more results to find more scans; this is not a verified edition series.',
+      singleMap: 'Single map · no comparison',
+      matchingMaps: 'Maps in this area',
+      nearPoint: 'Near {point} · a small bounding area around the point',
+      selectedArea: 'Selected map area',
+      namedMaps: 'Map metadata matching “{query}”',
+      startLocation: 'Start with a location',
+      yearFrom: 'Publication year from',
+      yearTo: 'Publication year to',
+      applyYears: 'Apply years',
+      allYears: 'All years',
+      yearError:
+        'Use four-digit years with the first year before or equal to the last.',
+      discoveryStart:
+        'Search for a place above, click a location on the map, or pan and choose Search this area. Select a result to inspect the original scan.',
+      loadedMaps: '{count} of {total} maps loaded',
+      mapSearchError:
+        'Maps could not be loaded. Check your connection and retry. This does not mean there are no maps here.',
+      noMaps:
+        'No maps match this area and year range. Try a wider area or All years.',
+      loadMoreMaps: 'Load more maps',
+      coverageHelp:
+        'Outlines show the bounding boxes of loaded results. Publication years do not necessarily indicate when features were surveyed.',
       samePlace: 'Map tools',
       locateCoordinates: 'Go to coordinates',
       viewEdition: 'View {year} edition',
@@ -12,7 +57,7 @@ export const messages = {
       editionStripHelp:
         'Choose a publication year. Different printings may depict the same survey; inspect source dates below the map.',
       focusHelp:
-        'Pan and zoom to explore. In comparison view, both maps follow the same location. Click a map to pin a location.',
+        'Pan and zoom to explore. In comparison view, both maps follow the same location. Click a map to search a small area around that location.',
       pinnedLocation: 'Pinned location',
       cursorLocation: 'Shared cursor',
       movePointer: 'Move over a map',
@@ -26,7 +71,8 @@ export const messages = {
       shareLink: 'Snapshot link · selected scans, location and zoom',
       openSharedView: 'Open saved view',
       inspectSource: 'Inspect dates, map margins & citation',
-      indexPublicationYear: 'Publication year in index',
+      indexPublicationYear: 'Publication year',
+      unstructuredDate: 'See description or map margins',
       printingYear: 'Printing year',
       scale: 'Scale',
       dateEvidenceHelp:

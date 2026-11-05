@@ -218,13 +218,12 @@ footer:
   show_api_debug: false
 
 research:
-  search: { resource_type: Index maps }
+  search: { resource_type: Index maps, map_resource_type: Topographic maps }
   kind: editions
-  title: { en: Read a landscape through its map editions }
+  title: { en: Explore historical topographic maps }
   description:
     en: >-
-      Find a state or region, choose a map sheet, and compare its editions
-      at the same location and zoom.
+      Find a location, explore the maps covering it, and compare scans through time.
   note:
     {
       en: 'Edition, survey and printing years describe different events. Shared sheet footprints do not guarantee pixel-perfect registration; use these scans for visual comparison.',
@@ -232,6 +231,6 @@ research:
   records:
     - id: usgs-htmc-index-az-48000
       label: { en: 'Arizona · 1:48,000' }
-  bbox: [-112.25, 36, -112, 36.25]
+  bbox: [-125, 24, -66, 50]
   sheet: Bright Angel
   editions: [usgs-htmc-314254, usgs-htmc-464619]

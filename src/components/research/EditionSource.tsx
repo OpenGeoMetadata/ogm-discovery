@@ -27,19 +27,25 @@ export function EditionSource({ feature }: { feature: IndexFeature }) {
       <dl className="research-source-dates">
         <div>
           <dt>{t('research.indexPublicationYear')}</dt>
-          <dd>{feature.properties.datePub || t('research.unknown')}</dd>
+          <dd>
+            {feature.properties.datePub || t('research.unstructuredDate')}
+          </dd>
         </div>
         <div>
           <dt>{t('research.survey')}</dt>
-          <dd>{feature.properties.dateSurvey || t('research.unknown')}</dd>
+          <dd>
+            {feature.properties.dateSurvey || t('research.unstructuredDate')}
+          </dd>
         </div>
         <div>
           <dt>{t('research.printingYear')}</dt>
-          <dd>{feature.properties.dateReprnt || t('research.unknown')}</dd>
+          <dd>
+            {feature.properties.dateReprnt || t('research.unstructuredDate')}
+          </dd>
         </div>
         <div>
           <dt>{t('research.scale')}</dt>
-          <dd>{feature.properties.scale || t('research.unknown')}</dd>
+          <dd>{feature.properties.scale || t('research.unstructuredDate')}</dd>
         </div>
       </dl>
       <p className="research-muted">{t('research.dateEvidenceHelp')}</p>

@@ -280,17 +280,22 @@ The switch also belongs on search results and record pages so neither experience
 becomes a dead end. Keep conventional catalog filters and research URL parameters
 independent; both pathways remain shareable through static hash routes.
 
-Historical comparison must expose place discovery above the selected index and
-sheet. Keep state/region search and “Browse all map indexes” visible; paginate
-metadata results so the starter index is never a geographic limit. Explain that
-panning the comparison views does not discover or replace map sheets.
+Historical exploration follows topoView’s location-first workflow. Keep location
+lookup separate from map-name search, distinguish ambiguous places, and search
+for map records intersecting the selected place’s bounds. A map click searches
+a clearly labeled nearby area; panning waits for an explicit “Search this area”
+action. Do not require choosing a state index before discovering maps.
 
-Historical maps open with one large map and a publication-year strip. Keep place
-search and the selected index/sheet visible beside the map on wide screens.
-“Compare maps” optionally opens a second synchronized map; allow comparison of
-printings within the same year. At most two map renderers are active. Stack the
-controls and comparison on narrow screens; let the edition strip scroll horizontally.
-Source dates, map margins, citations and downloads belong below the selected map.
-Keep coordinates and view-sharing compact, with coordinate entry disclosed on demand.
-A shared cursor or pin must remain visible above the raster preview canvas, without
-intercepting gestures. No observation notebook or annotation workflow is included.
+Use one persistent large map with a compact results sidebar, year filters and
+loaded-result coverage outlines. Keep the loaded/total count and pagination
+explicit. Distinguish request failure from a successful empty search. Selecting
+a record overlays its georeferenced scan; provide opacity, fit and return-to-coverage
+controls. A horizontal strip exposes related loaded scans without claiming a
+canonical or complete edition series. Optional comparison adds one synchronized
+map, never more than two renderers. Stack maps and results on narrow screens.
+
+Preserve source titles and descriptions, original downloads, map margins and
+citations. Do not infer typed scale, printing or survey events from title text.
+Shared cursors must remain visible above the raster canvas without intercepting
+gestures. Coordinate search and view sharing stay compact. No observation
+notebook or annotation workflow is included.

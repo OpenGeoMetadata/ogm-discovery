@@ -7,7 +7,6 @@ import {
   render,
   screen,
   waitFor,
-  within,
 } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
 import { HelmetProvider } from 'react-helmet-async';
@@ -18,11 +17,16 @@ import { I18nProvider } from '../../../context/I18nContext';
 import { MapLibreContext } from '../../../context/MapLibreContext';
 import { THEME_STORAGE_KEY } from '../../../config/institution';
 import {
+  fetchNominatimSearch,
   fetchResourceDetails,
   fetchSearchResults,
 } from '../../../services/api';
 import { bboxFeature, type IndexFeature } from '../../../services/research';
-import type { GeoDocument, JsonApiResponse } from '../../../types/api';
+import type {
+  GeoDocument,
+  JsonApiResponse,
+  GazetteerResponse,
+} from '../../../types/api';
 import { Map as MockMap, instances, markers } from '../../helpers/maplibre';
 import ResearchPage from '../../../pages/ResearchPage';
 vi.mock('maplibre-gl', () => import('../../helpers/maplibre'));
@@ -109,20 +113,6 @@ function tile(
       available: true,
       download: `https://assets.example/${id}.tif`,
       websiteUrl: `https://source.example/${id}`,
-    },
-  };
-}
-function edition(id: string, year: string, printing?: string): IndexFeature {
-  return {
-    ...tile(id, [-112.25, 36, -112, 36.25]),
-    properties: {
-      recId: id,
-      title: 'Bright Angel',
-      label: id,
-      datePub: year,
-      dateReprnt: printing,
-      dateSurvey: '1903',
-      scale: '1:48,000',
     },
   };
 }
@@ -399,399 +389,364 @@ describe('elevation research', () => {
   });
 });
 
-describe('historical edition research', () => {
-  beforeEach(() => {
-    features = [
-      edition('usgs-htmc-314254', '1903'),
-      edition('reprint', '1903', '1957'),
-      edition('middle', '1906'),
-      edition('usgs-htmc-464619', '1962', '1963'),
-      {
-        ...edition('other', '1920'),
-        properties: {
-          ...edition('other', '1920').properties,
-          title: 'Other sheet',
-        },
-      },
-    ];
-  });
-
-  it('shares a geographic cursor, pins on click, restores markers after a style change and supports keyboard coordinates', async () => {
-    const view = setup('usgs-htmc');
-    await screen.findByLabelText('Printing / scan · 1903');
-    fireEvent.click(screen.getByRole('button', { name: 'Compare maps' }));
-    await screen.findByLabelText('Printing / scan · 1962');
-    fireEvent.click(screen.getByText('Go to coordinates'));
-    const maps = [...instances];
-    act(() =>
-      maps[0].fire('mousemove', { lngLat: { lng: -112.2, lat: 36.12 } })
-    );
-    for (const marker of markers)
-      expect(marker.getLngLat()).toEqual([-112.19999999999999, 36.12]);
-    act(() => maps[0].fire('click', { lngLat: { lng: -112.1, lat: 36.1 } }));
-    expect(route().get('point')).toBe('-112.10000, 36.10000');
-    act(() => maps[1].fire('mousemove', { lngLat: { lng: 0, lat: 0 } }));
-    for (const marker of markers)
-      expect(marker.getLngLat()).toEqual([-112.1, 36.1]);
-    act(() => {
-      maps[0].setStyle();
-      maps[0].styleLoaded();
-    });
-    expect(markers[0].getLngLat()).toEqual([-112.1, 36.1]);
-    fireEvent.change(screen.getByLabelText('Longitude, latitude (WGS84)'), {
-      target: { value: '200, 90' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Locate & pin' }));
-    expect(screen.getByRole('alert')).toHaveTextContent('Enter longitude');
-    fireEvent.change(screen.getByLabelText('Longitude, latitude (WGS84)'), {
-      target: { value: '-112.15, 36.15' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Locate & pin' }));
-    for (const map of maps)
-      expect(map.jumpTo).toHaveBeenLastCalledWith(
-        expect.objectContaining({ center: { lng: -112.15, lat: 36.15 } })
-      );
-    fireEvent.click(screen.getByRole('button', { name: 'Clear pin' }));
-    expect(route().has('point')).toBe(false);
-    for (const marker of markers) expect(marker.getElement().hidden).toBe(true);
-    view.unmount();
-    for (const map of maps)
-      for (const event of ['move', 'mousemove', 'mouseout', 'click'])
-        expect(map.listeners.get(event)?.size).toBe(0);
-  });
-  it('restores and shares the selected printings, exact view and point through a collection URL', async () => {
-    setup(
-      'usgs-htmc',
-      '?printings=reprint&point=-112.2,36.1&view=-112.2,36.1,12'
-    );
-    await screen.findByLabelText('Printing / scan · 1903');
-    for (const map of instances)
-      expect(map.jumpTo).toHaveBeenCalledWith({
-        center: { lng: -112.2, lat: 36.1 },
-        zoom: 12,
-        bearing: 0,
-        pitch: 0,
-      });
-    instances[0].center = { lng: -112.21, lat: 36.11 };
-    instances[0].zoom = 13;
-    act(() => instances[0].fire('move'));
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Create link to this view' })
-    );
-    const link = new URL(
-      screen
-        .getByRole('link', { name: 'Open saved view' })
-        .getAttribute('href')!
-    );
-    expect(link.pathname).toMatch(/usgs-htmc\/$/);
-    const params = new URLSearchParams(link.hash.split('?')[1]);
-    expect(params.get('view')).toBe('-112.21000,36.11000,13.000');
-    expect(params.get('point')).toBe('-112.20000, 36.10000');
-    expect(params.get('printings')).toBe('reprint,middle,usgs-htmc-464619');
-  });
-  it('opens original map margins and distinguishes index, survey and printing dates with the API citation', async () => {
-    vi.mocked(fetchResourceDetails).mockImplementation(async (id) => {
-      const data = record(id);
-      data.meta!.ui!.downloads!.push({
-        label: 'GeoPDF',
-        type: 'pdf',
-        url: 'https://assets.example/full-map.pdf',
-      });
-      data.attributes.ogm.dct_description_sm = [
-        'Surveyed in 1903; printed in 1957.',
-      ];
-      return data;
-    });
-    setup('usgs-htmc', '?printings=reprint');
-    await screen.findByLabelText('Printing / scan · 1903');
-    const card = screen.getByRole('article', { name: '1903' });
-    fireEvent.click(
-      within(card).getByText('Inspect dates, map margins & citation')
-    );
-    expect(
-      await within(card).findByRole('link', { name: /Open full map PDF/ })
-    ).toHaveAttribute('href', 'https://assets.example/full-map.pdf');
-    expect(within(card).getByText('Citation for reprint')).toBeVisible();
-    expect(within(card).getByText('1957')).toBeVisible();
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(navigator, 'clipboard', {
-      configurable: true,
-      value: { writeText },
-    });
-    fireEvent.click(
-      within(card).getByRole('button', { name: 'Copy citation' })
-    );
-    await within(card).findByText('Citation copied.');
-    expect(writeText).toHaveBeenCalledWith('Citation for reprint');
-    writeText.mockRejectedValue(new Error('denied'));
-    fireEvent.click(
-      within(card).getByRole('button', { name: 'Copy citation' })
-    );
-    await within(card).findByText('Select and copy the citation above.');
-  });
-
-  it('starts with one map and an edition strip, preserves the view across editions, and compares only on request', async () => {
-    const view = setup('usgs-htmc');
-    expect(await screen.findByTestId('scan-preview')).toHaveTextContent(
-      'usgs-htmc-314254'
-    );
-    expect(screen.getAllByRole('article')).toHaveLength(1);
-    for (const year of ['1903', '1906', '1962'])
-      expect(
-        screen.getByRole('button', { name: `View ${year} edition` })
-      ).toBeVisible();
-    expect(
-      screen.queryByRole('button', { name: /Record an observation/ })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByText('editions across 4 scans / printings')
-    ).toBeVisible();
-    const primary = instances[0];
-    primary.center = { lng: -112.1, lat: 36.1 };
-    primary.zoom = 12;
-    act(() => primary.fire('move'));
-    fireEvent.click(screen.getByRole('button', { name: 'View 1906 edition' }));
-    await waitFor(() =>
-      expect(screen.getByTestId('scan-preview')).toHaveTextContent('middle')
-    );
-    expect(route().get('active')).toBe('middle');
-    expect(instances).toHaveLength(1);
-    fireEvent.click(screen.getByRole('button', { name: 'Compare maps' }));
-    await screen.findByLabelText('Printing / scan · 1962');
-    const secondary = instances[1];
-    expect(secondary.jumpTo).toHaveBeenCalledWith({
-      center: primary.center,
-      zoom: 12,
-      bearing: 0,
-      pitch: 0,
-    });
-    for (const map of instances) {
-      map.jumpTo.mockClear();
-      map.jumpTo.mockImplementation(() => map.fire('move'));
-    }
-    act(() => primary.fire('move'));
-    expect(secondary.jumpTo).toHaveBeenCalledTimes(1);
-    expect(primary.jumpTo).not.toHaveBeenCalled();
-    fireEvent.change(screen.getByLabelText('Compare with'), {
-      target: { value: '1903' },
-    });
-    fireEvent.change(await screen.findByLabelText('Printing / scan · 1903'), {
-      target: { value: 'reprint' },
-    });
-    await waitFor(() =>
-      expect(
-        screen.getAllByTestId('scan-preview').map((e) => e.textContent)
-      ).toEqual(['middle', 'reprint'])
-    );
-    expect(route().get('compare')).toBe('reprint');
-    fireEvent.click(screen.getByRole('button', { name: 'Compare maps' }));
-    expect(screen.getAllByRole('article')).toHaveLength(1);
-    expect(secondary.listeners.get('move')?.size).toBe(0);
-    fireEvent.change(screen.getByLabelText('Map sheet'), {
-      target: { value: 'other' },
-    });
-    await waitFor(() =>
-      expect(screen.getByTestId('scan-preview')).toHaveTextContent('other')
-    );
-    for (const key of ['printings', 'active', 'compare', 'point', 'view'])
-      expect(route().has(key)).toBe(false);
-    view.unmount();
-    for (const map of instances)
-      expect(map.listeners.get('move')?.size).toBe(0);
-  });
-  it.each([
-    '?left=reprint&right=usgs-htmc-464619',
-    '?printings=reprint,middle,usgs-htmc-464619',
-  ])(
-    'restores preferred printings from %s while keeping every edition selectable',
-    async (query) => {
-      setup('usgs-htmc', query);
-      expect(await screen.findByTestId('scan-preview')).toHaveTextContent(
-        'reprint'
-      );
-      expect(screen.getByLabelText('Printing / scan · 1903')).toHaveValue(
-        'reprint'
-      );
-      fireEvent.click(
-        screen.getByRole('button', { name: 'View 1906 edition' })
-      );
-      await waitFor(() =>
-        expect(screen.getByTestId('scan-preview')).toHaveTextContent('middle')
-      );
-      fireEvent.click(
-        screen.getByRole('button', { name: 'View 1903 edition' })
-      );
-      await waitFor(() =>
-        expect(screen.getByTestId('scan-preview')).toHaveTextContent('reprint')
-      );
-      expect(screen.getByLabelText('Printing / scan · 1903')).toHaveValue(
-        'reprint'
-      );
-    }
+it.each(['usgs-tnm'])('reports an unavailable index in %s', async (theme) => {
+  fetchMock.mockRejectedValue(new Error('offline'));
+  setup(theme);
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'The source index could not be loaded'
   );
-  it('restores optional comparison and can compare two printings of the same publication year', async () => {
-    setup(
-      'usgs-htmc',
-      '?active=usgs-htmc-314254&compare=reprint&point=-112.1,36.1&view=-112.1,36.1,12'
-    );
-    await waitFor(() =>
-      expect(
-        screen.getAllByTestId('scan-preview').map((e) => e.textContent)
-      ).toEqual(['usgs-htmc-314254', 'reprint'])
-    );
-    expect(
-      screen.getByRole('button', { name: 'Compare maps' })
-    ).toHaveAttribute('aria-pressed', 'true');
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Create link to this view' })
-    );
-    const params = new URLSearchParams(
-      screen
-        .getByRole('link', { name: 'Open saved view' })
-        .getAttribute('href')!
-        .split('?')[1]
-    );
-    expect(params.get('active')).toBe('usgs-htmc-314254');
-    expect(params.get('compare')).toBe('reprint');
-    expect(params.get('point')).toBe('-112.10000, 36.10000');
-    expect(params.get('view')).toBe('-112.10000,36.10000,12.000');
-  });
-  it('finds another state without opening a disclosure and replaces the old sheet and scans', async () => {
-    vi.mocked(fetchSearchResults).mockResolvedValue({
-      data: [record('another-index')],
-    } as unknown as JsonApiResponse);
-    const madison = {
-      ...edition('wisconsin-scan', '1920'),
-      properties: {
-        ...edition('wisconsin-scan', '1920').properties,
-        title: 'Madison',
-      },
-    };
-    fetchMock.mockImplementation(async (url: string) => ({
-      ok: true,
-      json: async () => ({
-        type: 'FeatureCollection',
-        features: String(url).includes('another-index') ? [madison] : features,
-      }),
-    }));
-    setup(
-      'usgs-htmc',
-      '?sheet=reprint&left=reprint&right=middle&printings=reprint'
-    );
-    await screen.findAllByTestId('scan-preview');
-    expect(
-      screen.queryByText('Find more in this collection')
-    ).not.toBeInTheDocument();
-    fireEvent.change(
-      screen.getByLabelText('Find maps in another state or region'),
-      {
-        target: { value: 'Wisconsin' },
-      }
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-    fireEvent.click(
-      await screen.findByRole('button', { name: 'Record another-index' })
-    );
-    expect(fetchSearchResults).toHaveBeenCalledWith('Wisconsin', 1, 20, [
-      { field: 'gbl_resourceType_sm', value: 'Index maps' },
-    ]);
-    await waitFor(() =>
-      expect(
-        screen.getAllByTestId('scan-preview').map((e) => e.textContent)
-      ).toEqual(['wisconsin-scan'])
-    );
-    expect(screen.getByLabelText('Map sheet')).toHaveTextContent('Madison');
-    expect(screen.getByLabelText('Map sheet')).not.toHaveTextContent(
-      'Bright Angel'
-    );
-    expect(screen.getByLabelText('Selected map index')).toHaveValue(
-      'another-index'
-    );
-    expect(route().get('index')).toBe('another-index');
-    for (const key of ['sheet', 'left', 'right', 'printings'])
-      expect(route().has(key)).toBe(false);
-  });
-  it('browses all indexes with forward and backward pagination and resets to page one for a new search', async () => {
-    vi.mocked(fetchSearchResults).mockImplementation(
-      async (query, page) =>
-        ({
-          data: [record(`${query || 'all'}-${page}`)],
-          meta: { totalPages: 2 },
-        }) as unknown as JsonApiResponse
-    );
-    setup('usgs-htmc');
-    await screen.findAllByTestId('scan-preview');
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Browse all map indexes' })
-    );
-    await screen.findByRole('button', { name: 'Record all-1' });
-    fireEvent.click(screen.getByRole('button', { name: 'Next results' }));
-    await screen.findByRole('button', { name: 'Record all-2' });
-    expect(
-      screen.queryByRole('button', { name: 'Next results' })
-    ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Previous results' }));
-    await screen.findByRole('button', { name: 'Record all-1' });
-    fireEvent.click(screen.getByRole('button', { name: 'Next results' }));
-    await screen.findByRole('button', { name: 'Record all-2' });
-    fireEvent.change(
-      screen.getByLabelText('Find maps in another state or region'),
-      { target: { value: 'Alaska' } }
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-    await screen.findByRole('button', { name: 'Record Alaska-1' });
-    expect(
-      screen.queryByRole('button', { name: 'Previous results' })
-    ).not.toBeInTheDocument();
-    expect(fetchSearchResults).toHaveBeenCalledWith('', 2, 20, [
-      { field: 'gbl_resourceType_sm', value: 'Index maps' },
-    ]);
-  });
-  it('retries a failed index search and explains an empty result without losing the comparison', async () => {
-    vi.mocked(fetchSearchResults)
-      .mockRejectedValueOnce(new Error('offline'))
-      .mockResolvedValueOnce({
-        data: [],
-        meta: { totalPages: 0 },
-      } as unknown as JsonApiResponse);
-    setup('usgs-htmc');
-    await screen.findAllByTestId('scan-preview');
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Browse all map indexes' })
-    );
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Search could not be completed'
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'Retry search' }));
-    expect(
-      await screen.findByText('No matching records. Try a broader search.')
-    ).toBeVisible();
-    expect(screen.getAllByTestId('scan-preview')).toHaveLength(1);
-  });
-  it('reports an empty index without mounting a comparison', async () => {
-    features = [];
-    setup('usgs-htmc');
-    expect(
-      await screen.findByText('No sheets are available in this index.')
-    ).toBeVisible();
-    expect(screen.queryByTestId('scan-preview')).not.toBeInTheDocument();
-  });
 });
-
-it.each(['usgs-tnm', 'usgs-htmc'])(
-  'reports an unavailable index in %s',
-  async (theme) => {
-    fetchMock.mockRejectedValue(new Error('offline'));
-    setup(theme);
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'The source index could not be loaded'
-    );
-  }
-);
 it('returns to discovery for a theme without research tools', () => {
   setup('btaa');
   expect(screen.getByTestId('route')).toHaveTextContent(/^\/$/);
   expect(
     screen.queryByRole('navigation', { name: 'Collection pathways' })
   ).not.toBeInTheDocument();
+});
+
+function scan(
+  id: string,
+  year = '1952',
+  name = 'Minneapolis South',
+  bbox = 'ENVELOPE(-93.375, -93.25, 45, 44.875)'
+) {
+  const result = record(id);
+  Object.assign(result.attributes.ogm, {
+    dct_title_s: `${name} ${year} (${id})`,
+    dct_alternative_sm: [name],
+    dct_issued_s: year,
+    dcat_bbox: bbox,
+  });
+  return result;
+}
+const placeResponse = {
+  data: [
+    {
+      id: 'mn',
+      attributes: {
+        name: 'Minneapolis',
+        display_name: 'Minneapolis, Minnesota',
+        min_longitude: -93.329125,
+        max_longitude: -93.193859,
+        min_latitude: 44.8906175,
+        max_latitude: 45.0512576,
+      },
+    },
+    {
+      id: 'ks',
+      attributes: {
+        name: 'Minneapolis',
+        display_name: 'Minneapolis, Kansas',
+        min_longitude: -98,
+        max_longitude: -97,
+        min_latitude: 39,
+        max_latitude: 40,
+      },
+    },
+  ],
+} as GazetteerResponse;
+const searchResponse = (
+  data: GeoDocument[],
+  totalCount = data.length,
+  totalPages = 1
+) => ({ data, meta: { totalCount, totalPages } }) as JsonApiResponse;
+function apiFilters() {
+  return vi.mocked(fetchSearchResults).mock.calls.at(-1)![9]!;
+}
+async function findMinneapolis() {
+  fireEvent.change(screen.getByLabelText('Find a city, place or address'), {
+    target: { value: 'Minneapolis' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+  fireEvent.click(
+    await screen.findByRole('button', { name: 'Minneapolis, Minnesota' })
+  );
+}
+describe('location-first historical maps', () => {
+  beforeEach(() => {
+    vi.mocked(fetchNominatimSearch)
+      .mockReset()
+      .mockResolvedValue(placeResponse);
+    vi.mocked(fetchResourceDetails).mockImplementation(async (id) =>
+      scan(id, id === 'later' ? '1967' : '1952')
+    );
+    vi.mocked(fetchSearchResults).mockResolvedValue(
+      searchResponse([
+        scan('early'),
+        scan('later', '1967'),
+        scan('other', '1952', 'Saint Paul'),
+      ])
+    );
+  });
+  it('starts nationally without fetching the Arizona index and finds maps by place bounds', async () => {
+    setup('usgs-htmc');
+    expect(fetchResourceDetails).not.toHaveBeenCalled();
+    expect(fetchSearchResults).not.toHaveBeenCalled();
+    expect(screen.queryByText(/Record an observation/)).not.toBeInTheDocument();
+    await findMinneapolis();
+    expect(await screen.findByText('3 of 3 maps loaded')).toBeVisible();
+    expect(fetchNominatimSearch).toHaveBeenCalledWith('Minneapolis', 5);
+    expect(vi.mocked(fetchSearchResults).mock.calls.at(-1)![0]).toBe('');
+    expect(apiFilters().get('include_filters[gbl_resourceType_sm][]')).toBe(
+      'Topographic maps'
+    );
+    expect(apiFilters().get('include_filters[geo][top_left][lon]')).toBe(
+      '-93.329125'
+    );
+    expect(apiFilters().get('include_filters[geo][relation]')).toBe(
+      'intersects'
+    );
+    expect(route().get('place')).toBe('Minneapolis, Minnesota');
+    expect(instances[0].fitBounds).toHaveBeenLastCalledWith(
+      [
+        [-93.329125, 44.8906175],
+        [-93.193859, 45.0512576],
+      ],
+      expect.anything()
+    );
+    expect(
+      instances[0].getSource('research-discovery-footprints').data.features
+    ).toHaveLength(3);
+    act(() => instances[0].styleLoaded());
+    expect(
+      instances[0].getLayer('research-discovery-footprints')
+    ).toBeDefined();
+  });
+  it('searches actual map names independently of the current extent', async () => {
+    setup('usgs-htmc', '?area=-94,44,-93,45');
+    await screen.findByText('3 of 3 maps loaded');
+    fireEvent.click(screen.getByRole('button', { name: 'Map name' }));
+    fireEvent.change(screen.getByLabelText('Find maps by name'), {
+      target: { value: 'Minneapolis' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    await waitFor(() =>
+      expect(vi.mocked(fetchSearchResults).mock.calls.at(-1)![0]).toBe(
+        'Minneapolis'
+      )
+    );
+    expect(apiFilters().has('include_filters[geo][type]')).toBe(false);
+    expect(apiFilters().get('include_filters[gbl_resourceType_sm][]')).toBe(
+      'Topographic maps'
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: /Minneapolis South 1952 \(early\)/ })
+    );
+    expect(await screen.findByTestId('scan-preview')).toHaveTextContent(
+      'early'
+    );
+    expect(instances[0].fitBounds).toHaveBeenLastCalledWith(
+      [
+        [-93.375, 44.875],
+        [-93.25, 45],
+      ],
+      expect.anything()
+    );
+  });
+  it('loads additional pages without duplicates, retries failures and resets paging for years', async () => {
+    vi.mocked(fetchSearchResults)
+      .mockResolvedValueOnce(searchResponse([scan('early')], 3, 2))
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValueOnce(
+        searchResponse(
+          [scan('early'), scan('later', '1967'), scan('other')],
+          3,
+          2
+        )
+      )
+      .mockResolvedValue(searchResponse([]));
+    setup('usgs-htmc', '?area=-94,44,-93,45');
+    await screen.findByText('1 of 3 maps loaded');
+    fireEvent.click(screen.getByRole('button', { name: 'Load more maps' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'This does not mean there are no maps here'
+    );
+    expect(screen.queryByText(/No maps match/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry search' }));
+    await screen.findByText('3 of 3 maps loaded');
+    expect(
+      screen.queryByRole('button', { name: 'Load more maps' })
+    ).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Publication year from'), {
+      target: { value: '1970' },
+    });
+    fireEvent.change(screen.getByLabelText('Publication year to'), {
+      target: { value: '1900' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply years' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('four-digit');
+    fireEvent.change(screen.getByLabelText('Publication year to'), {
+      target: { value: '1980' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply years' }));
+    await screen.findByText(/No maps match/);
+    expect(vi.mocked(fetchSearchResults).mock.calls.at(-1)![1]).toBe(1);
+    expect(apiFilters().get('include_filters[year_range][start]')).toBe('1970');
+    fireEvent.click(screen.getByRole('button', { name: 'All years' }));
+    await waitFor(() =>
+      expect(apiFilters().has('include_filters[year_range][start]')).toBe(false)
+    );
+  });
+  it('uses bounded nearby searches on map clicks and explicit viewport search', async () => {
+    setup('usgs-htmc');
+    act(() =>
+      instances[0].fire('click', { lngLat: { lng: -93.265, lat: 44.977 } })
+    );
+    await screen.findByText('3 of 3 maps loaded');
+    expect(apiFilters().get('include_filters[geo][top_left][lon]')).toBe(
+      '-93.27'
+    );
+    expect(apiFilters().get('include_filters[geo][bottom_right][lon]')).toBe(
+      '-93.26'
+    );
+    expect(route().get('point')).toBe('-93.26500, 44.97700');
+    fireEvent.click(screen.getByRole('button', { name: 'Search this area' }));
+    await waitFor(() =>
+      expect(apiFilters().get('include_filters[geo][top_left][lon]')).toBe(
+        '-110'
+      )
+    );
+    expect(route().has('point')).toBe(false);
+  });
+  it('shows related scans, keeps one map mounted, compares and shares the synchronized view', async () => {
+    const view = setup('usgs-htmc', '?area=-94,44,-93,45');
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: /Minneapolis South 1952 \(early\)/,
+      })
+    );
+    await screen.findByTestId('scan-preview');
+    const strip = screen.getByRole('group', { name: 'Related scans' });
+    expect(strip).toHaveTextContent('early');
+    expect(strip).toHaveTextContent('later');
+    expect(strip).not.toHaveTextContent('other');
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: '1967 Minneapolis South 1967 (later)',
+      })
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId('scan-preview')).toHaveTextContent('later')
+    );
+    expect(instances).toHaveLength(1);
+    const primary = instances[0];
+    primary.center = { lng: -93.3, lat: 44.9 };
+    primary.zoom = 11;
+    act(() => primary.fire('move'));
+    fireEvent.change(screen.getByLabelText('Compare with'), {
+      target: { value: 'early' },
+    });
+    await waitFor(() =>
+      expect(screen.getAllByTestId('scan-preview')).toHaveLength(2)
+    );
+    expect(instances[1].jumpTo).toHaveBeenCalledWith({
+      center: primary.center,
+      zoom: 11,
+      bearing: 0,
+      pitch: 0,
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Create link to this view' })
+    );
+    const url = screen
+      .getByRole('link', { name: 'Open saved view' })
+      .getAttribute('href')!;
+    expect(url).toContain('usgs-htmc/#/research');
+    expect(url).toContain('active=later');
+    expect(url).toContain('compare=early');
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Show historical scan' })
+    );
+    expect(screen.queryByTestId('scan-preview')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Back to coverage' }));
+    expect(screen.queryByLabelText('Compare with')).not.toBeInTheDocument();
+    view.unmount();
+    for (const map of instances)
+      expect(map.listeners.get('click')?.size).toBe(0);
+  });
+  it('resolves legacy right-hand record links from their own footprint', async () => {
+    setup('usgs-htmc', '?right=early');
+    expect(await screen.findByTestId('scan-preview')).toHaveTextContent(
+      'early'
+    );
+    await waitFor(() =>
+      expect(route().get('area')).toBe('-93.375,44.875,-93.25,45')
+    );
+    expect(apiFilters().get('include_filters[geo][top_left][lon]')).toBe(
+      '-93.375'
+    );
+  });
+  it('keeps failed place lookup distinct from no results and ignores stale responses', async () => {
+    vi.mocked(fetchNominatimSearch)
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValueOnce({ data: [] } as unknown as GazetteerResponse);
+    setup('usgs-htmc');
+    fireEvent.change(screen.getByLabelText('Find a city, place or address'), {
+      target: { value: 'Minneapolis' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Check your connection'
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    await screen.findByText(/No locations found/);
+    let finish!: (value: GazetteerResponse) => void;
+    vi.mocked(fetchNominatimSearch).mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      })
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    fireEvent.change(screen.getByLabelText('Find a city, place or address'), {
+      target: { value: 'Madison' },
+    });
+    await act(async () => finish(placeResponse));
+    expect(
+      screen.queryByRole('button', { name: 'Minneapolis, Minnesota' })
+    ).not.toBeInTheDocument();
+  });
+});
+
+it('preserves original source evidence without inferring structured dates', async () => {
+  const original = scan('source');
+  original.attributes.ogm.dct_description_sm = [
+    'Field checked in 1952; printed in 1954.',
+  ];
+  original.meta!.ui!.downloads!.push({
+    url: 'https://assets.example/source.pdf',
+    label: 'Original PDF',
+    type: 'pdf',
+  });
+  vi.mocked(fetchResourceDetails).mockResolvedValue(original);
+  setup('usgs-htmc', '?active=source&area=-94,44,-93,45');
+  await screen.findByTestId('scan-preview');
+  fireEvent.click(screen.getByText('Inspect dates, map margins & citation'));
+  expect(
+    await screen.findByText('Field checked in 1952; printed in 1954.')
+  ).toBeVisible();
+  expect(
+    screen.getByRole('link', { name: /Open full map PDF/ })
+  ).toHaveAttribute('href', 'https://assets.example/source.pdf');
+  expect(screen.getAllByText('See description or map margins')).toHaveLength(3);
+  expect(screen.getByText('Citation for source')).toBeVisible();
+});
+
+it('ignores an old map-search response after a new location is selected', async () => {
+  let finish!: (value: JsonApiResponse) => void;
+  vi.mocked(fetchSearchResults)
+    .mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      })
+    )
+    .mockResolvedValueOnce(searchResponse([scan('new')]));
+  vi.mocked(fetchNominatimSearch).mockResolvedValue(placeResponse);
+  setup('usgs-htmc', '?area=-100,30,-99,31');
+  await findMinneapolis();
+  await screen.findByText('1 of 1 maps loaded');
+  await act(async () => finish(searchResponse([scan('stale')])));
+  expect(
+    screen.queryByRole('button', { name: /\(stale\)/ })
+  ).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /\(new\)/ })).toBeVisible();
 });
