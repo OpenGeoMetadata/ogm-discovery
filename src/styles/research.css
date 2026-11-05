@@ -318,8 +318,8 @@
 }
 .research-sheet-bar {
   display: grid;
-  grid-template-columns: 1fr 1.2fr 0.65fr 0.9fr;
-  align-items: end;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 0.65fr);
+  align-items: start;
   gap: 24px;
   padding: 18px 22px;
   margin-bottom: 20px;
@@ -361,6 +361,7 @@
 }
 .research-chronology {
   display: flex;
+  flex-wrap: wrap;
   gap: 0;
   margin: 24px 0 0;
   border-top: 2px solid #9b8b6d;
@@ -482,4 +483,19 @@
 }
 .research-record-search li button:hover {
   background: #eef3f2;
+}
+
+.research-sheet-bar > .research-muted {
+  grid-column: 1 / -1;
+}
+.research-index-search {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+.research-index-search form {
+  margin-top: 14px;
+}
+.research-record-search li button[aria-pressed='true'] {
+  background: var(--color-surface-subtle, #eef3f2);
+  font-weight: 600;
 }

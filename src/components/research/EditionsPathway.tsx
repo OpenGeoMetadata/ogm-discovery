@@ -142,7 +142,8 @@ export function EditionsPathway({ config }: { config: ThemeResearchConfig }) {
             onChange={(index) =>
               update({ index, sheet: '', left: '', right: '' })
             }
-            label={t('research.index')}
+            label={t('research.selectedIndex')}
+            indexSearch
           />
         </div>
         <label className="research-field">

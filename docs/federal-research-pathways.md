@@ -59,3 +59,17 @@ These are proposed backend improvements, not fields assumed by the frontend.
 ## Review evidence
 
 Screenshots are in `docs/screenshots/research-pathways/`. Desktop captures use a 1440px viewport; mobile captures use 390px. They show live NASA/USGS assets, not mock data. See the PR for embedded comparisons and validation results.
+
+### Finding another historical-map location
+
+The historical workspace keeps state/region search and **Browse all map indexes**
+visible above the selected index. Search a state, choose an index at the desired
+scale, then select its map sheet and editions. Results use the collection-scoped
+metadata API with the Index maps resource-type filter and support pagination.
+Changing indexes clears the previous sheet and edition selections. Panning the
+comparison maps only moves the selected scans; it does not search for new sheets.
+
+Use the collection path when sharing, for example
+`/ogm-discovery/usgs-htmc/#/research?index=usgs-htmc-index-wi-62500`.
+A research URL at the application root without a collection path depends on the
+recipient's stored theme choice.

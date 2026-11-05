@@ -475,16 +475,35 @@ describe('historical edition research', () => {
     expect(left.listeners.get('move')?.size).toBe(0);
     expect(right.listeners.get('move')?.size).toBe(0);
   });
-  it('searches indexes using the API resource-type filter and clears old edition settings', async () => {
+  it('finds another state without opening a disclosure and replaces the old sheet and scans', async () => {
     vi.mocked(fetchSearchResults).mockResolvedValue({
       data: [record('another-index')],
     } as unknown as JsonApiResponse);
-    setup('usgs-htmc', '?left=reprint&right=middle');
+    const madison = {
+      ...edition('wisconsin-scan', '1920'),
+      properties: {
+        ...edition('wisconsin-scan', '1920').properties,
+        title: 'Madison',
+      },
+    };
+    fetchMock.mockImplementation(async (url: string) => ({
+      ok: true,
+      json: async () => ({
+        type: 'FeatureCollection',
+        features: String(url).includes('another-index') ? [madison] : features,
+      }),
+    }));
+    setup('usgs-htmc', '?sheet=reprint&left=reprint&right=middle');
     await screen.findAllByTestId('scan-preview');
-    fireEvent.click(screen.getByText('Find more in this collection'));
-    fireEvent.change(screen.getByLabelText('Search collection metadata'), {
-      target: { value: 'Wisconsin' },
-    });
+    expect(
+      screen.queryByText('Find more in this collection')
+    ).not.toBeInTheDocument();
+    fireEvent.change(
+      screen.getByLabelText('Find maps in another state or region'),
+      {
+        target: { value: 'Wisconsin' },
+      }
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
     fireEvent.click(
       await screen.findByRole('button', { name: 'Record another-index' })
@@ -492,9 +511,78 @@ describe('historical edition research', () => {
     expect(fetchSearchResults).toHaveBeenCalledWith('Wisconsin', 1, 20, [
       { field: 'gbl_resourceType_sm', value: 'Index maps' },
     ]);
+    await waitFor(() =>
+      expect(
+        screen.getAllByTestId('scan-preview').map((e) => e.textContent)
+      ).toEqual(['wisconsin-scan', 'wisconsin-scan'])
+    );
+    expect(screen.getByLabelText('Map sheet')).toHaveTextContent('Madison');
+    expect(screen.getByLabelText('Map sheet')).not.toHaveTextContent(
+      'Bright Angel'
+    );
+    expect(screen.getByLabelText('Selected map index')).toHaveValue(
+      'another-index'
+    );
     expect(route().get('index')).toBe('another-index');
-    expect(route().has('left')).toBe(false);
-    expect(route().has('right')).toBe(false);
+    for (const key of ['sheet', 'left', 'right'])
+      expect(route().has(key)).toBe(false);
+  });
+  it('browses all indexes with forward and backward pagination and resets to page one for a new search', async () => {
+    vi.mocked(fetchSearchResults).mockImplementation(
+      async (query, page) =>
+        ({
+          data: [record(`${query || 'all'}-${page}`)],
+          meta: { totalPages: 2 },
+        }) as unknown as JsonApiResponse
+    );
+    setup('usgs-htmc');
+    await screen.findAllByTestId('scan-preview');
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Browse all map indexes' })
+    );
+    await screen.findByRole('button', { name: 'Record all-1' });
+    fireEvent.click(screen.getByRole('button', { name: 'Next results' }));
+    await screen.findByRole('button', { name: 'Record all-2' });
+    expect(
+      screen.queryByRole('button', { name: 'Next results' })
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Previous results' }));
+    await screen.findByRole('button', { name: 'Record all-1' });
+    fireEvent.click(screen.getByRole('button', { name: 'Next results' }));
+    await screen.findByRole('button', { name: 'Record all-2' });
+    fireEvent.change(
+      screen.getByLabelText('Find maps in another state or region'),
+      { target: { value: 'Alaska' } }
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    await screen.findByRole('button', { name: 'Record Alaska-1' });
+    expect(
+      screen.queryByRole('button', { name: 'Previous results' })
+    ).not.toBeInTheDocument();
+    expect(fetchSearchResults).toHaveBeenCalledWith('', 2, 20, [
+      { field: 'gbl_resourceType_sm', value: 'Index maps' },
+    ]);
+  });
+  it('retries a failed index search and explains an empty result without losing the comparison', async () => {
+    vi.mocked(fetchSearchResults)
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValueOnce({
+        data: [],
+        meta: { totalPages: 0 },
+      } as unknown as JsonApiResponse);
+    setup('usgs-htmc');
+    await screen.findAllByTestId('scan-preview');
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Browse all map indexes' })
+    );
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Search could not be completed'
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Retry search' }));
+    expect(
+      await screen.findByText('No matching records. Try a broader search.')
+    ).toBeVisible();
+    expect(screen.getAllByTestId('scan-preview')).toHaveLength(2);
   });
   it('reports an empty index without mounting a comparison', async () => {
     features = [];

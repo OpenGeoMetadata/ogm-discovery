@@ -279,3 +279,8 @@ and `aria-current`, and describe the research task using localized theme copy.
 The switch also belongs on search results and record pages so neither experience
 becomes a dead end. Keep conventional catalog filters and research URL parameters
 independent; both pathways remain shareable through static hash routes.
+
+Historical comparison must expose place discovery above the selected index and
+sheet. Keep state/region search and “Browse all map indexes” visible; paginate
+metadata results so the starter index is never a geographic limit. Explain that
+panning the comparison views does not discover or replace map sheets.

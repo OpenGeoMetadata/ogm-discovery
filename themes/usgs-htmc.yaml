@@ -222,9 +222,9 @@ research:
   kind: editions
   title: { en: Read a landscape through its map editions }
   description:
-    {
-      en: Choose a sheet and compare georeferenced scans at the same location and zoom.,
-    }
+    en: >-
+      Find a state or region, choose a map sheet, and compare its editions
+      at the same location and zoom.
   note:
     {
       en: 'Edition, survey and printing years describe different events. Shared sheet footprints do not guarantee pixel-perfect registration; use these scans for visual comparison.',

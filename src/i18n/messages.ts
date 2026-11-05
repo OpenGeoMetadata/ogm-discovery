@@ -74,12 +74,23 @@ export const messages = {
       export: 'Export tile manifest ↓',
       manifestHelp:
         'The manifest contains original download URLs and your study-area bounds. Review each tile’s source metadata for vertical datum, units and nodata before analysis.',
-      sheetStep: '01 / Index & sheet',
+      findIndex: 'Find maps in another state or region',
+      findIndexHelp:
+        'Search a state or region (for example, Wisconsin), choose a scale index, then choose a map sheet. The sheet list covers only the selected index.',
+      browseIndexes: 'Browse all map indexes',
+      selectedIndex: 'Selected map index',
+      resultsPage:
+        '{count} results · Page {page}. Select a result to load its maps.',
+      noMatches: 'No matching records. Try a broader search.',
+      previousResults: 'Previous results',
+      nextResults: 'Next results',
+      retrySearch: 'Retry search',
+      sheetStep: '01 / Choose a place & sheet',
       index: 'Map index',
       sheet: 'Map sheet',
       editionsCount: 'editions across {count} scans / printings',
       linkedMaps:
-        'Linked views · Pan or zoom either map to inspect the same place in both scans.',
+        'Linked views · Pan or zoom to inspect the selected scans. To find maps elsewhere, change the index and map sheet above.',
       noSheets: 'No sheets are available in this index.',
       editionA: '02 / First edition or printing',
       editionB: '03 / Second edition or printing',
