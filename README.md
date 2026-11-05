@@ -230,6 +230,19 @@ npm run scaffold        # create a starter themes/<theme-id>.yaml file
 npm run deploy          # publish dist/ with gh-pages
 ```
 
+### Matching CI locally
+
+CI runs on the current Node LTS release. Verify its reported Node version when
+reproducing a failure; a passing run on a different runtime is not a CI result.
+Run `npm ci`, `npm run lint -- --max-warnings=0`, `npm run typecheck`,
+`npm run test:ci`, and `npm run build`. The coverage command enforces the existing
+80% line and statement thresholds; a plain `vitest run` does not.
+
+Vitest workers disable Node's native Web Storage with
+`--no-experimental-webstorage` so happy-dom and jsdom provide isolated browser
+storage. This avoids the Node 25+ / Vitest 3 global collision without a shared
+storage file or changing application behavior.
+
 ## Creating A New Institution Theme
 
 Use the scaffold helper to create a starter theme file:
