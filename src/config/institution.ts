@@ -104,6 +104,25 @@ export interface ThemeSpotlightCard {
   reverse?: boolean;
 }
 
+export interface ThemeCollectionIntro {
+  eyebrow: LocalizedText;
+  image: {
+    src: string;
+    alt: LocalizedText;
+    caption: LocalizedText;
+    href: string;
+  };
+  facts: Array<{ value: LocalizedText; label: LocalizedText }>;
+  pathways: Array<{
+    label: LocalizedText;
+    title: LocalizedText;
+    description: LocalizedText;
+    href: string;
+  }>;
+  map_heading: LocalizedText;
+  map_description: LocalizedText;
+}
+
 export interface BasemapConfig {
   id: string;
   label: LocalizedText;
@@ -230,6 +249,7 @@ export interface ThemeConfig {
     links?: ThemeLink[];
   };
   homepage?: {
+    collection_intro?: ThemeCollectionIntro;
     announcement?: {
       enabled?: boolean;
       text: LocalizedText;

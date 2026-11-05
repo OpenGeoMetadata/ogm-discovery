@@ -36,6 +36,12 @@ export function getThemeScopedAppBasePath(): string {
   return `${basePath}${encodeURIComponent(requestedThemeId)}/`;
 }
 
+/** Switch to a shareable theme home, clearing filters from the previous catalog. */
+export function buildThemeHomePath(themeId: string): string {
+  if (!isKnownThemeId(themeId)) return getAppBasePath();
+  return `${getAppBasePath()}${encodeURIComponent(themeId)}/`;
+}
+
 export function buildAppHashRouteUrl(
   routePath: string,
   searchParams?: URLSearchParams

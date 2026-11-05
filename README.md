@@ -414,3 +414,40 @@ resource thumbnails before deployment. A cold render still depends on remote
 basemap data and available worker capacity. The local preview harness now loads
 missing public resource geometry into its isolated test database on demand;
 this behavior is not installed in the production API.
+
+### Federal collection prototypes
+
+The theme selector includes three collection portals, also available at stable
+static paths (append to your deployment base URL):
+
+| Theme                            | Home path    | Catalog scope                                        |
+| -------------------------------- | ------------ | ---------------------------------------------------- |
+| NASA GIBS                        | `nasa-gibs/` | `pcdm_memberOf_sm = nasa-gibs`                       |
+| USGS The National Map            | `usgs-tnm/`  | USGS provider + `dcat_keyword_sm = The National Map` |
+| USGS Historical Topographic Maps | `usgs-htmc/` | `pcdm_memberOf_sm = usgs-htmc`                       |
+
+For example, `https://opengeometadata.github.io/ogm-discovery/nasa-gibs/`
+and `https://opengeometadata.github.io/ogm-discovery/usgs-htmc/#/resources/usgs-htmc-314262`.
+The existing `?ogm_theme=<id>` entry point also works. Selecting a theme opens
+its home URL and clears the previous collection's route and filters. These are
+community prototypes, not official agency websites.
+
+Set the optional `homepage.collection_intro` to use an asset-led collection
+home above the interactive discovery map. Existing themes keep their current
+hero layout when the field is absent. All copy fields accept localized objects:
+
+- `eyebrow`: short collection identifier above the existing `institution.hero_text`
+  and `institution.hero_description`.
+- `image`: `src` (bundled or remote), localized `alt` and `caption`, and an internal
+  `href` to a record or search. The caption should include source attribution.
+- `facts`: an array of localized `value` / `label` pairs. Use stable collection
+  characteristics, not hardcoded live record counts.
+- `pathways`: an array of localized `label`, `title`, `description`, plus an internal
+  `href` for a curated discovery route.
+- `map_heading` and `map_description`: localized context for the live map.
+
+Reuse `homepage.hero_actions`, `hero_map`, `featured_items`, and branding tokens
+for actions, map coverage, previews and palette. Local images resolve against the
+Vite base path. No new API or server is required. See
+[the collection research and asset notes](docs/federal-collection-themes.md)
+for source provenance, preview limitations and screenshots.

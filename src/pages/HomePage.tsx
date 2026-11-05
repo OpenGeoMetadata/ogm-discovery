@@ -17,6 +17,7 @@ import { Seo } from '../components/Seo';
 import { CampusMapBackground } from '../components/home/CampusMapBackground';
 import { GinBlogSection } from '../components/home/GinBlogSection';
 import { HomepageFeaturedCollection } from '../components/home/HomepageFeaturedCollection';
+import { CollectionIntro } from '../components/home/CollectionIntro';
 import { FacetMoreModal } from '../components/search/FacetMoreModal';
 import { LightboxModal } from '../components/ui/LightboxModal';
 
@@ -117,6 +118,7 @@ export function HomePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { theme } = useTheme();
+  const collectionIntro = theme.homepage?.collection_intro;
   const { t, text } = useI18n();
   const { setLastApiUrl } = useApi();
   const announcement = theme.homepage?.announcement;
@@ -447,24 +449,38 @@ export function HomePage() {
       <Header />
 
       <main className="theme-shell flex flex-1 flex-col">
-        <h1 className="sr-only">{theme.institution.name}</h1>
-        <div className="theme-border relative h-[calc(82vh-4rem)] min-h-[28rem] flex-shrink-0 overflow-hidden border-b">
+        {collectionIntro ? (
+          <>
+            <CollectionIntro />
+            <div className="collection-map-heading">
+              <h2>{text(collectionIntro.map_heading)}</h2>
+              <p>{text(collectionIntro.map_description)}</p>
+            </div>
+          </>
+        ) : (
+          <h1 className="sr-only">{theme.institution.name}</h1>
+        )}
+        <div
+          className={`theme-border relative flex-shrink-0 overflow-hidden border-b ${collectionIntro ? 'h-[30rem]' : 'h-[calc(82vh-4rem)] min-h-[28rem]'}`}
+        >
           {mounted && (
             <Suspense fallback={null}>
               <HomePageHexMapBackground />
             </Suspense>
           )}
-          {theme.homepage?.hero_background_image_url ? (
+          {!collectionIntro && theme.homepage?.hero_background_image_url ? (
             <div
               aria-hidden="true"
               className="theme-photo-overlay pointer-events-none absolute inset-0 z-20 opacity-35"
             />
           ) : null}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_38%),linear-gradient(180deg,rgba(4,30,66,0.18),rgba(4,30,66,0.28))]"
-          />
-          {showHeroDescription && (
+          {!collectionIntro && (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_38%),linear-gradient(180deg,rgba(4,30,66,0.18),rgba(4,30,66,0.28))]"
+            />
+          )}
+          {!collectionIntro && showHeroDescription && (
             <div className="pointer-events-none absolute inset-0 z-30 flex items-start justify-center px-4 pt-24 sm:px-6 lg:items-center lg:justify-start lg:px-8">
               <div className="theme-hero-panel relative w-full max-w-4xl overflow-hidden rounded-[1.15rem] p-6 pointer-events-auto lg:ml-6 lg:p-8">
                 <div className="theme-hero-accent absolute inset-y-0 left-0 z-20 w-2.5" />

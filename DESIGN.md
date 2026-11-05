@@ -236,3 +236,20 @@ keep choices theme-driven. Support hover, click/touch, native radio keyboard
 navigation, Escape with focus restoration, and dismissal outside the control.
 Long labels wrap and the choices scroll when necessary. Keep provider credits
 outside this control and visible when it is expanded.
+
+### Collection portals
+
+The optional `homepage.collection_intro` uses a split introduction and an actual
+collection asset, followed by three compact discovery pathways and the existing
+interactive map. This is a reusable collection layout, not an agency-specific
+component. On small screens the introduction, image, pathways and map stack in
+reading order. Asset captions remain outside the image and carry attribution;
+links have visible focus states. Use stable facts about formats and coverage,
+not counts that could drift from the API.
+
+NASA GIBS uses navy navigation, cool blue surfaces and satellite imagery. The
+National Map uses USGS-inspired navy, restrained green accents and terrain.
+Historical Topographic Maps uses forest navigation, warm paper, rust accents
+and serif headings to complement the scanned sheets. The collection symbols
+are original navigation graphics, not official NASA or USGS insignia. Keep the
+community-prototype notice visible. Existing institutional heroes are unchanged.

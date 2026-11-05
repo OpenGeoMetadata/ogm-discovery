@@ -4,6 +4,7 @@ import { useApi } from '../../context/ApiContext';
 import { useTheme } from '../../hooks/useTheme';
 import { useI18n } from '../../hooks/useI18n';
 import { isAbsoluteUrl, resolveThemeAssetUrl } from '../../utils/themeUrls';
+import { buildThemeHomePath } from '../../utils/appRoutes';
 
 interface FooterProps {
   id?: string;
@@ -141,7 +142,9 @@ export default function Footer({ id }: FooterProps) {
                   className={
                     isPhotoFooter
                       ? 'text-2xl font-semibold text-white'
-                      : 'text-lg font-semibold text-gray-900'
+                      : footerStyle === 'network'
+                        ? 'text-lg font-semibold text-white'
+                        : 'text-lg font-semibold text-gray-900'
                   }
                 >
                   {footerTitle}
@@ -149,7 +152,7 @@ export default function Footer({ id }: FooterProps) {
                 {addressLines.length > 0 ? (
                   <div
                     className={
-                      isPhotoFooter
+                      isPhotoFooter || footerStyle === 'network'
                         ? 'space-y-1 text-sm text-white/80'
                         : 'space-y-1 text-sm text-gray-500'
                     }
@@ -290,7 +293,7 @@ export default function Footer({ id }: FooterProps) {
               className={`flex flex-wrap items-center gap-4 rounded-lg px-4 py-3 ${panelClass}`}
             >
               {showThemeSelector ? (
-                <label className="flex items-center gap-2 text-xs uppercase tracking-wider">
+                <label className="flex min-w-0 max-w-full flex-wrap items-center gap-2 text-xs uppercase tracking-wider">
                   <span>{t('common.theme')}</span>
                   <select
                     value={themeId}
@@ -298,9 +301,9 @@ export default function Footer({ id }: FooterProps) {
                       const nextThemeId = event.target.value;
                       if (nextThemeId === themeId) return;
                       setThemeId(nextThemeId);
-                      window.location.reload();
+                      window.location.assign(buildThemeHomePath(nextThemeId));
                     }}
-                    className="rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900"
+                    className="min-w-0 max-w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900"
                   >
                     {themes.map((item) => (
                       <option key={item.id} value={item.id}>
