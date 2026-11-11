@@ -1,0 +1,28 @@
+{
+  "id": "../../berkeley/",
+  "name": "UC Berkeley | OpenGeoMetadata",
+  "short_name": "UC Berkeley",
+  "description": "Discover maps and geospatial datasets shared by the UC Berkeley Library. Browse geographic coverage and follow each record to its source data or map.",
+  "start_url": "../../berkeley/#/",
+  "scope": "../../berkeley/",
+  "display": "standalone",
+  "theme_color": "#003262",
+  "background_color": "#F1F4F7",
+  "icons": [
+    {
+      "src": "../../pwa-64x64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "../../pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "../../pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

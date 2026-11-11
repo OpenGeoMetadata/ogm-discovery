@@ -106,7 +106,7 @@ export interface ThemeSpotlightCard {
 
 export interface ThemeCollectionIntro {
   eyebrow: LocalizedText;
-  image: {
+  image?: {
     src: string;
     alt: LocalizedText;
     caption: LocalizedText;

@@ -19,6 +19,42 @@ describe('collection portals', () => {
   });
   afterEach(() => vi.unstubAllEnvs());
 
+  it.each([
+    'berkeley',
+    'geobtaa',
+    'gmu',
+    'harvard',
+    'hdx',
+    'lunaris',
+    'princeton',
+    'stanford',
+    'usda-naip',
+    'utexas',
+    'uwm',
+  ])('renders the %s repository portal without a placeholder image', (id) => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, id);
+    vi.stubEnv('BASE_URL', '/ogm-discovery/');
+    const { container } = render(
+      <MemoryRouter>
+        <ThemeProvider initialThemeId={id}>
+          <I18nProvider>
+            <CollectionIntro />
+          </I18nProvider>
+        </ThemeProvider>
+      </MemoryRouter>
+    );
+    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Search this collection' })
+    ).toHaveAttribute('href', '/search?q=&view=gallery');
+    expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(3);
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    expect(
+      container.querySelector('.collection-intro-grid-text')
+    ).toBeInTheDocument();
+    expect(buildThemeHomePath(id)).toBe(`/ogm-discovery/${id}/`);
+  });
+
   it.each(themes)(
     'renders %s with accessible asset and discovery links',
     (id, title, action) => {

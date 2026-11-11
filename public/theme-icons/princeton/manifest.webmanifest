@@ -1,0 +1,28 @@
+{
+  "id": "../../princeton/",
+  "name": "Princeton University | OpenGeoMetadata",
+  "short_name": "Princeton University",
+  "description": "Explore maps and geospatial resources shared by Princeton University. Browse places, inspect individual sheets, and follow catalog records back to their sources.",
+  "start_url": "../../princeton/#/",
+  "scope": "../../princeton/",
+  "display": "standalone",
+  "theme_color": "#8B4518",
+  "background_color": "#FBF5ED",
+  "icons": [
+    {
+      "src": "../../pwa-64x64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "../../pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "../../pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

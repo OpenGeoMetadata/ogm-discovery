@@ -176,6 +176,15 @@ textarea {
   display: grid;
   grid-template-columns: 1fr 1fr;
 }
+.collection-intro-grid-text {
+  grid-template-columns: 1fr;
+}
+.collection-intro-grid-text h1 {
+  max-width: 26ch;
+}
+.collection-intro-grid-text .collection-description {
+  max-width: 72ch;
+}
 .collection-intro-copy {
   padding: clamp(2rem, 4vw, 4.5rem);
   background: var(--color-surface-alt);

@@ -1,0 +1,188 @@
+# OGM supported_schemas includes Aardvark; verified 2026-11-11.
+id: berkeley
+label: UC Berkeley
+site:
+  title:
+    en: UC Berkeley | OpenGeoMetadata
+  short_name: UC Berkeley
+  description:
+    en: >-
+      Discover maps and geospatial datasets shared by the UC Berkeley Library. Browse
+      geographic coverage and follow each record to its source data or map.
+  locale: en
+  supported_locales:
+    - en
+  show_theme_selector: true
+  routing:
+    mode: hash
+  icons:
+    manifest: /theme-icons/berkeley/manifest.webmanifest
+  manifest:
+    background_color: '#F1F4F7'
+    theme_color: '#003262'
+  banner:
+    enabled: true
+    tone: notice
+    text:
+      en: >-
+        OpenGeoMetadata community prototype. Consult the source institution or publisher for
+        official services.
+institution:
+  name: UC Berkeley
+  logo_url: /opengeometadata-bauhaus-logo.svg
+  logo_alt:
+    en: OpenGeoMetadata geometric logo
+  logo_lockup:
+    separator: none
+    right_text:
+      en: UC Berkeley
+    subtext:
+      en: OpenGeoMetadata / Collection explorer
+  header:
+    logo_height_rem: 3.5
+    lockup_text_size_rem: 1.2
+  hero_text:
+    en: Explore places through Berkeley’s collections.
+  hero_description:
+    en: >-
+      Discover maps and geospatial datasets shared by the UC Berkeley Library. Browse
+      geographic coverage and follow each record to its source data or map.
+branding:
+  colors:
+    primary: '#003262'
+    active: '#003262'
+    surface: '#FFFFFF'
+    surface_alt: '#F1F4F7'
+    text: '#202A30'
+    muted: '#505D64'
+    border: '#D3DCE0'
+    page_background: '#F1F4F7'
+    header_background: '#003262'
+    header_text: '#FFFFFF'
+    hero_panel_accent: '#003262'
+    button_primary_hover: '#003262'
+    button_secondary_text: '#003262'
+    button_secondary_border: '#D3DCE0'
+    button_secondary_background: '#FFFFFF'
+    button_secondary_hover: '#F1F4F7'
+    lockup_background: '#003262'
+    lockup_foreground: '#FFFFFF'
+api:
+  base_url: https://ogm.geo4lib.app/api/v1/
+  client_name: ogm-berkeley
+  default_query_params:
+    - include_filters[ogm_repo][]=edu.berkeley
+navigation:
+  cta:
+    label:
+      en: Source metadata
+    href: https://github.com/OpenGeoMetadata/edu.berkeley
+    external: true
+  cta_style: utility
+  links:
+    - label:
+        en: Search
+      href: /search?q=
+      external: false
+    - label:
+        en: Bookmarks
+      href: /bookmarks
+      external: false
+homepage:
+  collection_intro:
+    eyebrow:
+      en: UC Berkeley / Collection explorer
+    facts:
+      - value:
+          en: Maps + GIS
+        label:
+          en: Discover
+      - value:
+          en: Library collections
+        label:
+          en: Explore
+      - value:
+          en: UC Berkeley
+        label:
+          en: Collection context
+    pathways:
+      - label:
+          en: 01 / Places
+        title:
+          en: Explore geographic coverage
+        description:
+          en: Use the interactive map and place filters to locate resources.
+        href: /search?q=&view=gallery
+      - label:
+          en: 02 / Maps
+        title:
+          en: Browse the map collection
+        description:
+          en: Explore map records, then inspect their descriptions and available previews.
+        href: /search?q=&include_filters[gbl_resourceClass_sm][]=Maps&view=gallery
+      - label:
+          en: 03 / Data
+        title:
+          en: Find geospatial datasets
+        description:
+          en: Browse datasets and follow their source links for access and use information.
+        href: /search?q=&include_filters[gbl_resourceClass_sm][]=Datasets&view=gallery
+    map_heading:
+      en: Explore geographic coverage
+    map_description:
+      en: Search a place or select an area on the map to discover records in this collection.
+  hero_actions:
+    - label:
+        en: Search this collection
+      href: /search?q=&view=gallery
+      external: false
+  hero_map:
+    center:
+      - 37.87
+      - -122.27
+    zoom: 6
+    initial_pan_px:
+      - 0
+      - 0
+  featured_items:
+    - id: ark28722-s7001t
+      camera:
+        mode: fitBounds
+        maxZoom: 8
+        padding:
+          - 48
+          - 48
+        duration: 1
+    - id: ark28722-s70026
+      camera:
+        mode: fitBounds
+        maxZoom: 8
+        padding:
+          - 48
+          - 48
+        duration: 1
+  collection_spotlights: []
+  partner_institutions: []
+  blog:
+    enabled: false
+footer:
+  style: network
+  title:
+    en: UC Berkeley
+  copyright:
+    en: >-
+      Metadata is shared through OpenGeoMetadata. Access and reuse conditions vary by resource;
+      consult the original record.
+  link_groups:
+    - title:
+        en: Explore the source
+      links:
+        - label:
+            en: Collection repository
+          href: https://github.com/OpenGeoMetadata/edu.berkeley
+          external: true
+        - label:
+            en: About OpenGeoMetadata
+          href: https://opengeometadata.org/
+          external: true
+  show_api_debug: false

@@ -178,6 +178,26 @@ describe('HomePageHexMapBackground – Featured carousel behavior', () => {
     );
   };
 
+  it.each(['gmu', 'harvard'])(
+    'keeps the %s map without fetching unrelated featured records',
+    (id) => {
+      localStorage.setItem(THEME_STORAGE_KEY, id);
+      vi.mocked(api.fetchFeaturedResourcePreview).mockClear();
+      render(
+        <BrowserRouter>
+          <ThemeProvider initialThemeId={id}>
+            <HomePageHexMapBackground />
+          </ThemeProvider>
+        </BrowserRouter>
+      );
+      expect(screen.getByTestId('map-container')).toBeInTheDocument();
+      expect(
+        screen.queryByRole('region', { name: 'Featured resources' })
+      ).not.toBeInTheDocument();
+      expect(api.fetchFeaturedResourcePreview).not.toHaveBeenCalled();
+    }
+  );
+
   const waitForFeaturedData = async () => {
     await screen.findByRole(
       'button',

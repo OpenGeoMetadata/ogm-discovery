@@ -14,7 +14,9 @@ export function CollectionIntro() {
 
   return (
     <section className="collection-intro" aria-labelledby="collection-title">
-      <div className="collection-intro-grid">
+      <div
+        className={`collection-intro-grid${intro.image ? '' : ' collection-intro-grid-text'}`}
+      >
         <div className="collection-intro-copy">
           <p className="collection-eyebrow">{text(intro.eyebrow)}</p>
           <h1 id="collection-title">{text(theme.institution.hero_text)}</h1>
@@ -57,18 +59,20 @@ export function CollectionIntro() {
             ))}
           </dl>
         </div>
-        <figure className="collection-image">
-          <Link to={intro.image.href}>
-            <img
-              src={resolveThemeAssetUrl(intro.image.src)}
-              alt={text(intro.image.alt)}
-            />
-            <figcaption>
-              <span>{text(intro.image.caption)}</span>
-              <ArrowUpRight size={20} aria-hidden />
-            </figcaption>
-          </Link>
-        </figure>
+        {intro.image && (
+          <figure className="collection-image">
+            <Link to={intro.image.href}>
+              <img
+                src={resolveThemeAssetUrl(intro.image.src)}
+                alt={text(intro.image.alt)}
+              />
+              <figcaption>
+                <span>{text(intro.image.caption)}</span>
+                <ArrowUpRight size={20} aria-hidden />
+              </figcaption>
+            </Link>
+          </figure>
+        )}
       </div>
       <div className="collection-pathways">
         {intro.pathways.map((pathway) => (

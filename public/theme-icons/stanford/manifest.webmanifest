@@ -1,0 +1,28 @@
+{
+  "id": "../../stanford/",
+  "name": "Stanford EarthWorks | OpenGeoMetadata",
+  "short_name": "Stanford EarthWorks",
+  "description": "Discover maps and geospatial data from Stanford University Libraries’ EarthWorks repository. Explore coverage, inspect metadata, and follow persistent links to the original resources.",
+  "start_url": "../../stanford/#/",
+  "scope": "../../stanford/",
+  "display": "standalone",
+  "theme_color": "#8C1515",
+  "background_color": "#F8F3F0",
+  "icons": [
+    {
+      "src": "../../pwa-64x64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "../../pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "../../pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

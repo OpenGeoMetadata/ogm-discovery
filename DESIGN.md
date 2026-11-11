@@ -254,6 +254,14 @@ and serif headings to complement the scanned sheets. The collection symbols
 are original navigation graphics, not official NASA or USGS insignia. Keep the
 community-prototype notice visible. Existing institutional heroes are unchanged.
 
+Repository portals reuse this introduction, three discovery pathways, and live
+map with collection-specific copy and restrained palettes. The introduction image
+is optional: without a verified collection asset, use a full-width text introduction
+with no empty image frame or unrelated stock image. Use the shared OGM mark for
+community prototypes unless an appropriate institutional asset is configured.
+An explicitly empty featured-record list leaves the live map available and hides
+the carousel; it must not substitute records from another collection.
+
 ## Asset-specific research workspaces
 
 Federal research workspaces use a compact institutional header and task-specific

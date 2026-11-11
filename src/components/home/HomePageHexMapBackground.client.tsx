@@ -325,11 +325,11 @@ function HomeMapResetListener({
 export function HomePageHexMapBackground() {
   const { theme } = useTheme();
   const featuredItems = useMemo<ThemeFeaturedItemConfig[]>(() => {
-    if (theme.homepage?.featured_items?.length) {
+    if (theme.homepage?.featured_items) {
       return theme.homepage.featured_items;
     }
 
-    if (theme.homepage?.featured_resource_ids?.length) {
+    if (theme.homepage?.featured_resource_ids) {
       return theme.homepage.featured_resource_ids.map((id) => ({ id }));
     }
 
@@ -458,7 +458,7 @@ export function HomePageHexMapBackground() {
 
   // Auto-advance featured carousel every 10s; progress bar shows time left. Pauses while popup card is hovered.
   useEffect(() => {
-    if (!featuredInitiated) return;
+    if (!featuredInitiated || featuredItems.length === 0) return;
 
     featuredStartTimeRef.current = Date.now();
     featuredTotalPausedRef.current = 0;
@@ -659,8 +659,10 @@ export function HomePageHexMapBackground() {
           </div>
         )}
 
-        {/* Featured resources carousel at bottom of map — always visible so users can click before the 10s timer */}
+        {/* An empty configured list disables the featured carousel. */}
         <div
+          hidden={featuredItems.length === 0}
+          style={featuredItems.length === 0 ? { display: 'none' } : undefined}
           role="region"
           aria-roledescription="carousel"
           aria-label="Featured resources"
