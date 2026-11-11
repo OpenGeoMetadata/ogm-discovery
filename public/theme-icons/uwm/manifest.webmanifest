@@ -1,0 +1,28 @@
+{
+  "id": "../../uwm/",
+  "name": "UWM · AGSL GeoDiscovery | OpenGeoMetadata",
+  "short_name": "UWM · AGSL GeoDiscovery",
+  "description": "Explore maps, index maps, and GIS data shared by the American Geographical Society Library at the University of Wisconsin-Milwaukee. Check each record for access and use conditions.",
+  "start_url": "../../uwm/#/",
+  "scope": "../../uwm/",
+  "display": "standalone",
+  "theme_color": "#72550B",
+  "background_color": "#FBF7E9",
+  "icons": [
+    {
+      "src": "../../pwa-64x64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "../../pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "../../pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

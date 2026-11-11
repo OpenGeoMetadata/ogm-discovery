@@ -1,0 +1,28 @@
+{
+  "id": "../../gmu/",
+  "name": "George Mason University | OpenGeoMetadata",
+  "short_name": "George Mason University",
+  "description": "Explore geospatial metadata shared by George Mason University. Search by place and topic, then consult the original source for access and use information.",
+  "start_url": "../../gmu/#/",
+  "scope": "../../gmu/",
+  "display": "standalone",
+  "theme_color": "#005239",
+  "background_color": "#EFF5F1",
+  "icons": [
+    {
+      "src": "../../pwa-64x64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "../../pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "../../pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "../../utexas/",
+  "name": "University of Texas at Austin | OpenGeoMetadata",
+  "short_name": "University of Texas at Austin",
+  "description": "Discover geospatial resources shared by the University of Texas at Austin. Search the catalog by place and topic, and follow records to their original collections.",
+  "start_url": "../../utexas/#/",
+  "scope": "../../utexas/",
+  "display": "standalone",
+  "theme_color": "#9D470D",
+  "background_color": "#FCF5EC",
+  "icons": [
+    {
+      "src": "../../pwa-64x64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "../../pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "../../pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

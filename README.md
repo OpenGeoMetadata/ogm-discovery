@@ -428,6 +428,72 @@ basemap data and available worker capacity. The local preview harness now loads
 missing public resource geometry into its isolated test database on demand;
 this behavior is not installed in the production API.
 
+### Aardvark repository themes
+
+The theme selector covers all 16 repositories whose OGM GitHub
+`supported_schemas` property includes `Aardvark` as of November 11, 2026.
+The new portals follow the USGS collection layout: localized introductory copy,
+three discovery pathways, a scoped interactive map, and source-repository links.
+Each theme is a standalone YAML file; no component or route registration is needed.
+
+| Repository                                                                  | Theme / static home path |
+| --------------------------------------------------------------------------- | ------------------------ |
+| [ca.lunaris](https://github.com/OpenGeoMetadata/ca.lunaris)                 | `lunaris/`               |
+| [edu.berkeley](https://github.com/OpenGeoMetadata/edu.berkeley)             | `berkeley/`              |
+| [edu.gmu](https://github.com/OpenGeoMetadata/edu.gmu)                       | `gmu/`                   |
+| [edu.harvard](https://github.com/OpenGeoMetadata/edu.harvard)               | `harvard/`               |
+| [edu.nyu](https://github.com/OpenGeoMetadata/edu.nyu)                       | `nyu/` (existing)        |
+| [edu.princeton.arks](https://github.com/OpenGeoMetadata/edu.princeton.arks) | `princeton/`             |
+| [edu.stanford.purl](https://github.com/OpenGeoMetadata/edu.stanford.purl)   | `stanford/`              |
+| [edu.unr](https://github.com/OpenGeoMetadata/edu.unr)                       | `unr/` (existing)        |
+| [edu.utexas](https://github.com/OpenGeoMetadata/edu.utexas)                 | `utexas/`                |
+| [edu.uwm](https://github.com/OpenGeoMetadata/edu.uwm)                       | `uwm/`                   |
+| [geobtaa](https://github.com/OpenGeoMetadata/geobtaa)                       | `geobtaa/`               |
+| [gov.nasa.gibs](https://github.com/OpenGeoMetadata/gov.nasa.gibs)           | `nasa-gibs/` (existing)  |
+| [gov.usda.naip](https://github.com/OpenGeoMetadata/gov.usda.naip)           | `usda-naip/`             |
+| [gov.usgs.htmc](https://github.com/OpenGeoMetadata/gov.usgs.htmc)           | `usgs-htmc/` (existing)  |
+| [gov.usgs.tnm](https://github.com/OpenGeoMetadata/gov.usgs.tnm)             | `usgs-tnm/` (existing)   |
+| [org.humdata](https://github.com/OpenGeoMetadata/org.humdata)               | `hdx/`                   |
+
+Append these paths to the deployment base, for example
+`https://opengeometadata.github.io/ogm-discovery/usda-naip/`.
+The `?ogm_theme=<id>` selector also works. New repository portals use the existing
+`api.default_query_params` contract to scope requests by provenance:
+
+```yaml
+api:
+  base_url: https://ogm.geo4lib.app/api/v1/
+  default_query_params:
+    - include_filters[ogm_repo][]=gov.usda.naip
+```
+
+The separate `geobtaa` portal scopes to that repository; `btaa` remains the
+unchanged reference preset. Existing institutional and federal themes retain
+their established scopes and research tools. Archived campus repositories with
+cleared schema properties are not separate current Aardvark sources, even if
+their old `ogm-aardvark` topics remain. `uwmadison` remains an additional preset;
+`edu.wisc` currently declares only the legacy 1.0 schema.
+
+Harvard and George Mason declared Aardvark but returned zero records from the
+reference API during verification on November 11, 2026. Their portals retain
+the correct repository filters and empty featured lists. Harvesting/indexing
+those sources is a backend task; the frontend does not widen their searches.
+The other 14 repository filters returned records. Featured IDs in the new
+portals were selected from public records returned by their own repository scope.
+
+Collection images are optional. These new portals use a text introduction and
+the live discovery map until a verified, attributed image is configured.
+`homepage.featured_items: []` (or `featured_resource_ids: []`) disables the
+featured carousel, while omitting both fields preserves the legacy fallback.
+Theme-specific manifests reuse the bundled default icons; replace `site.icons`
+when adopting a portal with institutional branding. All new copy uses English
+localized objects, ready for additional translations.
+
+To refresh coverage, inspect the organization's `supported_schemas` properties
+with `gh api 'orgs/OpenGeoMetadata/properties/values?per_page=100' --paginate`,
+compare the Aardvark entries with this table, and verify the API repository filter
+before choosing featured records. Do not infer ingestion from a repository topic.
+
 ### Federal collection prototypes
 
 The theme selector includes three collection portals, also available at stable
@@ -451,7 +517,7 @@ hero layout when the field is absent. All copy fields accept localized objects:
 
 - `eyebrow`: short collection identifier above the existing `institution.hero_text`
   and `institution.hero_description`.
-- `image`: `src` (bundled or remote), localized `alt` and `caption`, and an internal
+- `image` (optional): `src` (bundled or remote), localized `alt` and `caption`, and an internal
   `href` to a record or search. The caption should include source attribution.
 - `facts`: an array of localized `value` / `label` pairs. Use stable collection
   characteristics, not hardcoded live record counts.

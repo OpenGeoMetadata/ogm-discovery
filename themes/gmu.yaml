@@ -1,0 +1,172 @@
+# OGM supported_schemas includes Aardvark; verified 2026-11-11.
+id: gmu
+label: George Mason University
+site:
+  title:
+    en: George Mason University | OpenGeoMetadata
+  short_name: George Mason University
+  description:
+    en: >-
+      Explore geospatial metadata shared by George Mason University. Search by place and topic,
+      then consult the original source for access and use information.
+  locale: en
+  supported_locales:
+    - en
+  show_theme_selector: true
+  routing:
+    mode: hash
+  icons:
+    manifest: /theme-icons/gmu/manifest.webmanifest
+  manifest:
+    background_color: '#EFF5F1'
+    theme_color: '#005239'
+  banner:
+    enabled: true
+    tone: notice
+    text:
+      en: >-
+        OpenGeoMetadata community prototype. Consult the source institution or publisher for
+        official services.
+institution:
+  name: George Mason University
+  logo_url: /opengeometadata-bauhaus-logo.svg
+  logo_alt:
+    en: OpenGeoMetadata geometric logo
+  logo_lockup:
+    separator: none
+    right_text:
+      en: George Mason University
+    subtext:
+      en: OpenGeoMetadata / Collection explorer
+  header:
+    logo_height_rem: 3.5
+    lockup_text_size_rem: 1.2
+  hero_text:
+    en: Find a geographic perspective.
+  hero_description:
+    en: >-
+      Explore geospatial metadata shared by George Mason University. Search by place and topic,
+      then consult the original source for access and use information.
+branding:
+  colors:
+    primary: '#005239'
+    active: '#005239'
+    surface: '#FFFFFF'
+    surface_alt: '#EFF5F1'
+    text: '#202A30'
+    muted: '#505D64'
+    border: '#D3DCE0'
+    page_background: '#EFF5F1'
+    header_background: '#005239'
+    header_text: '#FFFFFF'
+    hero_panel_accent: '#005239'
+    button_primary_hover: '#005239'
+    button_secondary_text: '#005239'
+    button_secondary_border: '#D3DCE0'
+    button_secondary_background: '#FFFFFF'
+    button_secondary_hover: '#EFF5F1'
+    lockup_background: '#005239'
+    lockup_foreground: '#FFFFFF'
+api:
+  base_url: https://ogm.geo4lib.app/api/v1/
+  client_name: ogm-gmu
+  default_query_params:
+    - include_filters[ogm_repo][]=edu.gmu
+navigation:
+  cta:
+    label:
+      en: Source metadata
+    href: https://github.com/OpenGeoMetadata/edu.gmu
+    external: true
+  cta_style: utility
+  links:
+    - label:
+        en: Search
+      href: /search?q=
+      external: false
+    - label:
+        en: Bookmarks
+      href: /bookmarks
+      external: false
+homepage:
+  collection_intro:
+    eyebrow:
+      en: George Mason University / Collection explorer
+    facts:
+      - value:
+          en: Geospatial data
+        label:
+          en: Discover
+      - value:
+          en: Library collections
+        label:
+          en: Explore
+      - value:
+          en: George Mason
+        label:
+          en: Collection context
+    pathways:
+      - label:
+          en: 01 / Places
+        title:
+          en: Explore geographic coverage
+        description:
+          en: Use the interactive map and place filters to locate resources.
+        href: /search?q=&view=gallery
+      - label:
+          en: 02 / Maps
+        title:
+          en: Browse the map collection
+        description:
+          en: Explore map records, then inspect their descriptions and available previews.
+        href: /search?q=&include_filters[gbl_resourceClass_sm][]=Maps&view=gallery
+      - label:
+          en: 03 / Data
+        title:
+          en: Find geospatial datasets
+        description:
+          en: Browse datasets and follow their source links for access and use information.
+        href: /search?q=&include_filters[gbl_resourceClass_sm][]=Datasets&view=gallery
+    map_heading:
+      en: Explore geographic coverage
+    map_description:
+      en: Search a place or select an area on the map to discover records in this collection.
+  hero_actions:
+    - label:
+        en: Search this collection
+      href: /search?q=&view=gallery
+      external: false
+  hero_map:
+    center:
+      - 38.83
+      - -77.31
+    zoom: 6
+    initial_pan_px:
+      - 0
+      - 0
+  featured_items: []
+  collection_spotlights: []
+  partner_institutions: []
+  blog:
+    enabled: false
+footer:
+  style: network
+  title:
+    en: George Mason University
+  copyright:
+    en: >-
+      Metadata is shared through OpenGeoMetadata. Access and reuse conditions vary by resource;
+      consult the original record.
+  link_groups:
+    - title:
+        en: Explore the source
+      links:
+        - label:
+            en: Collection repository
+          href: https://github.com/OpenGeoMetadata/edu.gmu
+          external: true
+        - label:
+            en: About OpenGeoMetadata
+          href: https://opengeometadata.org/
+          external: true
+  show_api_debug: false

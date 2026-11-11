@@ -1,0 +1,28 @@
+{
+  "id": "../../lunaris/",
+  "name": "Lunaris | OpenGeoMetadata",
+  "short_name": "Lunaris",
+  "description": "Explore Canadian research data described by Lunaris. Search across contributing repositories, follow geographic coverage, and visit the original source for access and context.",
+  "start_url": "../../lunaris/#/",
+  "scope": "../../lunaris/",
+  "display": "standalone",
+  "theme_color": "#174F63",
+  "background_color": "#EEF5F6",
+  "icons": [
+    {
+      "src": "../../pwa-64x64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "../../pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "../../pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

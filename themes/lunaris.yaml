@@ -1,0 +1,190 @@
+# OGM supported_schemas includes Aardvark; verified 2026-11-11.
+id: lunaris
+label: Lunaris
+site:
+  title:
+    en: Lunaris | OpenGeoMetadata
+  short_name: Lunaris
+  description:
+    en: >-
+      Explore Canadian research data described by Lunaris. Search across contributing
+      repositories, follow geographic coverage, and visit the original source for access and
+      context.
+  locale: en
+  supported_locales:
+    - en
+  show_theme_selector: true
+  routing:
+    mode: hash
+  icons:
+    manifest: /theme-icons/lunaris/manifest.webmanifest
+  manifest:
+    background_color: '#EEF5F6'
+    theme_color: '#174F63'
+  banner:
+    enabled: true
+    tone: notice
+    text:
+      en: >-
+        OpenGeoMetadata community prototype. Consult the source institution or publisher for
+        official services.
+institution:
+  name: Lunaris
+  logo_url: /opengeometadata-bauhaus-logo.svg
+  logo_alt:
+    en: OpenGeoMetadata geometric logo
+  logo_lockup:
+    separator: none
+    right_text:
+      en: Lunaris
+    subtext:
+      en: OpenGeoMetadata / Collection explorer
+  header:
+    logo_height_rem: 3.5
+    lockup_text_size_rem: 1.2
+  hero_text:
+    en: Canadian research, connected.
+  hero_description:
+    en: >-
+      Explore Canadian research data described by Lunaris. Search across contributing
+      repositories, follow geographic coverage, and visit the original source for access and
+      context.
+branding:
+  colors:
+    primary: '#174F63'
+    active: '#174F63'
+    surface: '#FFFFFF'
+    surface_alt: '#EEF5F6'
+    text: '#202A30'
+    muted: '#505D64'
+    border: '#D3DCE0'
+    page_background: '#EEF5F6'
+    header_background: '#174F63'
+    header_text: '#FFFFFF'
+    hero_panel_accent: '#174F63'
+    button_primary_hover: '#174F63'
+    button_secondary_text: '#174F63'
+    button_secondary_border: '#D3DCE0'
+    button_secondary_background: '#FFFFFF'
+    button_secondary_hover: '#EEF5F6'
+    lockup_background: '#174F63'
+    lockup_foreground: '#FFFFFF'
+api:
+  base_url: https://ogm.geo4lib.app/api/v1/
+  client_name: ogm-lunaris
+  default_query_params:
+    - include_filters[ogm_repo][]=ca.lunaris
+navigation:
+  cta:
+    label:
+      en: Source metadata
+    href: https://github.com/OpenGeoMetadata/ca.lunaris
+    external: true
+  cta_style: utility
+  links:
+    - label:
+        en: Search
+      href: /search?q=
+      external: false
+    - label:
+        en: Bookmarks
+      href: /bookmarks
+      external: false
+homepage:
+  collection_intro:
+    eyebrow:
+      en: Lunaris / Collection explorer
+    facts:
+      - value:
+          en: Canada
+        label:
+          en: Discover
+      - value:
+          en: Research data
+        label:
+          en: Explore
+      - value:
+          en: Lunaris
+        label:
+          en: Collection context
+    pathways:
+      - label:
+          en: 01 / Places
+        title:
+          en: Explore Canadian research
+        description:
+          en: Find records by geographic coverage and place.
+        href: /search?q=&view=gallery
+      - label:
+          en: 02 / Subjects
+        title:
+          en: Follow a research topic
+        description:
+          en: Search the catalog and use subject filters to refine your results.
+        href: /search?q=
+      - label:
+          en: 03 / Sources
+        title:
+          en: Find contributing repositories
+        description:
+          en: Browse records and check their publisher and source links.
+        href: /search?q=&view=list
+    map_heading:
+      en: Explore geographic coverage
+    map_description:
+      en: Search a place or select an area on the map to discover records in this collection.
+  hero_actions:
+    - label:
+        en: Search this collection
+      href: /search?q=&view=gallery
+      external: false
+  hero_map:
+    center:
+      - 56
+      - -106
+    zoom: 4
+    initial_pan_px:
+      - 0
+      - 0
+  featured_items:
+    - id: 03885b9a-ddf9-5755-957e-08c3ecb688ad
+      camera:
+        mode: fitBounds
+        maxZoom: 8
+        padding:
+          - 48
+          - 48
+        duration: 1
+    - id: 038b632d-68f6-5ee3-8cea-435afce753d1
+      camera:
+        mode: fitBounds
+        maxZoom: 8
+        padding:
+          - 48
+          - 48
+        duration: 1
+  collection_spotlights: []
+  partner_institutions: []
+  blog:
+    enabled: false
+footer:
+  style: network
+  title:
+    en: Lunaris
+  copyright:
+    en: >-
+      Metadata is shared through OpenGeoMetadata. Access and reuse conditions vary by resource;
+      consult the original record.
+  link_groups:
+    - title:
+        en: Explore the source
+      links:
+        - label:
+            en: Collection repository
+          href: https://github.com/OpenGeoMetadata/ca.lunaris
+          external: true
+        - label:
+            en: About OpenGeoMetadata
+          href: https://opengeometadata.org/
+          external: true
+  show_api_debug: false

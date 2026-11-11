@@ -1,0 +1,28 @@
+{
+  "id": "../../harvard/",
+  "name": "Harvard Geospatial Library | OpenGeoMetadata",
+  "short_name": "Harvard Geospatial Library",
+  "description": "Discover maps, geographic data, and map indexes described by the Harvard Geospatial Library. Use place and subject filters to find resources for your research.",
+  "start_url": "../../harvard/#/",
+  "scope": "../../harvard/",
+  "display": "standalone",
+  "theme_color": "#8C2332",
+  "background_color": "#F8F2F0",
+  "icons": [
+    {
+      "src": "../../pwa-64x64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "../../pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "../../pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

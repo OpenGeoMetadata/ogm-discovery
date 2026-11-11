@@ -1,0 +1,28 @@
+{
+  "id": "../../hdx/",
+  "name": "Humanitarian Data Exchange | OpenGeoMetadata",
+  "short_name": "Humanitarian Data Exchange",
+  "description": "Explore geospatial datasets described by the Humanitarian Data Exchange. Find data by place and topic, and review the original publisher’s dates, methods, and terms before use.",
+  "start_url": "../../hdx/#/",
+  "scope": "../../hdx/",
+  "display": "standalone",
+  "theme_color": "#005A83",
+  "background_color": "#EEF6FA",
+  "icons": [
+    {
+      "src": "../../pwa-64x64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "../../pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "../../pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

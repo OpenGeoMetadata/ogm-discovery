@@ -1,0 +1,188 @@
+# OGM supported_schemas includes Aardvark; verified 2026-11-11.
+id: utexas
+label: University of Texas at Austin
+site:
+  title:
+    en: University of Texas at Austin | OpenGeoMetadata
+  short_name: University of Texas at Austin
+  description:
+    en: >-
+      Discover geospatial resources shared by the University of Texas at Austin. Search the
+      catalog by place and topic, and follow records to their original collections.
+  locale: en
+  supported_locales:
+    - en
+  show_theme_selector: true
+  routing:
+    mode: hash
+  icons:
+    manifest: /theme-icons/utexas/manifest.webmanifest
+  manifest:
+    background_color: '#FCF5EC'
+    theme_color: '#9D470D'
+  banner:
+    enabled: true
+    tone: notice
+    text:
+      en: >-
+        OpenGeoMetadata community prototype. Consult the source institution or publisher for
+        official services.
+institution:
+  name: University of Texas at Austin
+  logo_url: /opengeometadata-bauhaus-logo.svg
+  logo_alt:
+    en: OpenGeoMetadata geometric logo
+  logo_lockup:
+    separator: none
+    right_text:
+      en: University of Texas at Austin
+    subtext:
+      en: OpenGeoMetadata / Collection explorer
+  header:
+    logo_height_rem: 3.5
+    lockup_text_size_rem: 1.2
+  hero_text:
+    en: Explore a world of collections.
+  hero_description:
+    en: >-
+      Discover geospatial resources shared by the University of Texas at Austin. Search the
+      catalog by place and topic, and follow records to their original collections.
+branding:
+  colors:
+    primary: '#9D470D'
+    active: '#9D470D'
+    surface: '#FFFFFF'
+    surface_alt: '#FCF5EC'
+    text: '#202A30'
+    muted: '#505D64'
+    border: '#D3DCE0'
+    page_background: '#FCF5EC'
+    header_background: '#9D470D'
+    header_text: '#FFFFFF'
+    hero_panel_accent: '#9D470D'
+    button_primary_hover: '#9D470D'
+    button_secondary_text: '#9D470D'
+    button_secondary_border: '#D3DCE0'
+    button_secondary_background: '#FFFFFF'
+    button_secondary_hover: '#FCF5EC'
+    lockup_background: '#9D470D'
+    lockup_foreground: '#FFFFFF'
+api:
+  base_url: https://ogm.geo4lib.app/api/v1/
+  client_name: ogm-utexas
+  default_query_params:
+    - include_filters[ogm_repo][]=edu.utexas
+navigation:
+  cta:
+    label:
+      en: Source metadata
+    href: https://github.com/OpenGeoMetadata/edu.utexas
+    external: true
+  cta_style: utility
+  links:
+    - label:
+        en: Search
+      href: /search?q=
+      external: false
+    - label:
+        en: Bookmarks
+      href: /bookmarks
+      external: false
+homepage:
+  collection_intro:
+    eyebrow:
+      en: University of Texas at Austin / Collection explorer
+    facts:
+      - value:
+          en: Maps + GIS
+        label:
+          en: Discover
+      - value:
+          en: Library collections
+        label:
+          en: Explore
+      - value:
+          en: UT Austin
+        label:
+          en: Collection context
+    pathways:
+      - label:
+          en: 01 / Places
+        title:
+          en: Explore geographic coverage
+        description:
+          en: Use the interactive map and place filters to locate resources.
+        href: /search?q=&view=gallery
+      - label:
+          en: 02 / Maps
+        title:
+          en: Browse the map collection
+        description:
+          en: Explore map records, then inspect their descriptions and available previews.
+        href: /search?q=&include_filters[gbl_resourceClass_sm][]=Maps&view=gallery
+      - label:
+          en: 03 / Data
+        title:
+          en: Find geospatial datasets
+        description:
+          en: Browse datasets and follow their source links for access and use information.
+        href: /search?q=&include_filters[gbl_resourceClass_sm][]=Datasets&view=gallery
+    map_heading:
+      en: Explore geographic coverage
+    map_description:
+      en: Search a place or select an area on the map to discover records in this collection.
+  hero_actions:
+    - label:
+        en: Search this collection
+      href: /search?q=&view=gallery
+      external: false
+  hero_map:
+    center:
+      - 30.29
+      - -97.74
+    zoom: 5
+    initial_pan_px:
+      - 0
+      - 0
+  featured_items:
+    - id: alexander-architectural-archives
+      camera:
+        mode: fitBounds
+        maxZoom: 8
+        padding:
+          - 48
+          - 48
+        duration: 1
+    - id: archivo-general-e-histórico-del-poder-ejecutivo-de-michoacán-collection
+      camera:
+        mode: fitBounds
+        maxZoom: 8
+        padding:
+          - 48
+          - 48
+        duration: 1
+  collection_spotlights: []
+  partner_institutions: []
+  blog:
+    enabled: false
+footer:
+  style: network
+  title:
+    en: University of Texas at Austin
+  copyright:
+    en: >-
+      Metadata is shared through OpenGeoMetadata. Access and reuse conditions vary by resource;
+      consult the original record.
+  link_groups:
+    - title:
+        en: Explore the source
+      links:
+        - label:
+            en: Collection repository
+          href: https://github.com/OpenGeoMetadata/edu.utexas
+          external: true
+        - label:
+            en: About OpenGeoMetadata
+          href: https://opengeometadata.org/
+          external: true
+  show_api_debug: false

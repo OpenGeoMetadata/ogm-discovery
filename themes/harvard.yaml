@@ -1,0 +1,172 @@
+# OGM supported_schemas includes Aardvark; verified 2026-11-11.
+id: harvard
+label: Harvard Geospatial Library
+site:
+  title:
+    en: Harvard Geospatial Library | OpenGeoMetadata
+  short_name: Harvard Geospatial Library
+  description:
+    en: >-
+      Discover maps, geographic data, and map indexes described by the Harvard Geospatial
+      Library. Use place and subject filters to find resources for your research.
+  locale: en
+  supported_locales:
+    - en
+  show_theme_selector: true
+  routing:
+    mode: hash
+  icons:
+    manifest: /theme-icons/harvard/manifest.webmanifest
+  manifest:
+    background_color: '#F8F2F0'
+    theme_color: '#8C2332'
+  banner:
+    enabled: true
+    tone: notice
+    text:
+      en: >-
+        OpenGeoMetadata community prototype. Consult the source institution or publisher for
+        official services.
+institution:
+  name: Harvard Geospatial Library
+  logo_url: /opengeometadata-bauhaus-logo.svg
+  logo_alt:
+    en: OpenGeoMetadata geometric logo
+  logo_lockup:
+    separator: none
+    right_text:
+      en: Harvard Geospatial Library
+    subtext:
+      en: OpenGeoMetadata / Collection explorer
+  header:
+    logo_height_rem: 3.5
+    lockup_text_size_rem: 1.2
+  hero_text:
+    en: Put research on the map.
+  hero_description:
+    en: >-
+      Discover maps, geographic data, and map indexes described by the Harvard Geospatial
+      Library. Use place and subject filters to find resources for your research.
+branding:
+  colors:
+    primary: '#8C2332'
+    active: '#8C2332'
+    surface: '#FFFFFF'
+    surface_alt: '#F8F2F0'
+    text: '#202A30'
+    muted: '#505D64'
+    border: '#D3DCE0'
+    page_background: '#F8F2F0'
+    header_background: '#8C2332'
+    header_text: '#FFFFFF'
+    hero_panel_accent: '#8C2332'
+    button_primary_hover: '#8C2332'
+    button_secondary_text: '#8C2332'
+    button_secondary_border: '#D3DCE0'
+    button_secondary_background: '#FFFFFF'
+    button_secondary_hover: '#F8F2F0'
+    lockup_background: '#8C2332'
+    lockup_foreground: '#FFFFFF'
+api:
+  base_url: https://ogm.geo4lib.app/api/v1/
+  client_name: ogm-harvard
+  default_query_params:
+    - include_filters[ogm_repo][]=edu.harvard
+navigation:
+  cta:
+    label:
+      en: Source metadata
+    href: https://github.com/OpenGeoMetadata/edu.harvard
+    external: true
+  cta_style: utility
+  links:
+    - label:
+        en: Search
+      href: /search?q=
+      external: false
+    - label:
+        en: Bookmarks
+      href: /bookmarks
+      external: false
+homepage:
+  collection_intro:
+    eyebrow:
+      en: Harvard Geospatial Library / Collection explorer
+    facts:
+      - value:
+          en: Maps + GIS
+        label:
+          en: Discover
+      - value:
+          en: Map indexes
+        label:
+          en: Explore
+      - value:
+          en: Harvard
+        label:
+          en: Collection context
+    pathways:
+      - label:
+          en: 01 / Places
+        title:
+          en: Explore geographic coverage
+        description:
+          en: Use the interactive map and place filters to locate resources.
+        href: /search?q=&view=gallery
+      - label:
+          en: 02 / Maps
+        title:
+          en: Browse the map collection
+        description:
+          en: Explore map records, then inspect their descriptions and available previews.
+        href: /search?q=&include_filters[gbl_resourceClass_sm][]=Maps&view=gallery
+      - label:
+          en: 03 / Data
+        title:
+          en: Find geospatial datasets
+        description:
+          en: Browse datasets and follow their source links for access and use information.
+        href: /search?q=&include_filters[gbl_resourceClass_sm][]=Datasets&view=gallery
+    map_heading:
+      en: Explore geographic coverage
+    map_description:
+      en: Search a place or select an area on the map to discover records in this collection.
+  hero_actions:
+    - label:
+        en: Search this collection
+      href: /search?q=&view=gallery
+      external: false
+  hero_map:
+    center:
+      - 42.37
+      - -71.12
+    zoom: 6
+    initial_pan_px:
+      - 0
+      - 0
+  featured_items: []
+  collection_spotlights: []
+  partner_institutions: []
+  blog:
+    enabled: false
+footer:
+  style: network
+  title:
+    en: Harvard Geospatial Library
+  copyright:
+    en: >-
+      Metadata is shared through OpenGeoMetadata. Access and reuse conditions vary by resource;
+      consult the original record.
+  link_groups:
+    - title:
+        en: Explore the source
+      links:
+        - label:
+            en: Collection repository
+          href: https://github.com/OpenGeoMetadata/edu.harvard
+          external: true
+        - label:
+            en: About OpenGeoMetadata
+          href: https://opengeometadata.org/
+          external: true
+  show_api_debug: false
