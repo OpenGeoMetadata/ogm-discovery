@@ -234,14 +234,39 @@ npm run deploy          # publish dist/ with gh-pages
 
 CI runs on the current Node LTS release. Verify its reported Node version when
 reproducing a failure; a passing run on a different runtime is not a CI result.
+Local development requires Node 22.13+ on the 22.x line, or Node 24+, matching
+the accessibility tooling's supported runtimes.
 Run `npm ci`, `npm run lint -- --max-warnings=0`, `npm run typecheck`,
 `npm run test:ci`, and `npm run build`. The coverage command enforces the existing
 80% line and statement thresholds; a plain `vitest run` does not.
 
 Vitest workers disable Node's native Web Storage with
 `--no-experimental-webstorage` so happy-dom and jsdom provide isolated browser
-storage. This avoids the Node 25+ / Vitest 3 global collision without a shared
-storage file or changing application behavior.
+storage. Vitest 4 configures this through `test.execArgv`, without a shared storage
+file or changing application behavior.
+
+### Dependency security updates
+
+Use `npm ci` to reproduce the committed dependency tree and `npm audit` to check
+current advisories. Keep Vitest, its UI, and its coverage provider on matching
+versions. Security overrides in `package.json` keep transitive dependencies on
+patched releases where their consumers still request vulnerable versions:
+
+- `fflate` 0.7 and PostCSS selector parser 6 stay on their existing API lines.
+- Modern `glob` and `minimatch` consumers use patched releases; legacy consumers
+  retain their existing major versions and calling conventions.
+- Luma's glTF loader uses the matching Loaders.gl 4.5 packages, which remove the
+  required `texture-compressor` / vulnerable `image-size` dependency chain.
+- Pa11y CI 5 uses newer Puppeteer tooling without the unpatched `extract-zip`
+  dependency.
+
+As of November 11, 2026, all 180 open repository Dependabot alerts were checked
+against the updated lockfile's package versions and vulnerable version ranges.
+The separate low-severity
+[deepmerge advisory (GHSA-gcqx-w48m-w2h4)](https://github.com/advisories/GHSA-gcqx-w48m-w2h4)
+still has no published fix and is reported by `npm audit` through Mirador and
+build tooling. It is not suppressed or worked around by downgrading to an older
+release. Revisit it when upstream publishes a fix or a compatible replacement.
 
 ## Creating A New Institution Theme
 

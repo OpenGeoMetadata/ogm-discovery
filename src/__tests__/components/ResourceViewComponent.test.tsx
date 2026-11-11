@@ -208,7 +208,6 @@ const mockLocation: import('react-router').Location<{
   searchUrl: string;
   currentPage: number;
 } | null> = {
-  unstable_mask: undefined,
   state: null,
   pathname: '/resources/mit-001145244',
   search: '',
