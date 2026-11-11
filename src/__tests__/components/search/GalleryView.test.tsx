@@ -21,14 +21,17 @@ vi.mock('../../../context/BookmarkContext', () => ({
 }));
 
 beforeAll(() => {
-  global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-    observe: observeMock,
-    unobserve: unobserveMock,
-    disconnect: vi.fn(),
-  }));
+  global.IntersectionObserver = vi.fn().mockImplementation(function () {
+    return {
+      observe: observeMock,
+      unobserve: unobserveMock,
+      disconnect: vi.fn(),
+    };
+  });
 });
 
 afterEach(() => {
+  vi.restoreAllMocks();
   vi.clearAllMocks();
 });
 
@@ -60,6 +63,10 @@ const withResourceClassIcon = (result: GeoDocument): GeoDocument => ({
 describe('GalleryView', () => {
   beforeEach(() => {
     vi.useRealTimers();
+    // Model pending image requests explicitly; Happy DOM does not load assets.
+    vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(
+      false
+    );
   });
 
   const renderGallery = (

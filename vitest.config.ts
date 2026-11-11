@@ -1,5 +1,4 @@
-/// <reference types="vitest" />
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import a11yReporter from './vitest-a11y-reporter';
 
@@ -9,18 +8,13 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     globals: true,
     environment: 'happy-dom',
-    // Node 25+ exposes native Web Storage globals that Vitest 3 otherwise
-    // preserves instead of the isolated happy-dom/jsdom implementations.
-    // Apply this to test workers only; do not create a shared storage file.
-    poolOptions: {
-      forks: { execArgv: ['--no-experimental-webstorage'] },
-      threads: { execArgv: ['--no-experimental-webstorage'] },
-    },
+    // Keep Web Storage isolated in each DOM test environment on Node 25+.
+    execArgv: ['--no-experimental-webstorage'],
     setupFiles: ['./src/setupTests.ts'],
     css: true,
     reporters: ['default', a11yReporter],
     coverage: {
-      provider: 'v8', // Use v8 provider for Vitest 3.x
+      provider: 'v8',
       include: ['src/**/*.{ts,tsx}'],
       reporter: ['text', 'json', 'html'],
       exclude: [

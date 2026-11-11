@@ -11,6 +11,44 @@ describe('searchParams', () => {
   });
 
   describe('parseSearchParams', () => {
+    it.each(['{', '{}', '[null,{"op":"XOR","f":"title","q":"maps"}]'])(
+      'ignores malformed advanced search input: %s',
+      (adv_q) => {
+        const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        expect(
+          parseSearchParams(new URLSearchParams({ adv_q })).advancedQuery
+        ).toEqual([]);
+        expect(warning).toHaveBeenCalled();
+        warning.mockRestore();
+      }
+    );
+
+    it('retains valid advanced clauses alongside malformed entries', () => {
+      const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const adv_q = JSON.stringify([
+        { op: 'and', f: 'dct_title_s', q: 'maps' },
+        { op: 'NOT', f: 'dct_subject_sm', q: 'roads' },
+        { op: 'OR', f: 'title', q: 123 },
+      ]);
+      expect(
+        parseSearchParams(new URLSearchParams({ adv_q })).advancedQuery
+      ).toEqual([
+        { op: 'AND', field: 'dct_title_s', q: 'maps' },
+        { op: 'NOT', field: 'dct_subject_sm', q: 'roads' },
+      ]);
+      warning.mockRestore();
+    });
+
+    it('deduplicates excluded facets while preserving distinct values', () => {
+      const params = new URLSearchParams();
+      for (const value of ['Maps', 'Maps', 'Datasets']) {
+        params.append('exclude_filters[gbl_resourceClass_sm][]', value);
+      }
+      expect(parseSearchParams(params).excludeFacets).toEqual([
+        { field: 'gbl_resourceClass_sm', value: 'Maps' },
+        { field: 'gbl_resourceClass_sm', value: 'Datasets' },
+      ]);
+    });
     it('parses basic search parameters', () => {
       const searchParams = new URLSearchParams({
         q: 'test query',
@@ -281,6 +319,29 @@ describe('searchParams', () => {
   });
 
   describe('buildSearchParams', () => {
+    it('normalizes included and excluded boolean facets without changing other values', () => {
+      const params = buildSearchParams({
+        query: '',
+        page: 1,
+        perPage: SEARCH_RESULTS_PER_PAGE,
+        facets: [
+          { field: 'gbl_georeferenced_b', value: '1' },
+          { field: 'gbl_georeferenced_b', value: 'unknown' },
+        ],
+        excludeFacets: [
+          { field: 'b1g_georeferenced_allmaps_b', value: '0' },
+          { field: 'dct_title_s', value: '0' },
+        ],
+      });
+      expect(params.getAll('include_filters[gbl_georeferenced_b][]')).toEqual([
+        'true',
+        'unknown',
+      ]);
+      expect(params.get('exclude_filters[b1g_georeferenced_allmaps_b][]')).toBe(
+        'false'
+      );
+      expect(params.get('exclude_filters[dct_title_s][]')).toBe('0');
+    });
     it('builds basic search parameters', () => {
       const params: SearchParams = {
         query: 'test query',
