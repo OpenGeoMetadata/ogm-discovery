@@ -104,8 +104,8 @@ describe('API request boundaries', () => {
     vi.stubEnv('VITE_ENFORCE_HTTPS', 'true');
     expect(getApiBasePath()).toBe('http://api.example.org/v1');
     await fetchResourceJson('https');
-    expect(String(fetchMock.mock.calls[0][0])).toMatch(
-      /^https:\/\/api.example.org/
+    expect(new URL(String(fetchMock.mock.calls[0][0])).origin).toBe(
+      'https://api.example.org'
     );
   });
 
