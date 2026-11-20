@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useId } from 'react';
 import { Link } from 'react-router';
 import type { Map as GLMap, GeoJSONSource } from 'maplibre-gl';
 import type { ThemeResearchConfig } from '../../config/institution';
@@ -21,16 +21,22 @@ export function RecordSelect({
   value,
   onChange,
   label,
+  indexSearch = false,
 }: {
   config: ThemeResearchConfig;
   value: string;
   onChange: (value: string) => void;
   label: string;
+  indexSearch?: boolean;
 }) {
   const { text, t } = useI18n();
+  const helpId = useId();
   const [query, setQuery] = useState('');
+  const [submittedQuery, setSubmittedQuery] = useState('');
   const [results, setResults] = useState<GeoDocument[]>([]);
   const [status, setStatus] = useState('idle');
+  const [page, setPage] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
   const generation = useRef(0);
   const custom = !config.records.some((record) => record.id === value);
   const { data: selectedRecord } = useRecord(custom ? value : '');
@@ -40,14 +46,15 @@ export function RecordSelect({
     },
     []
   );
-  async function search(event: React.FormEvent) {
-    event.preventDefault();
+  async function search(searchQuery: string, nextPage = 1) {
     const current = ++generation.current;
     setStatus('loading');
+    setSubmittedQuery(searchQuery);
+    setPage(nextPage);
     try {
       const response = await fetchSearchResults(
-        query,
-        1,
+        searchQuery,
+        nextPage,
         20,
         config.search?.resource_type
           ? [
@@ -60,14 +67,117 @@ export function RecordSelect({
       );
       if (current === generation.current) {
         setResults(response.data);
+        setHasNext(
+          Boolean(response.links?.next) ||
+            nextPage < (response.meta?.totalPages ?? 1)
+        );
         setStatus('ready');
       }
     } catch {
       if (current === generation.current) setStatus('error');
     }
   }
+  const searchControls = (
+    <>
+      {indexSearch && (
+        <p id={helpId} className="research-muted">
+          {t('research.findIndexHelp')}
+        </p>
+      )}
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          void search(query);
+        }}
+      >
+        <label className="research-field">
+          {t(indexSearch ? 'research.findIndex' : 'research.searchCollection')}
+          <input
+            type="search"
+            value={query}
+            aria-describedby={indexSearch ? helpId : undefined}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </label>
+        <div className="research-actions">
+          <button type="submit">{t('research.search')}</button>
+          {indexSearch && (
+            <button
+              type="button"
+              onClick={() => {
+                setQuery('');
+                void search('');
+              }}
+            >
+              {t('research.browseIndexes')}
+            </button>
+          )}
+        </div>
+      </form>
+      {status === 'loading' && <p role="status">{t('research.loading')}</p>}
+      {status === 'error' && <p role="alert">{t('research.searchError')}</p>}
+      {status === 'ready' && (
+        <>
+          <p role="status" className="research-muted">
+            {t(results.length ? 'research.resultsPage' : 'research.noMatches', {
+              count: results.length,
+              page,
+            })}
+          </p>
+          <ul>
+            {results.map((record) => (
+              <li key={record.id}>
+                <button
+                  aria-pressed={record.id === value}
+                  onClick={() => {
+                    onChange(record.id);
+                    if (indexSearch) setStatus('idle');
+                  }}
+                >
+                  {record.attributes.ogm.dct_title_s}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {(status === 'ready' || status === 'error') && (
+        <div className="research-actions">
+          {page > 1 && (
+            <button
+              type="button"
+              onClick={() => void search(submittedQuery, page - 1)}
+            >
+              {t('research.previousResults')}
+            </button>
+          )}
+          {status === 'ready' && hasNext && (
+            <button
+              type="button"
+              onClick={() => void search(submittedQuery, page + 1)}
+            >
+              {t('research.nextResults')}
+            </button>
+          )}
+          {status === 'error' && (
+            <button
+              type="button"
+              onClick={() => void search(submittedQuery, page)}
+            >
+              {t('research.retrySearch')}
+            </button>
+          )}
+        </div>
+      )}
+    </>
+  );
   return (
     <div>
+      {config.search && indexSearch && (
+        <div className="research-record-search research-index-search">
+          {searchControls}
+        </div>
+      )}
       <label className="research-field">
         {label}
         <select
@@ -86,42 +196,10 @@ export function RecordSelect({
           )}
         </select>
       </label>
-      {config.search && (
+      {config.search && !indexSearch && (
         <details className="research-record-search">
           <summary>{t('research.findMore')}</summary>
-          <form onSubmit={search}>
-            <label className="research-field">
-              {t('research.searchCollection')}
-              <input
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-            </label>
-            <div className="research-actions">
-              <button type="submit">{t('research.search')}</button>
-            </div>
-          </form>
-          {status === 'loading' && <p role="status">{t('research.loading')}</p>}
-          {status === 'error' && (
-            <p role="alert">{t('research.searchError')}</p>
-          )}
-          {status === 'ready' && (
-            <>
-              <p className="research-muted">
-                {t('research.searchHelp', { count: results.length })}
-              </p>
-              <ul>
-                {results.map((record) => (
-                  <li key={record.id}>
-                    <button onClick={() => onChange(record.id)}>
-                      {record.attributes.ogm.dct_title_s}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
+          {searchControls}
         </details>
       )}
     </div>
