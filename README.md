@@ -472,13 +472,12 @@ api:
     - include_filters[ogm_repo][]=gov.usda.naip
 ```
 
-The `uwmadison/` preset queries the OGM API for the `geobtaa` repository and
-the provider `University of Wisconsin-Madison`. On November 20, 2026, none of
-the repository's 40,724 Aardvark records named Madison as provider. Madison's
-own `edu.wisc` repository declares the GeoBlacklight 1.0 schema.
-[Consortium metadata](https://github.com/OpenGeoMetadata/geobtaa/tree/ea9ebd9fa02daa3ab4dde622c724cdcdc23ff9a2/metadata-aardvark) ·
-[Madison metadata](https://github.com/OpenGeoMetadata/edu.wisc) ·
-[OGM campus query](https://ogm.geo4lib.app/api/v1/search?include_filters%5Bogm_repo%5D%5B%5D=geobtaa&include_filters%5Bschema_provider_s%5D%5B%5D=University%20of%20Wisconsin-Madison&per_page=1)
+The `uwmadison/` preset queries the OGM API for the `btaa-api.uwmadison` source
+and the provider `University of Wisconsin-Madison`. This source is a harvest of
+published Madison records from the BTAA Geospatial API. OGM preserves the BTAA
+record IDs and indexes the metadata locally. The `geobtaa` source separately
+tracks the consortium's GitHub repository.
+[OGM campus query](https://ogm.geo4lib.app/api/v1/search?include_filters%5Bogm_repo%5D%5B%5D=btaa-api.uwmadison&include_filters%5Bschema_provider_s%5D%5B%5D=University%20of%20Wisconsin-Madison&per_page=1)
 
 The `uwm/` portal serves UW-Milwaukee's American Geographical Society Library
 from its own active `edu.uwm` repository.

@@ -240,14 +240,14 @@ api:
     - include_filters[ogm_repo][]=edu.nyu
 ```
 
-UW-Madison searches the OGM API with both the consortium repository and the
-campus provider filters. This scope can be empty until OGM indexes campus records.
+UW-Madison searches the OGM API with both the source identifier for its BTAA API
+harvest and the campus provider. The viewer reads the indexed OGM copy.
 
 ```yaml
 api:
   base_url: https://ogm.geo4lib.app/api/v1/
   default_query_params:
-    - include_filters[ogm_repo][]=geobtaa
+    - include_filters[ogm_repo][]=btaa-api.uwmadison
     - include_filters[schema_provider_s][]=University of Wisconsin-Madison
 ```
 

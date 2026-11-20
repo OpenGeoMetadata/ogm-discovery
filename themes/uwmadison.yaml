@@ -54,10 +54,11 @@ api:
   turnstile_verify_path: /turnstile/verify
   client_name: ogm-viewer
   default_query_params:
-    - include_filters[ogm_repo][]=geobtaa
+    - include_filters[ogm_repo][]=btaa-api.uwmadison
     - include_filters[schema_provider_s][]=University of Wisconsin-Madison
 homepage:
-  featured_items: []
+  featured_items:
+    - id: 374030b8-8a7a-4dd5-873a-4a9c1196e8f5 # Official State Highway Map, Wisconsin 1916
 navigation:
   links:
     - href: /bookmarks
