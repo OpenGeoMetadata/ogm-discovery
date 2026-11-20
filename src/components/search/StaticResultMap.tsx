@@ -9,21 +9,20 @@ interface StaticResultMapProps {
 }
 
 export function StaticResultMap({ result }: StaticResultMapProps) {
-  return (
-    <StaticResultMapImage
-      key={getResultStaticMapUrl(result)}
-      imageUrl={getResultStaticMapUrl(result)}
-    />
-  );
+  const imageUrl = getResultStaticMapUrl(result);
+  return <StaticResultMapImage key={imageUrl} imageUrl={imageUrl} />;
 }
 
-function StaticResultMapImage({ imageUrl }: { imageUrl: string }) {
+function StaticResultMapImage({ imageUrl }: { imageUrl?: string }) {
   const { t } = useI18n();
   const {
     element: imgRef,
     src,
     failed,
-  } = useStaticMapImage(imageUrl, imageUrl.includes('/geometry/native'));
+  } = useStaticMapImage(
+    imageUrl ?? '',
+    !!imageUrl?.includes('/geometry/native')
+  );
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   // Handle cases where the image is already in the browser cache and the `load`
@@ -37,7 +36,7 @@ function StaticResultMapImage({ imageUrl }: { imageUrl: string }) {
   }, [src, imgRef]);
 
   // If image failed to load, show placeholder
-  if (imageError || failed) {
+  if (!imageUrl || imageError || failed) {
     return (
       <div className="h-48 w-48 flex items-center justify-center bg-gray-50 rounded-r-lg">
         <span className="text-xs text-gray-400">{t('map.dataError')}</span>

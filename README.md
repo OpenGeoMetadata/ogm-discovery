@@ -398,13 +398,19 @@ renderer/Celery integration before enabling these images in production; older
 APIs return 404 and Discovery retains its branded fallback. It never requests
 legacy CARTO campus images. Cold renders retry briefly without hiding the logo.
 
+For an API that publishes ready-to-display result images, set
+`api.prefer_record_assets: true` in the theme. UW–Madison uses this setting with
+the production BTAA catalog. Search cards display the record's `meta.ui.static_map`
+for geography and prefer `thumbnail_url` over `resource_class_icon_url` for the
+preview. Missing assets use the existing unavailable state or local class icon.
+
 Images normally use the active API base. For local integration testing only, set
 `VITE_STATIC_MAP_API_BASE_URL=http://127.0.0.1:3007/api/v1` when building to send
 campus and resource geography images to the local asset API while search still uses the configured API.
 Omit this override from production builds. Campus-image provider credits are
 visible below the partner grid; this integration currently uses OpenFreeMap.
 
-Search-result geography thumbnails request `/static-maps/{id}/geometry/native`.
+By default, search-result geography thumbnails request `/static-maps/{id}/geometry/native`.
 This endpoint generates missing images through Celery and stores them in the
 existing content-addressed asset system. Discovery bypasses legacy API static-map
 URLs (including immutable hashes containing CARTO error tiles); custom external

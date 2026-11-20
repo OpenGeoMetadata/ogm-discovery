@@ -248,6 +248,7 @@ export interface ThemeConfig {
   api: {
     base_url: string;
     public_api_key?: string;
+    prefer_record_assets?: boolean;
     search_path?: string;
     suggest_path?: string;
     gazetteer_search_path?: string;

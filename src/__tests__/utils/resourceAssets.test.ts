@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   getResultPrimaryImageUrl,
   getResultStaticMapUrl,
 } from '../../utils/resourceAssets';
+import * as institution from '../../config/institution';
 import type { GeoDocument } from '../../types/api';
 
 function resultWithUi(ui: Record<string, string | undefined>) {
@@ -94,5 +95,39 @@ describe('native resource geography', () => {
         resultWithUi({ static_map: 'https://institution.edu/map.png' })
       )
     ).toBe('https://institution.edu/map.png');
+  });
+});
+
+describe('record assets in the UW-Madison preset', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('uses the advertised geometry URL and icon without requesting generation', () => {
+    vi.spyOn(institution, 'getActiveThemeConfig').mockReturnValue(
+      institution.getThemeConfig('uwmadison')
+    );
+    const map = '/api/v1/static-maps/resource-1/geometry';
+    const icon =
+      '/api/v1/static-map-assets/' +
+      'b'.repeat(64) +
+      '?kind=resource-class-icon';
+    const result = resultWithUi({
+      static_map: map,
+      resource_class_icon_url: icon,
+    });
+
+    expect(getResultStaticMapUrl(result)).toBe(map);
+    expect(getResultPrimaryImageUrl(result, 'list')).toBe(icon);
+    const ready = '/api/v1/static-map-assets/' + 'a'.repeat(64);
+    expect(getResultStaticMapUrl(resultWithUi({ static_map: ready }))).toBe(
+      ready
+    );
+    expect(getResultStaticMapUrl(resultWithUi({}))).toBeUndefined();
+    expect(getResultPrimaryImageUrl(resultWithUi({}), 'list')).toBeUndefined();
+    expect(
+      getResultPrimaryImageUrl(
+        resultWithUi({ thumbnail_url: ready, resource_class_icon_url: icon }),
+        'list'
+      )
+    ).toBe(ready);
   });
 });

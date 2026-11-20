@@ -43,6 +43,7 @@ branding:
     sans: '"Work Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
 api:
   base_url: https://geo.btaa.org/api/v1/
+  prefer_record_assets: true
   search_path: /search
   suggest_path: /suggest
   gazetteer_search_path: /gazetteers/nominatim/search
