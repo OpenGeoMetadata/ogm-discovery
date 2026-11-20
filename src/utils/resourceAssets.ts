@@ -1,4 +1,5 @@
 import type { GeoDocument } from '../types/api';
+import { getActiveThemeConfig } from '../config/institution';
 import { getApiBasePath } from '../services/api';
 
 export type SearchResultAssetView = 'list' | 'gallery' | 'map';
@@ -185,6 +186,9 @@ export function getResultPrimaryImageUrl(
 ): string | undefined {
   const extracted = extractThumbnailUrl(result);
   const normalized = toSsrAssetUrl(extracted);
+  if (getActiveThemeConfig().api?.prefer_record_assets) {
+    return normalized ?? toSsrAssetUrl(extractResourceClassIconUrl(result));
+  }
   const galleryResourceClassIconUrl =
     view === 'gallery'
       ? toSsrAssetUrl(extractResourceClassIconUrl(result))
@@ -239,8 +243,11 @@ export function getStaticMapUrl(
 
 export function getResultStaticMapUrl(
   result: Pick<GeoDocument, 'id' | 'meta'>
-): string {
+): string | undefined {
   const extracted = extractStaticMapUrl(result);
+  if (getActiveThemeConfig().api?.prefer_record_assets) {
+    return toSsrAssetUrl(extracted);
+  }
   // API-supplied immutable hashes can contain burned-in provider error tiles.
   // Re-resolve generated geography through the native variant, but preserve
   // institution-provided external static maps.
