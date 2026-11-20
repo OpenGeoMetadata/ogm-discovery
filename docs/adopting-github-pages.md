@@ -240,13 +240,14 @@ api:
     - include_filters[ogm_repo][]=edu.nyu
 ```
 
-UW-Madison uses the BTAA Geoportal API and filters by the institution that
-provides the metadata. This includes county datasets held by Madison.
+UW-Madison searches the OGM API with both the consortium repository and the
+campus provider filters. This scope can be empty until OGM indexes campus records.
 
 ```yaml
 api:
-  base_url: https://geo.btaa.org/api/v1/
+  base_url: https://ogm.geo4lib.app/api/v1/
   default_query_params:
+    - include_filters[ogm_repo][]=geobtaa
     - include_filters[schema_provider_s][]=University of Wisconsin-Madison
 ```
 
