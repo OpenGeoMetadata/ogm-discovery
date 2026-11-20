@@ -399,8 +399,7 @@ APIs return 404 and Discovery retains its branded fallback. It never requests
 legacy CARTO campus images. Cold renders retry briefly without hiding the logo.
 
 For an API that publishes ready-to-display result images, set
-`api.prefer_record_assets: true` in the theme. UW–Madison uses this setting with
-the production BTAA catalog. Search cards display the record's `meta.ui.static_map`
+`api.prefer_record_assets: true` in the theme. Search cards display the record's `meta.ui.static_map`
 for geography and prefer `thumbnail_url` over `resource_class_icon_url` for the
 preview. Missing assets use the existing unavailable state or local class icon.
 
@@ -473,12 +472,13 @@ api:
     - include_filters[ogm_repo][]=gov.usda.naip
 ```
 
-The `geobtaa/` portal covers the consortium's OGM repository. For `uwmadison/`,
-the BTAA Geoportal indexes Madison's holdings under the provider
-`University of Wisconsin-Madison`. Its provider filter returned 11,037 records on
-November 20, 2026, including a 1916 highway map from the Robinson Map Library.
-[Madison metadata repository](https://github.com/OpenGeoMetadata/edu.wisc) ·
-[BTAA provider query](https://geo.btaa.org/api/v1/search?include_filters%5Bschema_provider_s%5D%5B%5D=University%20of%20Wisconsin-Madison&per_page=1)
+The `uwmadison/` preset queries the OGM API for the `geobtaa` repository and
+the provider `University of Wisconsin-Madison`. On November 20, 2026, none of
+the repository's 40,724 Aardvark records named Madison as provider. Madison's
+own `edu.wisc` repository declares the GeoBlacklight 1.0 schema.
+[Consortium metadata](https://github.com/OpenGeoMetadata/geobtaa/tree/ea9ebd9fa02daa3ab4dde622c724cdcdc23ff9a2/metadata-aardvark) ·
+[Madison metadata](https://github.com/OpenGeoMetadata/edu.wisc) ·
+[OGM campus query](https://ogm.geo4lib.app/api/v1/search?include_filters%5Bogm_repo%5D%5B%5D=geobtaa&include_filters%5Bschema_provider_s%5D%5B%5D=University%20of%20Wisconsin-Madison&per_page=1)
 
 The `uwm/` portal serves UW-Milwaukee's American Geographical Society Library
 from its own active `edu.uwm` repository.

@@ -42,7 +42,7 @@ branding:
   fonts:
     sans: '"Work Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
 api:
-  base_url: https://geo.btaa.org/api/v1/
+  base_url: https://ogm.geo4lib.app/api/v1/
   prefer_record_assets: true
   search_path: /search
   suggest_path: /suggest
@@ -54,10 +54,10 @@ api:
   turnstile_verify_path: /turnstile/verify
   client_name: ogm-viewer
   default_query_params:
+    - include_filters[ogm_repo][]=geobtaa
     - include_filters[schema_provider_s][]=University of Wisconsin-Madison
 homepage:
-  featured_items:
-    - id: 374030b8-8a7a-4dd5-873a-4a9c1196e8f5 # Official State Highway Map, Wisconsin 1916
+  featured_items: []
 navigation:
   links:
     - href: /bookmarks
