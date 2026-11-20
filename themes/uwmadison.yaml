@@ -32,7 +32,8 @@ institution:
   name: UW-Madison Geoportal
   logo_url: /uw-madison-logo.svg
   logo_alt: UW-Madison Geoportal logo
-  hero_text: Search geospatial resources from the University of Wisconsin-Madison and the OpenGeoMetadata community.
+  hero_text:
+    en: Search geospatial resources from the University of Wisconsin-Madison.
   hero_description: Browse and download GIS data, maps, and other geospatial resources.
 branding:
   colors:
@@ -41,7 +42,7 @@ branding:
   fonts:
     sans: '"Work Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
 api:
-  base_url: https://ogm.geo4lib.app/api/v1/
+  base_url: https://geo.btaa.org/api/v1/
   search_path: /search
   suggest_path: /suggest
   gazetteer_search_path: /gazetteers/nominatim/search
@@ -53,6 +54,9 @@ api:
   client_name: ogm-viewer
   default_query_params:
     - include_filters[schema_provider_s][]=University of Wisconsin-Madison
+homepage:
+  featured_items:
+    - id: 374030b8-8a7a-4dd5-873a-4a9c1196e8f5 # Official State Highway Map, Wisconsin 1916
 navigation:
   links:
     - href: /bookmarks

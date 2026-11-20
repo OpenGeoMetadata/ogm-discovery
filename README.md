@@ -467,12 +467,15 @@ api:
     - include_filters[ogm_repo][]=gov.usda.naip
 ```
 
-The separate `geobtaa` portal scopes to that repository; `btaa` remains the
-unchanged reference preset. Existing institutional and federal themes retain
-their established scopes and research tools. Archived campus repositories with
-cleared schema properties are not separate current Aardvark sources, even if
-their old `ogm-aardvark` topics remain. `uwmadison` remains an additional preset;
-`edu.wisc` currently declares only the legacy 1.0 schema.
+The `geobtaa/` portal covers the consortium's OGM repository. For `uwmadison/`,
+the BTAA Geoportal indexes Madison's holdings under the provider
+`University of Wisconsin-Madison`. Its provider filter returned 11,037 records on
+November 20, 2026, including a 1916 highway map from the Robinson Map Library.
+[Madison metadata repository](https://github.com/OpenGeoMetadata/edu.wisc) ·
+[BTAA provider query](https://geo.btaa.org/api/v1/search?include_filters%5Bschema_provider_s%5D%5B%5D=University%20of%20Wisconsin-Madison&per_page=1)
+
+The `uwm/` portal serves UW-Milwaukee's American Geographical Society Library
+from its own active `edu.uwm` repository.
 
 Harvard and George Mason declared Aardvark but returned zero records from the
 reference API during verification on November 11, 2026. Their portals retain
