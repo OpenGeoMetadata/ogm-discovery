@@ -240,8 +240,12 @@ api:
     - include_filters[ogm_repo][]=edu.nyu
 ```
 
+UW-Madison uses the BTAA Geoportal API and filters by the institution that
+provides the metadata. This includes county datasets held by Madison.
+
 ```yaml
 api:
+  base_url: https://geo.btaa.org/api/v1/
   default_query_params:
     - include_filters[schema_provider_s][]=University of Wisconsin-Madison
 ```
